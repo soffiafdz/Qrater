@@ -130,3 +130,7 @@ dmypy.json
 
 # Database
 SQL.db
+
+# Data
+static/uploads
+test_images
