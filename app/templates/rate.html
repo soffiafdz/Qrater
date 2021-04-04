@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% from 'bootstrap/pagination.html' import render_pager, render_pagination %}
+
+{% block app_content %}
+<div class="row">
+  <h1 class="display-4 mx-auto">
+    {{ imgs.items[0].name }}
+  </h1>
+  <img
+    src="{{ url_for('static', filename=(img_path)) }}"
+    class="img-fluid"
+    alt="{{ imgs.items[0].name }}"
+    >
+</div>
+<br>
+<div class="row">
+  {{ render_pagination(imgs, dataset=DS.name) }}
+</div>
+{% endblock %}

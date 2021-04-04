@@ -1,0 +1,10 @@
+<div class="card" style="width: 18rem;">
+  <div class="card-body">
+    <h3 class="card-title">{{ DS.name }}</h3>
+    <p class="card-text">No of images: {{ Image.query.filter_by(dataset=DS).count() }}</p>
+    <p class="card-text">Progress bars will go here</p>
+    <a
+      href="{{ url_for('main.rate', dataset=DS.name) }}"
+      class="btn btn-secondary">Rate</a>
+  </div>
+</div>

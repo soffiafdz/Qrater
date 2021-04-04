@@ -2,67 +2,65 @@
 
 {% block app_content %}
   <h1>Upload New Dataset</h1>
-  <div class="row">
-    <div class="col-md-4">
-      <form
-        class="form"
-        action=""
-        method="POST"
-        role="form"
-        enctype="multipart/form-data"
+  <form
+    class="form"
+    action=""
+    method="POST"
+    role="form"
+    enctype="multipart/form-data"
+  >
+    {{ form.csrf_token() }}
+    <div class="form-group required">
+      <label class="control-label" for="dataset_name">
+        Dataset name
+      </label>
+      <input
+        id="dataset_name"
+        class="form-control"
+        name="dataset_name"
+        required=""
+        type="text"
       >
-        <div class="form-group required">
-          <label class="control-label" for="dataset_name">
-            Dataset name
-          </label>
-          <input
-            id="dataset_name"
-            class="form-control"
-            name="dataset_name"
-            required=""
-            type="text"
-          >
-        </div>
-        <div class="form-group">
-          <label class="control-label" for="sub_regex">
-            Subjects' label [REGEX]
-          </label>
-          <input
-            id="sub_regex"
-            class="form-control"
-            name="sub_regex"
-            type="text"
-            placeholder="Optional"
-          >
-        </div>
-        <div class="form-group">
-          <label class="control-label" for="sess_regex">
-            Sessions' label [REGEX]
-          </label>
-          <input
-            id="sess_regex"
-            class="form-control"
-            name="sess_regex"
-            type="text"
-            placeholder="Optional"
-          >
-        </div>
-        <div class="form-group">
-          <label class="control-label" for="dataset">MRI files</label>
-          <input
-            id="dataset"
-            class="form-control"
-            multiple="true"
-            name="dataset"
-            type="file"
-            style="height: 100%;"
-            required=""
-          >
-        </div>
-        <input id="submit" class="btn btn-default" name="submit"
-          type="submit" value="Upload Dataset">
-      </form>
     </div>
-  </div>
+    <div class="form-row">
+      <div class="form-group col-md-6">
+        <label class="control-label" for="sub_regex">
+          Subjects' label
+        </label>
+        <input
+          id="sub_regex"
+          class="form-control"
+          name="sub_regex"
+          type="text"
+          placeholder="Regular Expression (Optional)"
+        >
+      </div>
+      <div class="form-group col-md-6">
+        <label class="control-label" for="sess_regex">
+          Sessions' label
+        </label>
+        <input
+          id="sess_regex"
+          class="form-control"
+          name="sess_regex"
+          type="text"
+          placeholder="Regular Expression (Optional)"
+        >
+      </div>
+    </div>
+    <div class="form-group required">
+      <label class="control-label" for="dataset">MRI files</label>
+      <input
+        id="dataset"
+        class="form-control-file"
+        multiple="true"
+        name="dataset"
+        type="file"
+        required=""
+      >
+    </div>
+    <input id="submit" class="btn btn-primary btn-lg" name="submit"
+      type="submit" value="Upload">
+  </form>
 {% endblock %}
 

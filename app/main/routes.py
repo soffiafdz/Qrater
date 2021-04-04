@@ -27,12 +27,12 @@ def before_request():
         g.search_form = SearchForm()
 
 
-@bp.route('/search')
-@login_required
-def search():
-    """Search view function."""
-    if not g.search_form.validate():
-        return redirect(url_for('main.explore'))
+# @bp.route('/search')
+# @login_required
+# def search():
+    # """Search view function."""
+    # if not g.search_form.validate():
+        # return redirect(url_for('main.explore'))
     # page = request.args.get('page', 1, type=int)
     # posts, total = Post.search(g.search_form.q.data, page,
                                # current_app.config['POSTS_PER_PAGE'])
@@ -45,12 +45,12 @@ def search():
 
 
 @bp.route("/", methods=['GET', 'POST'])
-@bp.route("/index", methods=['GET', 'POST'])
-@login_required
-def index():
+@bp.route("/dashboard", methods=['GET', 'POST'])
+def dashboard():
     """Construct the landing page."""
-    # if Dataset.query.first() is None:
-        # return redirect(url_for('main.upload_dataset'))
+    if Dataset.query.first() is None:
+        return render_template('no_datasets.html', title='Dashboard',
+                               rater=current_user)
 
     # page = request.args.get('page', 1, type=int)
     # posts = current_user.followed_posts().paginate(
@@ -59,10 +59,25 @@ def index():
         # if posts.has_next else None
     # prev_url = url_for('main.index', page=posts.prev_num) \
         # if posts.has_prev else None
-    return render_template('index.html', title='Home')
-                           # form=form,
-                           # posts=posts.items, next_url=next_url,
-                           # prev_url=prev_url)
+    return render_template('dashboard.html', title='Dashboard',
+                           Image=Image, datasets=Dataset.query.all())
+
+                        # form=form,
+                        # posts=posts.items, next_url=next_url,
+                        # prev_url=prev_url)
+
+
+@bp.route('/rate/<dataset>')
+@login_required
+def rate(dataset):
+    """Page to view images and rate them."""
+    DS = Dataset.query.filter_by(name=dataset).first_or_404()
+    page = request.args.get('page', 1, type=int)
+    imgs = DS.images.order_by(Image.id.asc()).paginate(
+        page, 1, False)
+    path = imgs.items[0].path.replace(current_app.config['UPLOAD_FOLDER'], "")
+    return render_template('rate.html', imgs=imgs, DS=DS,
+                           img_path=('uploads' + path))
 
 
 @bp.route('/upload_dataset', methods=['GET', 'POST'])
@@ -115,6 +130,6 @@ def upload_dataset():
             db.session.add(img)
             db.session.commit()
         flash('File(s) successfully uploaded!', category='success')
-        return redirect(url_for('main.index'))
+        return redirect(url_for('main.dashboard'))
     return render_template('upload_dataset.html', form=form,
                            title='Upload Dataset')

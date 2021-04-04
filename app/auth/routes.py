@@ -19,7 +19,7 @@ from app.auth.email import send_password_reset_email
 def login():
     """Log in."""
     if current_user.is_authenticated:
-        return redirect(url_for('main.index'))
+        return redirect(url_for('main.dashboard'))
     form = LoginForm()
     if form.validate_on_submit():
         rater = Rater.query.filter_by(username=form.username.data).first()
@@ -29,7 +29,7 @@ def login():
         login_user(rater, remember=form.remember_me.data)
         next_page = request.args.get('next')
         if not next_page or url_parse(next_page).netloc != '':
-            next_page = url_for('main.index')
+            next_page = url_for('main.dashboard')
         return redirect(next_page)
     return render_template('auth/login.html', title='Sign In', form=form)
 
@@ -38,14 +38,14 @@ def login():
 def logout():
     """Log out."""
     logout_user()
-    return redirect(url_for('main.index'))
+    return redirect(url_for('main.dashboard'))
 
 
 @bp.route('/register', methods=['GET', 'POST'])
 def register():
     """Page to register new rater."""
     if current_user.is_authenticated:
-        return redirect(url_for('main.index'))
+        return redirect(url_for('main.dashboard'))
     form = RegistrationForm()
     if form.validate_on_submit():
         rater = Rater(username=form.username.data, email=form.email.data)
@@ -62,7 +62,7 @@ def register():
 def reset_password_request():
     """Page to request a password reset."""
     if current_user.is_authenticated:
-        return redirect(url_for('main.index'))
+        return redirect(url_for('main.dashboard'))
     form = ResetPasswordRequestForm()
     if form.validate_on_submit():
         rater = Rater.query.filter_by(email=form.email.data).first()
@@ -79,10 +79,10 @@ def reset_password_request():
 def reset_password(token):
     """Page to reset the password."""
     if current_user.is_authenticated:
-        return redirect(url_for('main.index'))
+        return redirect(url_for('main.dashboard'))
     rater = Rater.verify_reset_password_token(token)
     if not rater:
-        return redirect(url_for('main.index'))
+        return redirect(url_for('main.dashboard'))
     form = ResetPasswordForm()
     if form.validate_on_submit():
         rater.set_password(form.password.data)
