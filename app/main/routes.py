@@ -13,7 +13,7 @@ from flask import (render_template, flash, redirect, url_for, request,
 from flask_login import current_user, login_required
 from app import db
 from app.upload import allowed_file
-from app.main.forms import SearchForm, UploadDatasetForm
+from app.main.forms import SearchForm, UploadDatasetForm, EmptyForm, RatingForm
 from app.models import Rater, Dataset, Image
 from app.main import bp
 
@@ -67,7 +67,7 @@ def dashboard():
                         # prev_url=prev_url)
 
 
-@bp.route('/rate/<dataset>')
+@bp.route('/<dataset>', methods=['GET', 'POST'])
 @login_required
 def rate(dataset):
     """Page to view images and rate them."""
@@ -76,8 +76,29 @@ def rate(dataset):
     imgs = DS.images.order_by(Image.id.asc()).paginate(
         page, 1, False)
     path = imgs.items[0].path.replace(current_app.config['UPLOAD_FOLDER'], "")
-    return render_template('rate.html', imgs=imgs, DS=DS,
-                           img_path=('uploads' + path))
+    form = RatingForm()
+    if form.validate_on_submit():
+        img = imgs.items[0]
+        img.set_rating(user=current_user, rating=form.rating.data)
+        img.set_comment(user=current_user, comment=form.comment.data)
+        return redirect(request.url)
+    return render_template('rate.html', DS=DS, form=form, imgs=imgs,
+                           img_path=('uploads' + path),
+                           img_name=imgs.items[0].name,
+                           comment=imgs.items[0].comment_by_user(current_user),
+                           rating=imgs.items[0].rating_by_user(current_user))
+
+
+@bp.route('/rate/<img_id>/<int:rating>', methods=['POST'])
+@login_required
+def give_rating(img_id, rating):
+    """Assign a rating to the current image."""
+    form = EmptyForm()
+    if form.validate_on_submit():
+        image = Image.query.get_or_404(img_id)
+        image.set_rating(user=current_user, rating=rating)
+        db.session.commit()
+    return redirect(request.referrer)
 
 
 @bp.route('/upload_dataset', methods=['GET', 'POST'])

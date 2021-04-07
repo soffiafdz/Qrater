@@ -10,6 +10,7 @@
     {% block styles %}
     <!-- Bootstrap CSS -->
     {{ bootstrap.load_css() }}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css">
     {% endblock %}
 
     {% block title %}
@@ -94,6 +95,7 @@
     <!-- Optional JavaScript -->
     {{ bootstrap.load_js() }}
     {{ moment.include_moment() }}
+    <script src="{{ url_for('static', filename=('js/mousetrap.min.js')) }}" ></script>
     {% endblock %}
   </body>
 </html>

@@ -126,7 +126,7 @@ class Dataset(db.Model):
     images = db.relationship('Image', backref='dataset', lazy='dynamic')
 
     def __repr__(self):
-        """Object reresentation."""
+        """Object representation."""
         return f'<Dataset {self.name}>'
 
 
@@ -135,7 +135,7 @@ class Image(SearchableMixin, db.Model):
 
     __searchable__ = ['body']
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(64), index=True, unique=True)
+    name = db.Column(db.String(64))
     path = db.Column(db.String(128), unique=True)
     extension = db.Column(db.String(8))
     dataset_id = db.Column(db.Integer, db.ForeignKey('dataset.id'))
@@ -144,8 +144,45 @@ class Image(SearchableMixin, db.Model):
     ratings = db.relationship("Ratings", backref="image", lazy="dynamic")
 
     def __repr__(self):
-        """Object reresentation."""
+        """Object representation."""
         return f'<MRImage {self.name}>'
+
+    def set_rating(self, user, rating):
+        """Set a rating to the current MRI."""
+        rating_mod = self.ratings.filter_by(rater=user).first()
+        if rating_mod is None:
+            rating_mod = Ratings(rater=user, image=self, rating=rating)
+            db.session.add(rating_mod)
+            db.session.commit()
+        else:
+            rating_mod.rating = rating
+            db.session.commit()
+
+    def set_comment(self, user, comment):
+        """Append a comment to the rating of current MRI."""
+        rating_mod = self.ratings.filter_by(rater=user).first()
+        if rating_mod is None:
+            rating_mod = Ratings(rater=user, image=self, comment=comment)
+            db.session.add(rating_mod)
+            db.session.commit()
+        else:
+            rating_mod.comment = comment
+            db.session.commit()
+
+    def rating_by_user(self, user):
+        """Return rating of the image by specific user."""
+        rating_mod = self.ratings.filter_by(rater=user).first()
+        if rating_mod is None:
+            return 0
+        return rating_mod.rating
+
+    def comment_by_user(self, user):
+        """Return rating of the image by specific user."""
+        rating_mod = self.ratings.filter_by(rater=user).first()
+        if rating_mod is None:
+            return None
+        return rating_mod.comment
+
 
 
 class Ratings(db.Model):
@@ -157,3 +194,7 @@ class Ratings(db.Model):
     rater_id = db.Column(db.Integer, db.ForeignKey('rater.id'))
     rating = db.Column(db.Integer)
     comment = db.Column(db.String(256))
+
+    def __repr__(self):
+        """Object representation."""
+        return f'<Rating {self.image_id}; {self.rating}>'
