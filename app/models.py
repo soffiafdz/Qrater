@@ -184,7 +184,6 @@ class Image(SearchableMixin, db.Model):
         return rating_mod.comment
 
 
-
 class Ratings(db.Model):
     """SQLAlchemy Model for QC ratings."""
 

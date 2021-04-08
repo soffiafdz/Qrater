@@ -46,7 +46,14 @@
           <div class="navbar-nav mr-auto">
             {{ render_nav_item("main.upload_dataset", "Upload Data") }}
           </div>
-          <ul class="navbar-nav ml-auto">
+          <div class="navbar-nav ml-n5">
+            {% block breadcrumb %}{% endblock %}
+          </div>
+          <div class="navbar-nav ml-auto">
+            {% block help %}
+            {% endblock %}
+          </div>
+          <ul class="navbar-nav">
             {% if current_user.is_anonymous %}
               {{ render_nav_item("auth.login", "Login", use_li=True) }}
             {% else %}

@@ -24,7 +24,7 @@ def login():
     if form.validate_on_submit():
         rater = Rater.query.filter_by(username=form.username.data).first()
         if rater is None or not rater.check_password(form.password.data):
-            flash('Invalid username or password')
+            flash('Invalid username or password...', 'danger')
             return redirect(url_for('auth.login'))
         login_user(rater, remember=form.remember_me.data)
         next_page = request.args.get('next')
@@ -52,7 +52,7 @@ def register():
         rater.set_password(form.password.data)
         db.session.add(rater)
         db.session.commit()
-        flash('Congratulations, you are now a registered Rater!')
+        flash('Congratulations, you are now a registered Rater!', 'success')
         return redirect(url_for('auth.login'))
     return render_template('auth/register.html', title='Register', form=form)
 
@@ -68,7 +68,8 @@ def reset_password_request():
         rater = Rater.query.filter_by(email=form.email.data).first()
         if rater:
             send_password_reset_email(rater)
-        flash('Check your email for the instructions to reset your password')
+        flash('Check your email for the instructions to reset your password',
+              'info')
         return redirect(url_for('auth.login'))
     return render_template('auth/reset_password_request',
                            title='Reset Password', form=form)
@@ -87,6 +88,6 @@ def reset_password(token):
     if form.validate_on_submit():
         rater.set_password(form.password.data)
         db.session.commit()
-        flash('Your password has been reset.')
+        flash('Your password has been reset.', 'success')
         return redirect(url_for('login'))
     return render_template('reset_password.html', form=form)

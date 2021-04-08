@@ -1,10 +1,70 @@
-<div class="card" style="width: 18rem;">
-  <div class="card-body">
-    <h3 class="card-title">{{ DS.name }}</h3>
-    <p class="card-text">No of images: {{ Image.query.filter_by(dataset=DS).count() }}</p>
-    <p class="card-text">Progress bars will go here</p>
-    <a
-      href="{{ url_for('main.rate', dataset=DS.name) }}"
-      class="btn btn-secondary">Rate</a>
+<div class="col mb-4">
+  <div class="card text-white bg-dark mb-3">
+    <div class="card-header">
+      <div class="progress">
+        <div class="progress-bar bg-success"
+             role="progressbar"
+             style="width: {{ npass100[loop_.index0] }}%"
+             aria-valuemin="0"
+             aria-valuemax="100"></div>
+        <div class="progress-bar bg-warning"
+             role="progressbar"
+             style="width: {{ nwarn100[loop_.index0] }}%"
+             aria-valuemin="0"
+             aria-valuemax="100"></div>
+        <div class="progress-bar bg-danger"
+             role="progressbar"
+             style="width: {{ nfail100[loop_.index0] }}%"
+             aria-valuemin="0"
+             aria-valuemax="100"></div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3 class="card-title mx-auto">{{ DS.name }}</h3>
+      <h4>
+        <span class="badge badge-light">Uploaded: {{ n_tot[loop_.index0] }}</span>
+      </h4>
+      <div class="row p-3 m-4">
+        <div class="col-sm">
+          <a
+            class="btn btn-lg btn-block btn-secondary"
+            href="{{ url_for('main.rate', dataset=DS.name, filter=0) }}"
+            role="button">
+            Pending
+            <span class="badge badge-light">{{ npend[loop_.index0] }}</span>
+          </a>
+        </div>
+        <div class="col-sm">
+          <a
+            class="btn btn-lg btn-block btn-success"
+            href="{{ url_for('main.rate', dataset=DS.name, filter=1) }}"
+            role="button">
+            Pass
+            <span class="badge badge-light">{{ npass[loop_.index0] }}</span>
+          </a>
+        </div>
+        <div class="col-sm">
+          <a
+            class="btn btn-lg btn-block btn-warning"
+            href="{{ url_for('main.rate', dataset=DS.name, filter=2) }}"
+            role="button">
+            Warning
+            <span class="badge badge-light">{{ nwarn[loop_.index0] }}</span>
+          </a>
+        </div>
+        <div class="col-sm">
+          <a
+            class="btn btn-lg btn-block btn-danger"
+            href="{{ url_for('main.rate', dataset=DS.name, filter=3) }}"
+            role="button">
+            Fail
+            <span class="badge badge-light">{{ nfail[loop_.index0] }}</span>
+          </a>
+        </div>
+      </div>
+      <a
+        href="{{ url_for('main.rate', dataset=DS.name) }}"
+        class="btn btn-lg btn-light btn-block">Rate</a>
+    </div>
   </div>
 </div>

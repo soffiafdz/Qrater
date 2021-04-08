@@ -4,6 +4,7 @@
 <div class="row row-cols-1 row-cols-md-3">
   <div class="col mb-4">
     {% for DS in datasets %}
+      {% set loop_ = loop %}
       {% include 'dataset_card.html' %}
     {% endfor %}
   </div>

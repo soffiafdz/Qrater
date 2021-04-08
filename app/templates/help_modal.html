@@ -1,0 +1,54 @@
+<button
+  type="button"
+  style="width: 2.5rem"
+  class="btn btn-dark "
+  style="width:100%"
+  data-toggle="modal"
+  data-target="#helpModal">
+  <i class="bi bi-question-circle-fill"></i>
+</button>
+<div class="modal fade" id="helpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title lead" id="helpModalLabel">Keyboard shortcuts</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <dl class="row">
+          <dt class="col-3"><kbd>?</kbd> or <kbd>h</kbd></dt>
+          <dd class="col-9">Show this help</dd>
+          <dt class="col-3">
+            <kbd><i class="bi bi-arrow-right-short"></i></kbd>
+          </dt>
+          <dd class="col-9">Next image</dd>
+          <dt class="col-3">
+            <kbd><i class="bi bi-arrow-left-short"></i></kbd>
+          </dt>
+          <dd class="col-9">Previous image</dd>
+          <dt class="col-3"><kbd>1</kbd></dt>
+          <dd class="col-9">
+            Mark as <span class="text-muted">Pass</span>
+          </dd>
+          <dt class="col-3"><kbd>2</kbd></dt>
+          <dd class="col-9">
+            Mark as <span class="text-muted">Warning</span>
+          </dd>
+          <dt class="col-3"><kbd>3</kbd></dt>
+          <dd class="col-9">
+            Mark as <span class="text-muted">Fail</span>
+          </dd>
+          <dt class="col-3"><kbd>0</kbd></dt>
+          <dd class="col-9">
+            Mark as <span class="text-muted">Pending</span>
+          </dd>
+          <dt class="col-3"><kbd>c</kbd></dt>
+          <dd class="col-9">Show/hide comment box</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+</div>
+

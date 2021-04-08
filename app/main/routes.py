@@ -14,7 +14,7 @@ from flask_login import current_user, login_required
 from app import db
 from app.upload import allowed_file
 from app.main.forms import SearchForm, UploadDatasetForm, EmptyForm, RatingForm
-from app.models import Rater, Dataset, Image
+from app.models import Dataset, Image, Ratings
 from app.main import bp
 
 
@@ -24,24 +24,6 @@ def before_request():
     if current_user.is_authenticated:
         current_user.last_seen = datetime.utcnow()
         db.session.commit()
-        g.search_form = SearchForm()
-
-
-# @bp.route('/search')
-# @login_required
-# def search():
-    # """Search view function."""
-    # if not g.search_form.validate():
-        # return redirect(url_for('main.explore'))
-    # page = request.args.get('page', 1, type=int)
-    # posts, total = Post.search(g.search_form.q.data, page,
-                               # current_app.config['POSTS_PER_PAGE'])
-    # next_url = url_for('main.search', q=g.search_form.q.data, page=page + 1) \
-        # if total > page * current_app.config['POSTS_PER_PAGE'] else None
-    # prev_url = url_for('main.search', q=g.search_form.q.data, page=page - 1) \
-        # if page > 1 else None
-    # return render_template('search.html', title='Search', posts=posts,
-                           # next_url=next_url, prev_url=prev_url)
 
 
 @bp.route("/", methods=['GET', 'POST'])
@@ -51,30 +33,57 @@ def dashboard():
     if Dataset.query.first() is None:
         return render_template('no_datasets.html', title='Dashboard',
                                rater=current_user)
-
-    # page = request.args.get('page', 1, type=int)
-    # posts = current_user.followed_posts().paginate(
-        # page, current_app.config['POSTS_PER_PAGE'], False)
-    # next_url = url_for('main.index', page=posts.next_num) \
-        # if posts.has_next else None
-    # prev_url = url_for('main.index', page=posts.prev_num) \
-        # if posts.has_prev else None
+    n_tot, npass, npass100, nwarn, nwarn100, nfail, nfail100, npend = \
+        [], [], [], [], [], [], [], []
+    for dataset in Dataset.query.all():
+        imgs = dataset.images
+        ntot = imgs.count()
+        n_0 = imgs.filter_by(ratings=None)\
+            .union(imgs.join(Ratings).filter_by(rating=0)).count()
+        n_1 = imgs.join(Ratings).filter_by(rating=1).count()
+        n_2 = imgs.join(Ratings).filter_by(rating=2).count()
+        n_3 = imgs.join(Ratings).filter_by(rating=3).count()
+        n_tot.append(ntot)
+        npend.append(n_0)
+        npass.append(n_1)
+        nwarn.append(n_2)
+        nfail.append(n_3)
+        npass100.append(round(n_1 / ntot * 100))
+        nwarn100.append(round(n_2 / ntot * 100))
+        nfail100.append(round(n_3 / ntot * 100))
     return render_template('dashboard.html', title='Dashboard',
-                           Image=Image, datasets=Dataset.query.all())
-
-                        # form=form,
-                        # posts=posts.items, next_url=next_url,
-                        # prev_url=prev_url)
+                           Image=Image, Ratings=Ratings,
+                           datasets=Dataset.query.all(),
+                           npend=npend, n_tot=n_tot,
+                           npass=npass, npass100=npass100,
+                           nwarn=nwarn, nwarn100=nwarn100,
+                           nfail=nfail, nfail100=nfail100)
 
 
 @bp.route('/<dataset>', methods=['GET', 'POST'])
+@bp.route('/<dataset>/filter_<int:filter>', methods=['GET', 'POST'])
 @login_required
-def rate(dataset):
+def rate(dataset, filter=None):
     """Page to view images and rate them."""
     DS = Dataset.query.filter_by(name=dataset).first_or_404()
     page = request.args.get('page', 1, type=int)
-    imgs = DS.images.order_by(Image.id.asc()).paginate(
-        page, 1, False)
+    if filter is None:
+        imgs = DS.images.order_by(Image.id.asc()).paginate(page, 1, False)
+    elif filter == 0:
+        unrated = DS.images.filter_by(ratings=None)
+        pending = DS.images.join(Ratings).filter_by(rating=filter)
+        imgs = unrated.union(pending).order_by(Image.id.asc()).paginate(
+            page, 1, False)
+    elif filter < 4:
+        imgs = DS.images.join(Ratings).filter_by(rating=filter).order_by(
+            Image.id.asc()).paginate(page, 1, False)
+    else:
+        flash('Invalid filtering; Showing all images...', 'danger')
+        return redirect(url_for('main.rate', dataset=dataset))
+    if not imgs.items:
+        flash('Filter ran out of images in filter; Showing all images...',
+              'info')
+        return redirect(url_for('main.rate', dataset=dataset))
     path = imgs.items[0].path.replace(current_app.config['UPLOAD_FOLDER'], "")
     form = RatingForm()
     if form.validate_on_submit():
@@ -83,22 +92,10 @@ def rate(dataset):
         img.set_comment(user=current_user, comment=form.comment.data)
         return redirect(request.url)
     return render_template('rate.html', DS=DS, form=form, imgs=imgs,
-                           img_path=('uploads' + path),
+                           filter=filter, img_path=('uploads' + path),
                            img_name=imgs.items[0].name,
                            comment=imgs.items[0].comment_by_user(current_user),
                            rating=imgs.items[0].rating_by_user(current_user))
-
-
-@bp.route('/rate/<img_id>/<int:rating>', methods=['POST'])
-@login_required
-def give_rating(img_id, rating):
-    """Assign a rating to the current image."""
-    form = EmptyForm()
-    if form.validate_on_submit():
-        image = Image.query.get_or_404(img_id)
-        image.set_rating(user=current_user, rating=rating)
-        db.session.commit()
-    return redirect(request.referrer)
 
 
 @bp.route('/upload_dataset', methods=['GET', 'POST'])
@@ -145,7 +142,7 @@ def upload_dataset():
                     os.remove(img.path)
                 db.session.delete(dataset)
                 db.session.commit()
-                flash(f'.{ext} is not a supported filetype', category='error')
+                flash(f'.{ext} is not a supported filetype', 'error')
                 return redirect(request.url)
         for img in imgs:
             db.session.add(img)
