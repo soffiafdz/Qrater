@@ -132,5 +132,4 @@ dmypy.json
 SQL.db
 
 # Data
-app/static
 test_images
