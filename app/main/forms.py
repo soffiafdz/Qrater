@@ -6,9 +6,9 @@ Python module containing the 'forms' classes for the Main Blueprint.
 
 from flask import request
 from flask_wtf import FlaskForm
-from wtforms import (StringField, SubmitField, TextAreaField,
-                     MultipleFileField, RadioField)
-from wtforms.validators import DataRequired, Length
+from wtforms import (StringField, SubmitField, MultipleFileField, RadioField)
+from wtforms.validators import DataRequired, ValidationError
+from app.models import Dataset
 
 
 class UploadDatasetForm(FlaskForm):
@@ -36,22 +36,6 @@ class RatingForm(FlaskForm):
                                            (3, 'Fail')])
     comment = StringField('Comment')
     submit = SubmitField('Comment')
-
-
-# ADAPT LATER || DELETE???
-class SearchForm(FlaskForm):
-    """Search Form for Images in Database."""
-
-    # NOT YET IMPLEMENTED
-    q = StringField('Search', validators=[DataRequired()])
-
-    def __init__(self, *args, **kwargs):
-        """Submit necessary values due to GET protocol."""
-        if 'formdata' not in kwargs:
-            kwargs['formdata'] = request.args
-        if 'csrf_enabled' not in kwargs:
-            kwargs['csrf_enabled'] = False
-        super().__init__(*args, **kwargs)
 
 # TODO: FORM FOR QC
 # TODO: FORM FOR DATABASE ATTRIBUTES

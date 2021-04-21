@@ -4,6 +4,7 @@
   <h1>Upload New Dataset</h1>
   <form
     class="form"
+    id="datasetForm"
     action=""
     method="POST"
     role="form"
@@ -14,12 +15,12 @@
       <label class="control-label" for="dataset_name">
         Dataset name
       </label>
-      <input
-        id="dataset_name"
-        class="form-control"
-        name="dataset_name"
-        required=""
-        type="text"
+    <input
+      id="dataset_name"
+      class="form-control"
+      name="dataset_name"
+      required=""
+      type="text"
       >
     </div>
     <div class="form-row">
@@ -33,34 +34,61 @@
           name="sub_regex"
           type="text"
           placeholder="Regular Expression (Optional)"
-        >
+          >
       </div>
-      <div class="form-group col-md-6">
-        <label class="control-label" for="sess_regex">
-          Sessions' label
-        </label>
-        <input
-          id="sess_regex"
-          class="form-control"
-          name="sess_regex"
-          type="text"
-          placeholder="Regular Expression (Optional)"
-        >
-      </div>
+        <div class="form-group col-md-6">
+          <label class="control-label" for="sess_regex">
+            Sessions' label
+          </label>
+          <input
+            id="sess_regex"
+            class="form-control"
+            name="sess_regex"
+            type="text"
+            placeholder="Regular Expression (Optional)"
+            >
+        </div>
     </div>
     <div class="form-group required">
       <label class="control-label" for="dataset">MRI files</label>
-      <input
-        id="dataset"
-        class="form-control-file"
-        multiple="true"
-        name="dataset"
-        type="file"
-        required=""
-      >
+      <div class="custom-file">
+        <input
+          id="dataset"
+          class="custom-file-input"
+          multiple="true"
+          name="dataset"
+          type="file"
+          required=""
+          >
+          <label class="custom-file-label" for="dataset">
+            <span class="d-inline-block text-truncate w-75">Choose file(s)</span>
+          </label>
+      </div>
     </div>
-    <input id="submit" class="btn btn-primary btn-lg" name="submit"
-      type="submit" value="Upload">
+    <button
+      class="btn btn-primary bn-lg"
+      id="submitBtn"
+      type="submit"
+      form="datasetForm"
+      value="Upload"
+      >Upload button
+    </button>
   </form>
 {% endblock %}
 
+{% block scripts %}
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/bs-custom-file-input/dist/bs-custom-file-input.js"></script>
+<script>
+  $(document).ready(function () {
+    bsCustomFileInput.init();
+    $("#datasetForm").submit(function() {
+      $("#submitBtn").html(
+        `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...`
+      );
+      $("#datasetForm :input").prop("readonly", true);
+      $("#dataset").prop("readonly", true)
+    });
+  });
+</script>
+{% endblock %}

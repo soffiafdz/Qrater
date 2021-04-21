@@ -22,8 +22,6 @@ class Config():
     ELASTICSEARCH_URL = os.environ.get('ELASTICSEARCH_URL')
     ADMINS = ['soffiafdz@gmail.com']
     MAX_CONTENT_LENGTH = os.environ.get('MAX_CONTENT_LENGTH') or \
-        200 * 1024 * 1024  # 200MB
-    UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER') or \
-        os.path.join(basedir, 'static/uploads')
+        1024 * 1024 * 1024  # 1GB
     DSET_ALLOWED_EXTS = os.environ.get("DSET_ALLOWED_EXTS") or \
         set(['png', 'jpg', 'jpeg'])

@@ -6,14 +6,14 @@ Module with different HTML routes for the webapp.
 
 import os
 import re
-from werkzeug.utils import secure_filename
 from datetime import datetime
+from werkzeug.utils import secure_filename
 from flask import (render_template, flash, redirect, url_for, request,
                    current_app, g)
 from flask_login import current_user, login_required
 from app import db
 from app.upload import allowed_file
-from app.main.forms import SearchForm, UploadDatasetForm, EmptyForm, RatingForm
+from app.main.forms import UploadDatasetForm, EmptyForm, RatingForm
 from app.models import Dataset, Image, Ratings
 from app.main import bp
 
@@ -84,7 +84,8 @@ def rate(dataset, filter=None):
         flash('Filter ran out of images in filter; Showing all images...',
               'info')
         return redirect(url_for('main.rate', dataset=dataset))
-    path = imgs.items[0].path.replace(current_app.config['UPLOAD_FOLDER'], "")
+    # TODO: This changes DSET_PATH to static... FIX
+    path = imgs.items[0].path.replace("app/static/", "")
     form = RatingForm()
     if form.validate_on_submit():
         img = imgs.items[0]
@@ -92,7 +93,7 @@ def rate(dataset, filter=None):
         img.set_comment(user=current_user, comment=form.comment.data)
         return redirect(request.url)
     return render_template('rate.html', DS=DS, form=form, imgs=imgs,
-                           filter=filter, img_path=('uploads' + path),
+                           filter=filter, img_path=(path),
                            img_name=imgs.items[0].name,
                            comment=imgs.items[0].comment_by_user(current_user),
                            rating=imgs.items[0].rating_by_user(current_user))
@@ -103,10 +104,15 @@ def rate(dataset, filter=None):
 def upload_dataset():
     """Page to upload new dataset of MRI."""
     form = UploadDatasetForm()
-    if request.method == 'POST':
+    if form.validate_on_submit():
+        ncheck = Dataset.query.filter_by(name=form.dataset_name.data).first()
+        if ncheck is not None:
+            flash(f'There is already a DATASET named "{ncheck.name}".',
+                  "danger")
+            return redirect(request.url)
+
         files = request.files.getlist(form.dataset.name)
-        savedir = os.path.join(current_app.config['UPLOAD_FOLDER'],
-                               'datasets', form.dataset_name.data)
+        savedir = os.path.join('app/static/datasets', form.dataset_name.data)
 
         if not os.path.isdir(savedir):
             os.makedirs(savedir)
@@ -123,6 +129,7 @@ def upload_dataset():
                 bname = filename.rsplit('.', 1)[0]
                 fpath = os.path.join(savedir, filename)
                 file.save(fpath)
+                # Maybe don't save and just use "fpath" to load the image??
                 img = Image(name=bname, path=fpath, extension=ext,
                             dataset=dataset)
                 if form.sub_regex.data:

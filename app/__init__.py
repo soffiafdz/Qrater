@@ -52,10 +52,6 @@ def create_app(config_class=Config):
     from app.main import bp as main_bp
     app.register_blueprint(main_bp)
 
-    if app.config['UPLOAD_FOLDER'] and \
-            not os.path.isdir(app.config['UPLOAD_FOLDER']):
-        os.makedirs(app.config['UPLOAD_FOLDER'])
-
     if not app.debug:
         # if app.config['MAIL_SERVER']:
             # auth = None
