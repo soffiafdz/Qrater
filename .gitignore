@@ -133,3 +133,4 @@ SQL.db
 
 # Data
 test_images
+app/static/datasets
