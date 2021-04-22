@@ -1,7 +1,7 @@
 """
 Qrater Auth.
 
-Module with bluepring specific routes
+Module with blueprint specific routes
 """
 
 from flask import render_template, flash, redirect, url_for, request
