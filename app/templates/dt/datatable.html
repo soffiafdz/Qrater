@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block styles %}
+{{ super()  }}
+<link
+  rel="stylesheet"
+  type="text/css"
+  href="https://cdn.datatables.net/v/bs4/dt-1.10.24/b-1.7.0/b-colvis-1.7.0/r-2.2.7/sc-2.0.3/sb-1.0.1/datatables.min.css"/>
+{% endblock %}
+
+{% block app_content %}
+<div class="row">
+  <div class="col-lg-12 m-4">
+    {# <h2>DataTables 1.10.x example: Users and their address.</h2> #}
+    <table id="dataTable" class="table" cellspacing="0" width="100%">
+      <thead class="thead-dark">
+        <tr>
+          <th>Image</th>
+          <th>Rating</th>
+          <th>Rated on</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script type="text/javascript"
+        src="https://cdn.datatables.net/v/dt/dt-1.10.24/datatables.min.js">
+</script>
+<script
+  type="text/javascript"
+  src="https://cdn.datatables.net/v/bs4/dt-1.10.24/b-1.7.0/b-colvis-1.7.0/r-2.2.7/sc-2.0.3/sb-1.0.1/datatables.min.js">
+</script>
+<script type="text/javascript" charset="utf-8">
+  $(document).ready(function () {
+    var table = $('#dataTable').DataTable({
+      "processing": true,
+      "serverSide": true,
+      "ajax": "{{ url_for('dt.data', dataset=dataset) }}"
+    });
+  });
+</script>
+{% endblock %}
