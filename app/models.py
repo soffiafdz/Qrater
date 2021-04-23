@@ -156,6 +156,7 @@ class Image(SearchableMixin, db.Model):
             db.session.commit()
         else:
             rating_mod.rating = rating
+            rating_mod.timestamp = datetime.utcnow()
             db.session.commit()
 
     def set_comment(self, user, comment):
