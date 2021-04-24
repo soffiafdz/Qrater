@@ -10,17 +10,16 @@ from app.models import db, Dataset, Image, Ratings
 from app.dt import bp
 
 
-@bp.route('/datatable')
-def datatable():
+@bp.route('/datatable/<dataset>')
+def datatable(dataset):
     """List a table with the images and their ratings."""
     # Figure out how to send Dataset
-    # For testing purposes now just use the first one
-    dataset_id = Dataset.query.first().id
-    return render_template("dt/datatable.html", dataset=dataset_id)
+    DS = Dataset.query.filter_by(name=dataset).first_or_404()
+    return render_template("dt/datatable.html", DS=DS)
 
 
-@bp.route('/data/<dataset>')
-def data(dataset):
+@bp.route('/data/<dset_id>')
+def data(dset_id):
     """Return server side data for datatable."""
 
     columns = [
@@ -32,7 +31,7 @@ def data(dataset):
     query = db.session.query().\
         select_from(Image).\
         join(Ratings, isouter=True).\
-        filter(Image.dataset_id == dataset)
+        filter(Image.dataset_id == dset_id)
 
     params = request.args.to_dict()
 
