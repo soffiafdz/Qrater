@@ -40,7 +40,54 @@
     var table = $('#dataTable').DataTable({
       "processing": true,
       "serverSide": true,
-      "ajax": "{{ url_for('dt.data', dataset=dataset) }}"
+      "ajax": "{{ url_for('dt.data', dset_id=DS.id) }}",
+      "columnDefs": [
+        {
+          targets: [0],
+          render: function ( data, type, row ) {
+            if ( type === 'display' ) {
+              {# NEED TO CHANGE IF rate_img URL CHANGES #}
+              return "<a href='/{{ DS.name }}/" + data +
+                "' class='text-dark'>" + data + "</a>"
+            }
+          }
+        },
+        {
+          targets: [-2],
+          render: function ( data, type, row ) {
+            if ( type === 'display' ) {
+              switch(data) {
+                case 1:
+                  return "<a href=" +
+                    "{{ url_for('main.rate', filter=1, dataset=DS.name) }} "+
+                    "class='text-success'>Pass</a>";
+                  break;
+                case 2:
+                  return "<a href=" +
+                    "{{ url_for('main.rate', filter=2, dataset=DS.name) }} "+
+                    "class='text-warning'>Warning</a>";
+                  break;
+                case 3:
+                  return "<a href=" +
+                    "{{ url_for('main.rate', filter=3, dataset=DS.name) }} "+
+                    "class='text-danger'>Fail</a>";
+                  break;
+                default:
+                  return "<a href=" +
+                    "{{ url_for('main.rate', filter=0, dataset=DS.name) }} "+
+                    "class='text-secondary'>Pending</a>";
+              }
+            }
+            return data;
+          }
+        },
+        {
+          targets: [-1],
+          render: function ( data, type, row ) {
+            return data ? moment(data).format("LLL") : "Unrated";
+          }
+        }
+      ]
     });
   });
 </script>
