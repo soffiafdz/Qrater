@@ -92,12 +92,29 @@ def rate(dataset, filter=None):
         img.set_rating(user=current_user, rating=form.rating.data)
         img.set_comment(user=current_user, comment=form.comment.data)
         return redirect(request.url)
-    return render_template('rate.html', DS=DS, form=form, imgs=imgs,
+    return render_template('rate.html', DS=DS, form=form, imgs=imgs, pag=True,
                            filter=filter, img_path=(path),
                            img_name=imgs.items[0].name,
                            comment=imgs.items[0].comment_by_user(current_user),
                            rating=imgs.items[0].rating_by_user(current_user))
 
+
+@bp.route('/<dataset>/<image>', methods=['GET', 'POST'])
+@login_required
+def rate_img(dataset, image):
+    """Page to view a single image and rate it."""
+    DS = Dataset.query.filter_by(name=dataset).first_or_404()
+    img = DS.images.filter_by(name=image).first_or_404()
+    path = img.path.replace("app/static/", "")
+    form = RatingForm()
+    if form.validate_on_submit():
+        img.set_rating(user=current_user, rating=form.rating.data)
+        img.set_comment(user=current_user, comment=form.comment.data)
+        return redirect(request.url)
+    return render_template('rate.html', DS=DS, form=form, pag=False,
+                           img_path=(path), img_name=img.name,
+                           comment=img.comment_by_user(current_user),
+                           rating=img.rating_by_user(current_user))
 
 @bp.route('/upload_dataset', methods=['GET', 'POST'])
 @login_required
