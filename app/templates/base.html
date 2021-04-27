@@ -32,61 +32,73 @@
   <body>
     {% block navbar %}
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-      <a
-        class="navbar-brand"
-        href="{{ url_for('main.dashboard') }}"
-        >Qrater</a>
-      <button
-        class="navbar-toggler"
-        type="button"
-        data-toggle="collapse"
-        data-target="#Navbar"
-        aria-controls="Navbar"
-        aria-expanded="false"
-        aria-label="Toggle navigation"
-        ><span class="navbar-toggler-icon"></span>
-      </button>
+      <div class="container-fluid">
+        <a
+          class="navbar-brand"
+          href="{{ url_for('main.dashboard') }}"
+          >Qrater</a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#Navbar"
+          aria-controls="Navbar"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+          ><span class="navbar-toggler-icon"></span>
+        </button>
 
-      <div class="collapse navbar-collapse" id="Navbar">
-        <div class="navbar-nav mr-auto">
-          <a
-            class="nav-item nav-link"
-            href="{{ url_for('main.upload_dataset') }}"
-            >Upload Data</a>
-        </div>
-        <div class="navbar-nav ml-n5">
-          {%- block breadcrumb %}{% endblock -%}
-        </div>
-        <div class="navbar-nav ml-auto">
-          {%- block help %}{% endblock -%}
-        </div>
-        <ul class="navbar-nav">
-          {% if current_user.is_anonymous %}
+        <div class="collapse navbar-collapse" id="Navbar">
+          <div class="navbar-nav me-auto mb-2 mb-lg-0">
+            <a class="nav-link" href="{{ url_for('main.upload_dataset') }}"
+              >Upload Data</a>
+          </div>
+          <div class="navbar-nav mb-2 mb-lg-0">
+            <nav aria-label="breadcrumb">
+              {%- block breadcrumb %}
+              <ol class="breadcrumb m-0">
+                <li class="breadcrumb-item">
+                  <a class="text-decoration-none text-light" href="#">Home</a></li>
+                <li class="breadcrumb-item active" aria-current="page">
+                  <a class="text-decoration-none text-light" href="#">Page</a>
+                </li>
+              </ol>
+              {% endblock -%}
+            </nav>
+          </div>
+
+          <div class="navbar-nav ms-auto">
+            {%- block help %}{% endblock -%}
+          </div>
+          <ul class="navbar-nav">
+            {% if current_user.is_anonymous %}
             <li class="nav-item">
               <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
             </li>
-          {% else %}
+            {% else %}
             <li class="nav-item dropdown">
               <a
                 class="nav-link dropdown-toggle"
                 href="#"
                 id="navbarDropdownMenuLink"
                 role="button"
-                data-toggle="dropdown"
+                data-bs-toggle="dropdown"
                 aria-haspopup="true"
                 aria-expanded="false"
-              >{{ current_user.username }}</a>
-              <div
-                class="dropdown-menu dropdown-menu-right"
-                aria-labelledby="navbarDropdownMenuLink"
-              >
-                <a
-                  class="dropdown-item"
-                  href="{{ url_for('auth.logout') }}">Logout</a>
-              </div>
+                >{{ current_user.username }}</a>
+              <ul
+                class="dropdown-menu dropdown-menu-dark dropdown-menu-end"
+                aria-labelledby="navbarDropdownMenuLink">
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="{{ url_for('auth.logout') }}">Logout</a>
+                </li>
+              </ul>
             </li>
-          {% endif %}
-        </ul>
+            {% endif %}
+          </ul>
+        </div>
       </div>
     </nav>
     {% endblock %}
