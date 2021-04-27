@@ -13,7 +13,8 @@ from flask import (render_template, flash, redirect, url_for, request,
 from flask_login import current_user, login_required
 from app import db
 from app.upload import allowed_file
-from app.main.forms import UploadDatasetForm, EmptyForm, RatingForm
+from app.main.forms import (UploadDatasetForm, EditDatasetForm, EmptyForm,
+                            RatingForm)
 from app.models import Dataset, Image, Ratings
 from app.main import bp
 
@@ -124,6 +125,7 @@ def upload_dataset():
     if form.validate_on_submit():
         ncheck = Dataset.query.filter_by(name=form.dataset_name.data).first()
         if ncheck is not None:
+            # TODO: Add link to edit_dataset
             flash(f'There is already a DATASET named "{ncheck.name}".',
                   "danger")
             return redirect(request.url)
@@ -149,18 +151,7 @@ def upload_dataset():
                 # Maybe don't save and just use "fpath" to load the image??
                 img = Image(name=bname, path=fpath, extension=ext,
                             dataset=dataset)
-                if form.sub_regex.data:
-                    pattern = form.sub_regex.data
-                    result = re.search(pattern, img.name)
-                    if result:
-                        img.subject = result.group()
-                if form.sess_regex.data:
-                    pattern = form.sess_regex.data
-                    result = re.search(pattern, img.name)
-                    if result:
-                        img.session = result.group()
                 imgs.append(img)
-                # db.session.add(img)
             else:
                 for img in imgs:
                     os.remove(img.path)
@@ -175,3 +166,82 @@ def upload_dataset():
         return redirect(url_for('main.dashboard'))
     return render_template('upload_dataset.html', form=form,
                            title='Upload Dataset')
+
+
+@bp.route('/edit_dataset', methods=['GET', 'POST'])
+@bp.route('/edit_dataset/<dataset>', methods=['GET', 'POST'])
+@login_required
+def edit_dataset(dataset=None):
+    """Page to edit an existing dataset of MRI."""
+    if dataset is not None:
+        pass
+
+    form = EditDatasetForm()
+    form.dataset.choices = [(ds.id, ds.name) for ds in
+                            Dataset.query.order_by('name')]
+    changes = False
+    if form.validate_on_submit():
+        ds_model = Dataset.query.get(form.dataset)
+
+        if ds_model.name != form.new_name.data:
+            if Dataset.query.filter_by(name=form.new_name.data).first() \
+                    is not None:
+                flash((f'A Dataset named "{form.new_name.data}" '
+                      'already exists. Please choose another name'),
+                      'danger')
+                return redirect(request.url)
+            os.rename(os.path.join('app/static/datasets', ds_model.name),
+                      os.path.join('app/static/datasets', form.new_name.data))
+            ds_model.name = form.new_name.data
+            db.session.add(ds_model)
+            db.session.commit()
+            changes = True
+
+        files = request.files.getlist(form.imgs_to_upload.name)
+        if files:
+            savedir = os.path.join('app/static/datasets', form.new_name.data)
+            new_imgs = []
+            for file in files:
+                ext = file.filename.rsplit('.', 1)[1]
+                if file and \
+                        allowed_file(file.filename,
+                                     current_app.config['DSET_ALLOWED_EXTS']):
+                    filename = secure_filename(file.filename)
+                    bname = filename.rsplit('.', 1)[0]
+                    fpath = os.path.join(savedir, filename)
+                    file.save(fpath)
+                    img = Image(name=bname, path=fpath, extension=ext,
+                                dataset=ds_model)
+                    new_imgs.append(img)
+                else:
+                    # First delete all uploaded new images then exit w/error
+                    for img in new_imgs:
+                        os.remove(img.path)
+                    flash(f'.{ext} is not a supported filetype', 'error')
+                    return redirect(request.url)
+            for img in new_imgs:
+                db.session.add(img)
+                db.session.commit()
+            changes = True
+
+        if form.sub_regex.data or form.sess_regex.data:
+            for img in ds_model.images.all():
+                if form.sub_regex.data:
+                    pattern = form.sub_regex.data
+                    result = re.search(pattern, img.name)
+                    if result:
+                        img.subject = result.group()
+                if form.sess_regex.data:
+                    pattern = form.sess_regex.data
+                    result = re.search(pattern, img.name)
+                    if result:
+                        img.session = result.group()
+                db.session.add(img)
+                db.session.commit()
+            changes = True
+
+        if changes:
+            flash(f'{ds_model.name} successfully edited!', category='success')
+        return redirect(url_for('main.dashboard'))
+    return render_template('edit_dataset.html', form=form,
+                           title='Edit Dataset')

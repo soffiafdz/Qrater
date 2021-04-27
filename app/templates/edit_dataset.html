@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+  <h1>Edit Dataset</h1>
+  <form
+    class="form"
+    id="datasetForm"
+    action=""
+    method="POST"
+    role="form"
+    enctype="multipart/form-data"
+  >
+    {{ form.csrf_token() }}
+    <div class="form-group required">
+      <label class="control-label" for="dataset_select">
+        Dataset to edit:
+      </label>
+      <select
+        class="custom-select"
+        id="dataset_select"
+        name="dataset"
+        required
+        >
+        {% for opt in form.dataset.choices %}
+
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group required">
+      <label class="control-label" for="dataset">MRI files</label>
+      <div class="custom-file">
+        <input
+          id="dataset"
+          class="custom-file-input"
+          multiple="true"
+          name="dataset"
+          type="file"
+          required=""
+          >
+          <label class="custom-file-label" for="dataset">
+            <span class="d-inline-block text-truncate w-75">Choose file(s)</span>
+          </label>
+      </div>
+    </div>
+    <button
+      class="btn btn-primary bn-lg"
+      id="submitBtn"
+      type="submit"
+      form="datasetForm"
+      value="Upload"
+      >Upload</button>
+  </form>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/bs-custom-file-input/dist/bs-custom-file-input.js"></script>
+<script>
+  $(document).ready(function () {
+    bsCustomFileInput.init();
+    $("#datasetForm").submit(function() {
+      $("#submitBtn").html(
+        `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...`
+      );
+      $("#datasetForm :input").prop("readonly", true);
+      $("#dataset").prop("readonly", true)
+    });
+  });
+</script>
+{% endblock %}
+
+
+<div class="form-row">
+  <div class="form-group col-md-6">
+    <label class="control-label" for="sub_regex">
+      Subjects' label
+    </label>
+    <input
+      id="sub_regex"
+      class="form-control"
+      name="sub_regex"
+      type="text"
+      placeholder="Regular Expression (Optional)">
+  </div>
+  <div class="form-group col-md-6">
+    <label class="control-label" for="sess_regex">
+      Sessions' label
+    </label>
+    <input
+      id="sess_regex"
+      class="form-control"
+      name="sess_regex"
+      type="text"
+      placeholder="Regular Expression (Optional)">
+  </div>
+</div>
