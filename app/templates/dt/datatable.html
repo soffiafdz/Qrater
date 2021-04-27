@@ -50,8 +50,11 @@
               return "<a href='/{{ DS.name }}/" + data +
                 "' class='text-dark'>" + data + "</a>"
             }
-          }
+            return data;
+          },
+          searchable: true
         },
+        { targets: '_all', searchable: false },
         {
           targets: [-2],
           render: function ( data, type, row ) {
