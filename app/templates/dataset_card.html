@@ -1,5 +1,5 @@
-<div class="col-sm mb-4">
-  <div class="card text-white bg-dark mb-3">
+<div class="col-sm">
+  <div class="card text-white bg-dark">
     <div class="card-header">
       <div class="progress">
         <div class="progress-bar bg-success"
@@ -20,60 +20,67 @@
       </div>
     </div>
     <div class="card-body">
-      <h3 class="card-title mx-auto">
+      <h3 class="card-title text-center">
         <a
           href="{{ url_for('dt.datatable', dataset=DS.name) }}"
-          class="text-light">{{ DS.name }}</a>
+          class="text-light text-decoration-none">{{ DS.name }}</a>
       </h3>
-      <h4>
-        <span class="badge badge-light">Uploaded: {{ n_tot[loop_.index0] }}</span>
+      <h4 class="card-subtitle text-center">
+        <span
+          class="badge rounded-pill badge-light"
+          >Uploaded: {{ n_tot[loop_.index0] }}</span>
       </h4>
-      <div class="row p-3">
+      <div class="d-grid gap-2 my-3">
         {% if npend[loop_.index0] > 0 %}
-        <div class="col p-2">
-          <a
-            class="btn btn-lg btn-block btn-secondary"
-            href="{{ url_for('main.rate', dataset=DS.name, filter=0) }}"
-            role="button">Pending<br>
-            <span class="badge badge-light">{{ npend[loop_.index0] }}</span>
-          </a>
-        </div>
-        <div class="w-100"></div>
+        <a
+          class="btn btn-lg btn-secondary text-start"
+          href="{{ url_for('main.rate', dataset=DS.name, filter=0) }}"
+          role="button"
+          >Pending
+          <span
+            class="badge rounded-pill bg-light text-dark"
+            >{{ npend[loop_.index0] }}</span>
+        </a>
         {% endif %}
         {% if npass[loop_.index0] > 0 %}
-        <div class="col-sm-12 col-lg p-2">
-          <a
-            class="btn btn-lg btn-block btn-success"
-            href="{{ url_for('main.rate', dataset=DS.name, filter=1) }}"
-            role="button">Pass<br>
-            <span class="badge badge-light">{{ npass[loop_.index0] }}</span>
-          </a>
-        </div>
+        <a
+          class="btn btn-lg btn-success text-start"
+          href="{{ url_for('main.rate', dataset=DS.name, filter=1) }}"
+          role="button"
+          >Pass
+          <span
+            class="badge rounded-pill bg-light text-dark"
+            >{{ npass[loop_.index0] }}</span>
+        </a>
         {% endif %}
         {% if nwarn[loop_.index0] > 0 %}
-        <div class="col-sm-12 col-lg p-2">
-          <a
-            class="btn btn-lg btn-block btn-warning"
-            href="{{ url_for('main.rate', dataset=DS.name, filter=2) }}"
-            role="button">Warning<br>
-            <span class="badge badge-light">{{ nwarn[loop_.index0] }}</span>
-          </a>
-        </div>
+        <a
+          class="btn btn-lg btn-warning text-start"
+          href="{{ url_for('main.rate', dataset=DS.name, filter=2) }}"
+          role="button"
+          >Warning
+          <span
+            class="badge rounded-pill bg-light text-dark"
+            >{{ nwarn[loop_.index0] }}</span>
+        </a>
         {% endif %}
         {% if nfail[loop_.index0] > 0 %}
-        <div class="col-sm-12 col-lg p-2">
-          <a
-            class="btn btn-lg btn-block btn-danger"
-            href="{{ url_for('main.rate', dataset=DS.name, filter=3) }}"
-            role="button">Fail<br>
-            <span class="badge badge-light">{{ nfail[loop_.index0] }}</span>
-          </a>
-        </div>
+        <a
+          class="btn btn-lg btn-danger text-start"
+          href="{{ url_for('main.rate', dataset=DS.name, filter=3) }}"
+          role="button"
+          >Fail
+          <span
+            class="badge rounded-pill bg-light text-dark"
+            >{{ nfail[loop_.index0] }}</span>
+        </a>
         {% endif %}
+        <a
+          href="{{ url_for('main.rate', dataset=DS.name) }}"
+          class="btn btn-lg btn-light"
+          >Rate
+        </a>
       </div>
-      <a
-        href="{{ url_for('main.rate', dataset=DS.name) }}"
-        class="btn btn-lg btn-light btn-block">Rate</a>
     </div>
   </div>
 </div>

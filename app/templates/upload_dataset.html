@@ -11,33 +11,29 @@
     enctype="multipart/form-data"
   >
     {{ form.csrf_token() }}
-    <div class="form-group required">
-      <label class="control-label" for="dataset_name">
+    <div class="form-floating col-md-6 mb-3">
+      <input
+        type="text"
+        class="form-control"
+        id="dataset_name"
+        name="dataset_name"
+        required
+        placeholder="Dataset Name"
+        >
+      <label for="dataset_name">
         Dataset name
       </label>
-    <input
-      id="dataset_name"
-      class="form-control"
-      name="dataset_name"
-      required=""
-      type="text"
-      >
     </div>
-    <div class="form-group required">
-      <label class="control-label" for="dataset">MRI files</label>
-      <div class="custom-file">
-        <input
-          id="dataset"
-          class="custom-file-input"
-          multiple="true"
-          name="dataset"
-          type="file"
-          required=""
-          >
-          <label class="custom-file-label" for="dataset">
-            <span class="d-inline-block text-truncate w-75">Choose file(s)</span>
-          </label>
-      </div>
+    <div class="col-md-6 mb-3">
+      <label class="form-label" for="dataset">MRI files</label>
+      <input
+        type="file"
+        class="form-control"
+        id="dataset"
+        name="dataset"
+        required
+        multiple
+        >
     </div>
     <button
       class="btn btn-primary bn-lg"
@@ -51,10 +47,8 @@
 
 {% block scripts %}
 {{ super() }}
-<script src="https://cdn.jsdelivr.net/npm/bs-custom-file-input/dist/bs-custom-file-input.js"></script>
 <script>
   $(document).ready(function () {
-    bsCustomFileInput.init();
     $("#datasetForm").submit(function() {
       $("#submitBtn").html(
         `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...`

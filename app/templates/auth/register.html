@@ -1,11 +1,54 @@
-{% extends 'base.html' %}
-{% from 'bootstrap/form.html' import render_form %}
+{% extends "base.html" %}
 
 {% block app_content %}
-  <h1>Register</h1>
-  <div class="row">
-    <div class="col-md-4">
-      {{ render_form(form) }}
+  <h1>New Rater</h1>
+  <form action="" class="form" method="POST" role="form">
+    {{ form.csrf_token() }}
+    <div class="form-floating col-md-6 mb-3">
+      <input
+        type="text"
+        class="form-control"
+        id="username"
+        name="username"
+        required
+        placeholder="User">
+      <label for="username">Username</label>
     </div>
-  </div>
+    <div class="form-floating col-md-6 mb-4">
+      <input
+        type="email"
+        class="form-control"
+        id="email"
+        name="email"
+        required
+        placeholder="user@email.com">
+      <label for="email">Email address</label>
+    </div>
+    <div class="form-floating col-md-6 mb-3">
+      <input
+        type="password"
+        class="form-control"
+        id="password"
+        name="password"
+        required
+        placeholder="Password">
+      <label for="password">Password</label>
+    </div>
+    <div class="form-floating col-md-6 mb-4">
+      <input
+        type="password"
+        class="form-control"
+        id="password2"
+        name="password2"
+        required
+        placeholder="Password">
+      <label for="password2">Repeat your password</label>
+    </div>
+    <input
+      type="submit"
+      name="submit"
+      id="submit"
+      value="Register"
+      class="btn btn-primary btn-lg">
+  </form>
 {% endblock %}
