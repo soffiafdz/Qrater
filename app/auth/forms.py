@@ -34,13 +34,15 @@ class RegistrationForm(FlaskForm):
         """Check that the username doesn't already exists."""
         user = Rater.query.filter_by(username=username.data).first()
         if user is not None:
-            raise ValidationError('Please use a different username.')
+            raise ValidationError(
+                'There is already a Rater with that username.')
 
     def validate_email(self, email):
         """Check that the email doesn't already exists."""
         user = Rater.query.filter_by(email=email.data).first()
         if user is not None:
-            raise ValidationError('Please use a different email address.')
+            raise ValidationError(
+                'There is already a Rater registered with that email.')
 
 
 # TODO: IMPLEMENT THESE??

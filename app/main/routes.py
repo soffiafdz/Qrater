@@ -123,13 +123,6 @@ def upload_dataset():
     """Page to upload new dataset of MRI."""
     form = UploadDatasetForm()
     if form.validate_on_submit():
-        ncheck = Dataset.query.filter_by(name=form.dataset_name.data).first()
-        if ncheck is not None:
-            # TODO: Add link to edit_dataset
-            flash(f'There is already a DATASET named "{ncheck.name}".',
-                  "danger")
-            return redirect(request.url)
-
         files = request.files.getlist(form.dataset.name)
         savedir = os.path.join('app/static/datasets', form.dataset_name.data)
 
@@ -164,6 +157,8 @@ def upload_dataset():
             db.session.commit()
         flash('File(s) successfully uploaded!', category='success')
         return redirect(url_for('main.dashboard'))
+    for _, error in form.errors.items():
+        flash(error[0], 'danger')
     return render_template('upload_dataset.html', form=form,
                            title='Upload Dataset')
 

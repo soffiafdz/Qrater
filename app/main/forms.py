@@ -19,6 +19,12 @@ class UploadDatasetForm(FlaskForm):
     dataset = MultipleFileField('MRI files', validators=[DataRequired()])
     submit = SubmitField('Upload')
 
+    def validate_dataset_name(self, dataset_name):
+        """Check that the dataset's name does not already exist."""
+        ncheck = Dataset.query.filter_by(name=dataset_name.data).first()
+        if ncheck is not None:
+            raise ValidationError(
+                f'A Dataset named "{ncheck.name}" already exists.')
 
 class EditDatasetForm(FlaskForm):
     """Form for editing an existing dataset."""
