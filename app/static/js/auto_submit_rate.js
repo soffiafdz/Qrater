@@ -1,10 +1,5 @@
-// Submit Form
-function submitRating() {
-  document.getElementById("ratingForm").submit();
-}
-
 // Submit on change of Rating/Comment
-$(".rating-radio").change(function(){
+$(".form-check").change(function(){
   $("form").submit();
 })
 

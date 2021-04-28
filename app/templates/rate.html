@@ -20,10 +20,14 @@
 <div class="row">
   <h1 class="display-4 text-center">
     {{ img_name }}
-    {% if rating == 0 %}<span class="badge rounded-pill bg-secondary">Pending</span>
-    {% elif rating == 1 %}<span class="badge rounded-pill bg-success">Pass</span>
-    {% elif rating == 2 %}<span class="badge rounded-pill bg-warning">Warning</span>
-    {% elif rating == 3 %}<span class="badge rounded-pill bg-danger">Fail</span>
+    {% if rating == 0 %}
+    <span class="badge rounded-pill bg-secondary">Pending</span>
+    {% elif rating == 1 %}
+    <span class="badge rounded-pill bg-success">Pass</span>
+    {% elif rating == 2 %}
+    <span class="badge rounded-pill bg-warning">Warning</span>
+    {% elif rating == 3 %}
+    <span class="badge rounded-pill bg-danger">Fail</span>
     {% endif %}
   </h1>
   <img
@@ -41,8 +45,9 @@
           <a
             class="page-link"
             id="prevPage"
-                         href="{{ url_for('main.rate', filter=filter, dataset=DS.name,
-                         page=imgs.prev_num) if imgs.has_prev else '#' }}">
+            href="{{ url_for('main.rate', filter=filter, dataset=DS.name,
+              page=imgs.prev_num) if imgs.has_prev else '#' }}"
+              >
             <i class="bi-arrow-left"></i>
           </a>
         </li>
@@ -52,9 +57,9 @@
         <li class="page-item">
           <a
             class="page-link"
-                             href="{{ url_for('main.rate', filter=filter, dataset=DS.name,
-                             page=page) }}"
-                             >{{ page }}</a>
+            href="{{ url_for('main.rate', filter=filter, dataset=DS.name,
+              page=page) }}"
+            >{{ page }}</a>
         </li>
         {% else %}
         <li class="page-item active">
@@ -78,8 +83,8 @@
             <a
               class="page-link"
               id="nextPage"
-                           href="{{ url_for('main.rate', filter=filter, dataset=DS.name,
-                           page=imgs.next_num) if imgs.has_next else '#' }}">
+              href="{{ url_for('main.rate', filter=filter, dataset=DS.name,
+                page=imgs.next_num) if imgs.has_next else '#' }}">
               <i class="bi-arrow-right"></i>
             </a>
           </li>
@@ -95,82 +100,92 @@
         role="toolbar"
         aria-label="Toolbar with button groups"
         >
-        <div class="btn-group me-2" role="group" aria-label="First group">
-          <input
-            type="radio"
-            name="rating"
-            id="rating-0"
-            class="btn-check"
-            value="0"
-            {% if rating == 0 %}checked{% endif %}
-            >
-            <label
-              class="btn btn-outline-secondary{% if rating == 0 %} active{% endif %}"
-              for="rating-0"
-              >Pending
-            </label>
-        </div>
-        <div class="btn-group me-2" role="group" aria-label="Second group">
-          <input
-            type="radio"
-            name="rating"
-            id="rating-1"
-            class="btn-check"
-            value="1"
-            {% if rating == 1 %}checked{% endif %}
-            >
-          <label
-            class="btn btn-outline-success{% if rating == 1 %} active{% endif %}"
-            for="rating-1"
-            >Pass
-          </label>
-          <input
-            type="radio"
-            name="rating"
-            id="rating-2"
-            class="btn-check"
-            value="2"
-            {% if rating == 2 %}checked{% endif %}
-            >
-          <label
-            class="btn btn-outline-warning{% if rating == 2 %} active{% endif %}"
-            for="rating-2"
-            >Warning
-          </label>
-          <input
-            type="radio"
-            name="rating"
-            id="rating-3"
-            class="btn-check"
-            value="3"
-            {% if rating == 3 %}checked{% endif %}
-            >
-          <label
-            class="btn btn-outline-danger{% if rating == 3 %} active{% endif %}"
-            for="rating-3"
-            >Fail
-          </label>
+        <div class="form-check p-0">
+          <div class="btn-group me-2" role="group" aria-label="First group">
+            <input
+              type="radio"
+              name="rating"
+              id="rating-0"
+              class="btn-check"
+              value="0"
+              {% if rating == 0 %}checked{% endif %}
+              >
+              <label
+                class="btn btn-outline-secondary{% if rating == 0 %} active{% endif %}"
+                for="rating-0"
+                >Pending
+              </label>
+          </div>
+            <div class="btn-group me-2" role="group" aria-label="Second group">
+              <input
+                type="radio"
+                name="rating"
+                id="rating-1"
+                class="btn-check"
+                value="1"
+                {% if rating == 1 %}checked{% endif %}
+                >
+                <label
+                  class="btn btn-outline-success{% if rating == 1 %} active{% endif %}"
+                  for="rating-1"
+                  >Pass
+                </label>
+                  <input
+                    type="radio"
+                    name="rating"
+                    id="rating-2"
+                    class="btn-check"
+                    value="2"
+                    {% if rating == 2 %}checked{% endif %}
+                    >
+                    <label
+                      class="btn btn-outline-warning{% if rating == 2 %} active{% endif %}"
+                      for="rating-2"
+                      >Warning
+                    </label>
+                      <input
+                        type="radio"
+                        name="rating"
+                        id="rating-3"
+                        class="btn-check"
+                        value="3"
+                        {% if rating == 3 %}checked{% endif %}
+                        >
+                        <label
+                          class="btn btn-outline-danger{% if rating == 3 %} active{% endif %}"
+                          for="rating-3"
+                          >Fail
+                        </label>
+            </div>
         </div>
         <div class="btn-group me-2" role="group" aria-label="Third group">
-          <button class="col-2 btn btn-outline-info"
-                  type="button"
-                  id="collapseButton"
-                  data-toggle="collapse"
-                  data-target="#collapseComment"
-                  aria-expanded="false"
-                  aria-controls="collapseComment"
-                  >Comment
+          <button
+            class="col-2 btn btn-outline-info"
+            type="button"
+            id="collapseButton"
+            data-bs-toggle="collapse"
+            data-bs-target="#collapseComment"
+            aria-expanded="false"
+            aria-controls="collapseComment"
+            >Comment
           </button>
         </div>
       </div>
-      <div class="collapse p-1" id="collapseComment">
+      <div class="collapse mt-2" id="collapseComment">
         <div class="card bg-light">
           <div class="card-body">
-            <input id="comment"
-                   class="form-control"
-                   placeholder="Add additional information to your rating"
-                   name="comment"
-                   value="{% if comment %}{{ comment }}{% endif %}">
+            <div class="form-floating">
+              <textarea
+                id="comment"
+                name="comment"
+                class="form-control"
+                placeholder="Adding additional information"
+                style="height: 100px"
+                >
+                {%- if comment %}{{ comment }}{% endif -%}
+              </textarea>
+              <label for="comment">Add additional information</label>
+            </div>
           </div>
         </div>
       </div>
