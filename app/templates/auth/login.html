@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block app_content %}
-  <h1>Sign In</h1>
+  <h1>Log In</h1>
   <form action="" class="form" method="POST" role="form">
     {{ form.csrf_token() }}
     <div class="form-floating col-md-6 mb-3">
@@ -37,12 +37,12 @@
     <input
       type="submit"
       id="submit"
-      value="Sign In"
+      value="Log In"
       class="btn btn-primary btn-lg">
   </form>
   <br>
   <p>New User? <a href="{{ url_for('auth.register') }}">Register</a></p>
   <p>Forgot Your Password?
-    <a href="#">Reset it</a>
+    <a href="#" class="text-muted">Reset it</a>
   </p>
 {% endblock %}
