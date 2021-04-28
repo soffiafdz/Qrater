@@ -7,7 +7,7 @@ Python module containing the 'forms' classes for the Main Blueprint.
 from flask import request
 from flask_wtf import FlaskForm
 from wtforms import (StringField, SubmitField, MultipleFileField, RadioField,
-                     SelectField)
+                     SelectField, TextAreaField)
 from wtforms.validators import DataRequired, ValidationError
 from app.models import Dataset
 
@@ -51,7 +51,7 @@ class RatingForm(FlaskForm):
                                            (1, 'Pass'),
                                            (2, 'Warning'),
                                            (3, 'Fail')])
-    comment = StringField('Comment')
+    comment = TextAreaField('Comment')
     submit = SubmitField('Comment')
 
 # TODO: FORM FOR QC
