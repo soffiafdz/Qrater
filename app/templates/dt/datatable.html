@@ -33,6 +33,8 @@
       <thead class="table-dark">
         <tr>
           <th>Image</th>
+          {%- if sub_labs %}<th>Subject</th>{% endif -%}
+          {%- if sess_labs %}<th>Session</th>{% endif -%}
           <th>Rating</th>
           <th>Rated on</th>
         </tr>
@@ -58,13 +60,12 @@
     var table = $('#dataTable').DataTable({
       "processing": true,
       "serverSide": true,
-      "ajax": "{{ url_for('dt.data', dset_id=DS.id) }}",
+      "ajax": "{{ url_for('dt.data', dset_id=DS.id, subs=sub_labs, sess=sess_labs) }}",
       "columnDefs": [
         {
           targets: [0],
           render: function ( data, type, row ) {
-            if ( type === 'display' ) {
-              {# NEED TO CHANGE IF rate_img URL CHANGES #}
+            if ( type === 'display' ) { {# NEED TO CHANGE IF rate_img URL CHANGES #}
               return "<a href='/{{ DS.name }}/" + data +
                 "' class='text-dark text-decoration-none'>" + data + "</a>"
             }

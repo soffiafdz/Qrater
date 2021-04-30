@@ -14,12 +14,20 @@ from app.dt import bp
 def datatable(dataset):
     """List a table with the images and their ratings."""
     # Figure out how to send Dataset
-    DS = Dataset.query.filter_by(name=dataset).first_or_404()
-    return render_template("dt/datatable.html", DS=DS)
+    ds_mod = Dataset.query.filter_by(name=dataset).first_or_404()
+
+    subs = [i.subject for i in ds_mod.images.all()]
+    sub_labs = (subs.count(None) != len(subs))
+
+    sess = [i.session for i in ds_mod.images.all()]
+    sess_labs = (sess.count(None) != len(sess))
+
+    return render_template("dt/datatable.html",
+                           DS=ds_mod, sub_labs=sub_labs, sess_labs=sess_labs)
 
 
-@bp.route('/data/<dset_id>')
-def data(dset_id):
+@bp.route('/data/<dset_id>/<subs>/<sess>')
+def data(dset_id, subs, sess):
     """Return server side data for datatable."""
 
     columns = [
@@ -27,6 +35,14 @@ def data(dset_id):
         ColumnDT(Ratings.rating),
         ColumnDT(Ratings.timestamp),
     ]
+
+    # Check if there are sess labels
+    if sess == "True":
+        columns.insert(1, ColumnDT(Image.session))
+
+    # Check if there are sub labels
+    if subs == "True":
+        columns.insert(1, ColumnDT(Image.subject))
 
     query = db.session.query().\
         select_from(Image).\
