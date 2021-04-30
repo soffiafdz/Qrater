@@ -29,8 +29,7 @@ class UploadDatasetForm(FlaskForm):
 class EditDatasetForm(FlaskForm):
     """Form for editing an existing dataset."""
 
-    dataset = SelectField("Dataset", coerce=int,
-                          validators=[DataRequired()])
+    dataset = SelectField("Dataset", validators=[DataRequired()])
     new_name = StringField("Dataset's name")
     sub_regex = StringField("Subjects' label (regex)")
     sess_regex = StringField("Sessions' label (regex)")
