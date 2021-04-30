@@ -23,6 +23,7 @@ migrate = Migrate()
 login = LoginManager()
 login.login_view = 'auth.login'
 login.login_messages = 'Please log in to access this page.'
+login.login_message_category = 'info'
 mail = Mail()
 moment = Moment()
 
