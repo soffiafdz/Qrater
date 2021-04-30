@@ -1,5 +1,11 @@
 {% extends "base.html" %}
 
+{% block modal %}
+{% if dataset is not none %}
+{% include "confirm_delete_modal.html" %}
+{% endif %}
+{% endblock %}
+
 {% block breadcrumb %}
 <ol class="breadcrumb m-0">
   <li class="breadcrumb-item">
@@ -140,6 +146,14 @@
       value="Upload"
       {% if dataset is none %}disabled{% endif %}
       >Update</button>
+    <button
+      class="btn btn-danger bn-lg"
+      id="deleteBtn"
+      type="button"
+      data-bs-toggle="modal"
+      data-bs-target="#deleteConfirmModal"
+      {% if dataset is none %}disabled{% endif %}
+      >Delete</button>
   </form>
 {% endblock %}
 

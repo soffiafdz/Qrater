@@ -6,10 +6,11 @@ Module with different HTML routes for the webapp.
 
 import os
 import re
+from shutil import rmtree
 from datetime import datetime
 from werkzeug.utils import secure_filename
 from flask import (render_template, flash, redirect, url_for, request,
-                   current_app, g)
+                   current_app)
 from flask_login import current_user, login_required
 from app import db
 from app.upload import allowed_file
@@ -175,8 +176,8 @@ def edit_dataset(dataset=None):
     form.dataset.choices = [ds.name for ds in Dataset.query.order_by('name')]
 
     test_names = {}
-    for Set in Dataset.query.all():
-        test_names[Set.name] = [img.name for img in Set.images.limit(5).all()]
+    for ds in Dataset.query.all():
+        test_names[ds.name] = [img.name for img in ds.images.limit(5).all()]
 
     changes = False
     if form.validate_on_submit():
@@ -246,3 +247,26 @@ def edit_dataset(dataset=None):
             return redirect(url_for('main.dashboard'))
     return render_template('edit_dataset.html', form=form, dataset=dataset,
                            names=test_names, title='Edit Dataset')
+
+
+@bp.route('/delete_dataset/<dataset>')
+@login_required
+def delete_dataset(dataset):
+    """Page to delete a dataset of MRI, including images and ratings."""
+
+    ds_model = Dataset.query.filter_by(name=dataset).first_or_404()
+    ds_name = ds_model.name
+    ds_dir = os.path.join('app/static/datasets', ds_name)
+
+    for image in ds_model.images.all():
+        for rating in image.ratings.all():
+            db.session.delete(rating)
+        db.session.delete(image)
+    db.session.delete(ds_model)
+
+    rmtree(ds_dir)
+    db.session.commit()
+
+    flash(f'Dataset: {ds_name} was successfully deleted!',
+          'success')
+    return redirect(url_for('main.dashboard'))

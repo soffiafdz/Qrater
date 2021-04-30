@@ -1,0 +1,43 @@
+<div
+  class="modal fade"
+  id="deleteConfirmModal"
+  tabindex="-1"
+  aria-labelledby="deleteConfirmModalLabel"
+  aria-hidden="true"
+  >
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-danger">
+        <h3 class="modal-title text-white" id="deleteConfirmModalLabel">
+          Delete Confirmation
+        </h3>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+          ></button>
+      </div>
+      <div class="modal-body">
+        <p>You are about to delete <span class="fw-bolder">{{ dataset }}</span>,
+          including all of its MRI files and their ratings,
+          from all of the Raters.</p>
+        <p>The ratings won't be able to be recovered, so only do this if you
+          are <span class="lead text-uppercase">absolutely sure</span>.</p>
+        <p>A lot of people could get mad with you...</p>
+      </div>
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          data-bs-dismiss="modal"
+          >Cancel</button>
+        <a
+          class="btn btn-danger"
+          role="button"
+          href="{{ url_for('main.delete_dataset', dataset=dataset) }}"
+          >Yes, delete them all</a>
+      </div>
+    </div>
+  </div>
+</div>
