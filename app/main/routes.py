@@ -13,8 +13,7 @@ from flask import (render_template, flash, redirect, url_for, request,
 from flask_login import current_user, login_required
 from app import db
 from app.upload import allowed_file
-from app.main.forms import (UploadDatasetForm, EditDatasetForm, EmptyForm,
-                            RatingForm)
+from app.main.forms import UploadDatasetForm, EditDatasetForm, RatingForm
 from app.models import Dataset, Image, Ratings
 from app.main import bp
 
@@ -150,7 +149,7 @@ def upload_dataset():
                     os.remove(img.path)
                 db.session.delete(dataset)
                 db.session.commit()
-                flash(f'.{ext} is not a supported filetype', 'error')
+                flash(f'.{ext} is not a supported filetype', 'danger')
                 return redirect(request.url)
         for img in imgs:
             db.session.add(img)
@@ -168,17 +167,22 @@ def upload_dataset():
 @login_required
 def edit_dataset(dataset=None):
     """Page to edit an existing dataset of MRI."""
+
     if dataset is not None:
-        pass
+        ds_model = Dataset.query.filter_by(name=dataset).first_or_404()
 
     form = EditDatasetForm()
-    form.dataset.choices = [(ds.id, ds.name) for ds in
-                            Dataset.query.order_by('name')]
-    changes = False
-    if form.validate_on_submit():
-        ds_model = Dataset.query.get(form.dataset)
+    form.dataset.choices = [ds.name for ds in Dataset.query.order_by('name')]
 
-        if ds_model.name != form.new_name.data:
+    test_names = {}
+    for Set in Dataset.query.all():
+        test_names[Set.name] = [img.name for img in Set.images.limit(5).all()]
+
+    changes = False
+    print("Pre Pass")
+    if form.validate_on_submit():
+        print('First Pass')
+        if form.new_name.data and form.new_name.data != ds_model.name:
             if Dataset.query.filter_by(name=form.new_name.data).first() \
                     is not None:
                 flash((f'A Dataset named "{form.new_name.data}" '
@@ -192,9 +196,10 @@ def edit_dataset(dataset=None):
             db.session.commit()
             changes = True
 
+        print('Second Pass')
         files = request.files.getlist(form.imgs_to_upload.name)
-        if files:
-            savedir = os.path.join('app/static/datasets', form.new_name.data)
+        if files[0].filename != "":
+            savedir = os.path.join('app/static/datasets', ds_model.name)
             new_imgs = []
             for file in files:
                 ext = file.filename.rsplit('.', 1)[1]
@@ -212,13 +217,14 @@ def edit_dataset(dataset=None):
                     # First delete all uploaded new images then exit w/error
                     for img in new_imgs:
                         os.remove(img.path)
-                    flash(f'.{ext} is not a supported filetype', 'error')
+                    flash(f'.{ext} is not a supported filetype', 'danger')
                     return redirect(request.url)
             for img in new_imgs:
                 db.session.add(img)
                 db.session.commit()
             changes = True
 
+        print('Third Pass')
         if form.sub_regex.data or form.sess_regex.data:
             for img in ds_model.images.all():
                 if form.sub_regex.data:
@@ -235,8 +241,9 @@ def edit_dataset(dataset=None):
                 db.session.commit()
             changes = True
 
+        print('Fourth pass')
         if changes:
-            flash(f'{ds_model.name} successfully edited!', category='success')
-        return redirect(url_for('main.dashboard'))
-    return render_template('edit_dataset.html', form=form,
-                           title='Edit Dataset')
+            flash(f'{ds_model.name} successfully edited!', 'success')
+            return redirect(url_for('main.dashboard'))
+    return render_template('edit_dataset.html', form=form, dataset=dataset,
+                           names=test_names, title='Edit Dataset')

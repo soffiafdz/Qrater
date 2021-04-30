@@ -1,9 +1,26 @@
 {% extends "base.html" %}
 
+{% block breadcrumb %}
+<ol class="breadcrumb m-0">
+  <li class="breadcrumb-item">
+    <a
+      class="text-decoration-none text-light"
+      href="{{ url_for('main.dashboard') }}"
+      >Dashboard</a>
+  </li>
+  <li class="breadcrumb-item">
+    <a
+      class="text-decoration-none text-light"
+      href="#"
+      >Edit Dataset</a>
+  </li>
+</ol>
+{% endblock %}
+
 {% block app_content %}
   <h1>Edit Dataset</h1>
   <form
-    class="form"
+    class="form disabled"
     id="datasetForm"
     action=""
     method="POST"
@@ -11,35 +28,108 @@
     enctype="multipart/form-data"
   >
     {{ form.csrf_token() }}
-    <div class="form-group required">
-      <label class="control-label" for="dataset_select">
-        Dataset to edit:
-      </label>
+    <div class="col-lg-9 mb-3">
       <select
-        class="custom-select"
-        id="dataset_select"
+        class="form-select form-select-lg"
+        id="datasetSelect"
         name="dataset"
-        required
+        aria-label="Select a dataset"
         >
-        {% for opt in form.dataset.choices %}
-
-        {% endfor %}
+          <option value="">Select a Dataset</option>
+          {%- for name in form.dataset.choices -%}
+          <option
+            {% if name == dataset %}selected{% endif %}
+            >{{ name }}</option>
+          {%- endfor -%}
       </select>
     </div>
-    <div class="form-group required">
-      <label class="control-label" for="dataset">MRI files</label>
-      <div class="custom-file">
-        <input
-          id="dataset"
-          class="custom-file-input"
-          multiple="true"
-          name="dataset"
-          type="file"
-          required=""
-          >
-          <label class="custom-file-label" for="dataset">
-            <span class="d-inline-block text-truncate w-75">Choose file(s)</span>
-          </label>
+    <div class="col-lg-9 mb-3">
+      <div class="row">
+        <label class="col-sm-12 col-md-3 col-form-label" for="newName">
+          New name
+        </label>
+        <div class="col-sm-12 col-md-9">
+          <div class="input-group">
+            <span class="input-group-text">
+              <i class="bi bi-bookmark-star-fill"></i>
+            </span>
+            <input
+              type="text"
+              class="form-control"
+              id="newName"
+              name="new_name"
+              placeholder="Change the Name (Optional)">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-9 mb-3">
+      <div class="row">
+        <label
+          class="col-sm-12 col-md-3 col-form-label"
+          for="reSub">Subject label</label>
+        <div class="col-sm-12 col-md-9">
+          <div class="input-group">
+            <span class="input-group-text">
+              <i class="bi bi-person-bounding-box"></i>
+            </span>
+            <input
+              type="text"
+              class="form-control"
+              id="reSub"
+              name="sub_regex"
+              placeholder="Regular Expression (Optional)">
+            <button
+              class="btn btn-outline-secondary"
+              type="button"
+              id="regexBtn1"
+              {% if dataset is none %}disabled{% endif %}
+              ><i class="bi bi-search"></i></button>
+          </div>
+          <div id="reSubResults" class="form-text d-none"></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-9 mb-3">
+      <div class="row">
+        <label
+          class="col-sm-12 col-md-3 col-form-label"
+          for="reSess">Session label</label>
+        <div class="col-sm-12 col-md-9">
+          <div class="input-group">
+            <span class="input-group-text">
+              <i class="bi bi-calendar-week"></i>
+            </span>
+            <input
+              type="text"
+              class="form-control"
+              id="reSess"
+              name="sess_regex"
+              placeholder="Regular Expression (Optional)">
+            <button
+              class="btn btn-outline-secondary"
+              type="button"
+              id="regexBtn2"
+              {% if dataset is none %}disabled{% endif %}
+              ><i class="bi bi-search"></i></button>
+          </div>
+          <div id="reSessResults" class="form-text d-none"></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-9 mb-3">
+      <div class="row">
+        <label class="col-sm-12 col-md-3 col-form-label" for="uploadImgs">
+          Add MRI
+        </label>
+        <div class="col-sm-12 col-md-9">
+          <input
+            type="file"
+            class="form-control"
+            id="uploadImgs"
+            name="imgs_to_upload"
+            multiple>
+        </div>
       </div>
     </div>
     <button
@@ -48,49 +138,73 @@
       type="submit"
       form="datasetForm"
       value="Upload"
-      >Upload</button>
+      {% if dataset is none %}disabled{% endif %}
+      >Update</button>
   </form>
 {% endblock %}
 
 {% block scripts %}
 {{ super() }}
-<script src="https://cdn.jsdelivr.net/npm/bs-custom-file-input/dist/bs-custom-file-input.js"></script>
 <script>
   $(document).ready(function () {
-    bsCustomFileInput.init();
+    var imgsArray = {{ names|tojson|safe }};
+    $("#datasetSelect").change(function() {
+      if($(this).val() == "") {
+        $("#datasetForm :input").attr("disabled", true);
+        $(this).attr("disabled", false);
+      } else {
+        window.location.href = "{{ url_for('main.edit_dataset') }}/" +
+          $(this).val();
+      }
+    });
+    $("#regexBtn1").click(function() {
+      if ($("#reSub").val() == "") {
+        $("#reSubResults").addClass("d-none");
+      } else {
+        var results = [];
+        var dataset = $("#datasetSelect").val()
+        var imgs = imgsArray[dataset];
+        var regex = new RegExp($("#reSub").val());
+        $("#reSubResults").removeClass("d-none");
+        imgs.forEach(function(img) {
+          var res = img.match(regex);
+          if (res) results.push(res[0]);
+        });
+        if (!results.length) {
+          $("#reSubResults").addClass("text-danger");
+          $("#reSubResults").html("No results with this REGEX");
+        } else {
+          $("#reSubResults").html(results.join(', '));
+        }
+      }
+    });
+    $("#regexBtn2").click(function() {
+      if ($("#reSess").val() == "") {
+        $("#reSessResults").addClass("d-none");
+      } else {
+        var results = [];
+        var dataset = $("#datasetSelect").val()
+        var imgs = imgsArray[dataset];
+        var regex = new RegExp($("#reSess").val());
+        $("#reSessResults").removeClass("d-none");
+        imgs.forEach(function(img) {
+          var res = img.match(regex);
+          if (res) results.push(res[0]);
+        });
+        if (!results.length) {
+          $("#reSessResults").addClass("text-danger");
+          $("#reSessResults").html("No results with this REGEX");
+        } else {
+          $("#reSessResults").html(results.join(', '));
+        }
+      }
+    });
     $("#datasetForm").submit(function() {
       $("#submitBtn").html(
         `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...`
       );
       $("#datasetForm :input").prop("readonly", true);
-      $("#dataset").prop("readonly", true)
     });
   });
 </script>
 {% endblock %}
-
-
-<div class="form-row">
-  <div class="form-group col-md-6">
-    <label class="control-label" for="sub_regex">
-      Subjects' label
-    </label>
-    <input
-      id="sub_regex"
-      class="form-control"
-      name="sub_regex"
-      type="text"
-      placeholder="Regular Expression (Optional)">
-  </div>
-  <div class="form-group col-md-6">
-    <label class="control-label" for="sess_regex">
-      Sessions' label
-    </label>
-    <input
-      id="sess_regex"
-      class="form-control"
-      name="sess_regex"
-      type="text"
-      placeholder="Regular Expression (Optional)">
-  </div>
-</div>
