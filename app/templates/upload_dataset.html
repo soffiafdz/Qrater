@@ -1,5 +1,22 @@
 {% extends "base.html" %}
 
+{% block breadcrumb %}
+<ol class="breadcrumb m-0">
+  <li class="breadcrumb-item">
+    <a
+      class="text-decoration-none text-light"
+      href="{{ url_for('main.dashboard') }}"
+      >Dashboard</a>
+  </li>
+  <li class="breadcrumb-item">
+    <a
+      class="text-decoration-none text-light"
+      href="#"
+      >Upload Dataset</a>
+  </li>
+</ol>
+{% endblock %}
+
 {% block app_content %}
   <h1>Upload New Dataset</h1>
   <form
@@ -11,7 +28,7 @@
     enctype="multipart/form-data"
   >
     {{ form.csrf_token() }}
-    <div class="form-floating col-md-6 mb-3">
+    <div class="form-floating col-md-8 mb-3">
       <input
         type="text"
         class="form-control"
@@ -24,16 +41,21 @@
         Dataset name
       </label>
     </div>
-    <div class="col-md-6 mb-3">
-      <label class="form-label" for="dataset">MRI files</label>
-      <input
-        type="file"
-        class="form-control"
-        id="dataset"
-        name="dataset"
-        required
-        multiple
-        >
+    <div class="col-md-8 mb-3">
+      <div class="row">
+        <label class="col-sm-2 col-form-label" for="uploadImgs">
+          MRI files
+        </label>
+        <div class="col-sm-10">
+          <input
+            type="file"
+            class="form-control"
+            id="dataset"
+            name="dataset"
+            required
+            multiple>
+        </div>
+      </div>
     </div>
     <button
       class="btn btn-primary bn-lg"
@@ -54,7 +76,6 @@
         `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...`
       );
       $("#datasetForm :input").prop("readonly", true);
-      $("#dataset").prop("readonly", true)
     });
   });
 </script>

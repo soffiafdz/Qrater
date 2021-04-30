@@ -16,6 +16,50 @@
 </button>
 {% endblock %}
 
+{% block breadcrumb %}
+<ol class="breadcrumb m-0">
+  <li class="breadcrumb-item">
+    <a
+      class="text-decoration-none text-light"
+      href="{{ url_for('main.dashboard') }}"
+      >Dashboard</a>
+  </li>
+  <li class="breadcrumb-item">
+    <a
+      class="text-decoration-none text-light"
+      href="{{ url_for('dt.datatable', dataset=DS.name) }}"
+      >{{ DS.name }}</a>
+  </li>
+  <li class="breadcrumb-item">
+    <a
+      class="text-decoration-none text-light"
+      href="{{ url_for('main.rate',
+        dataset=DS.name) if filter is not none else '#' }}"
+      >Rating</a>
+  </li>
+  {% if filter is not none %}
+  <li class="breadcrumb-item">
+    <a
+      href="#"
+      {%- if filter == 0 -%}
+      class="text-decoration-none text-secondary"
+      >Pending
+      {%- elif filter == 1 -%}
+      class="text-decoration-none text-success"
+      >Pass
+      {%- elif filter == 2 -%}
+      class="text-decoration-none text-warning"
+      >Warning
+      {%- elif filter == 3 -%}
+      class="text-decoration-none text-danger"
+      >Fail
+      {%- endif -%}
+    </a>
+  </li>
+  {% endif %}
+</ol>
+{% endblock %}
+
 {% block app_content %}
 <div class="row">
   <h1 class="display-4 text-center">

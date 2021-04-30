@@ -1,5 +1,13 @@
 {% extends "base.html" %}
 
+{% block breadcrumb %}
+<ol class="breadcrumb m-0">
+  <li class="breadcrumb-item">
+    <a class="text-decoration-none text-light" href="#">Dashboard</a>
+  </li>
+</ol>
+{% endblock %}
+
 {% block app_content %}
 <div class="row row-cols-1 row-cols-lg-2 row-cols-xl-3 g-2 g-lg-3 g-xl-4">
   {% for DS in datasets %}

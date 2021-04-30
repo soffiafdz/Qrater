@@ -5,7 +5,24 @@
 <link
   rel="stylesheet"
   type="text/css"
-  href="https://cdn.datatables.net/v/bs4/dt-1.10.24/b-1.7.0/b-colvis-1.7.0/r-2.2.7/sc-2.0.3/sb-1.0.1/datatables.min.css"/>
+  href="https://cdn.datatables.net/1.10.24/css/dataTables.bootstrap5.min.css">
+{% endblock %}
+
+{% block breadcrumb %}
+<ol class="breadcrumb m-0">
+  <li class="breadcrumb-item">
+    <a
+      class="text-decoration-none text-light"
+      href="{{ url_for('main.dashboard') }}"
+      >Dashboard</a>
+  </li>
+  <li class="breadcrumb-item">
+    <a
+      class="text-decoration-none text-light"
+      href="#"
+      >{{ DS.name }}</a>
+  </li>
+</ol>
 {% endblock %}
 
 {% block app_content %}
@@ -13,7 +30,7 @@
   <div class="col-lg-12 m-4">
     {# <h2>DataTables 1.10.x example: Users and their address.</h2> #}
     <table id="dataTable" class="table" cellspacing="0" width="100%">
-      <thead class="thead-dark">
+      <thead class="table-dark">
         <tr>
           <th>Image</th>
           <th>Rating</th>
@@ -28,12 +45,13 @@
 
 {% block scripts %}
 {{ super() }}
-<script type="text/javascript"
-        src="https://cdn.datatables.net/v/dt/dt-1.10.24/datatables.min.js">
+<script
+  type="text/javascript"
+  src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js">
 </script>
 <script
   type="text/javascript"
-  src="https://cdn.datatables.net/v/bs4/dt-1.10.24/b-1.7.0/b-colvis-1.7.0/r-2.2.7/sc-2.0.3/sb-1.0.1/datatables.min.js">
+  src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap5.min.js">
 </script>
 <script type="text/javascript" charset="utf-8">
   $(document).ready(function () {
@@ -48,7 +66,7 @@
             if ( type === 'display' ) {
               {# NEED TO CHANGE IF rate_img URL CHANGES #}
               return "<a href='/{{ DS.name }}/" + data +
-                "' class='text-dark'>" + data + "</a>"
+                "' class='text-dark text-decoration-none'>" + data + "</a>"
             }
             return data;
           },
@@ -63,22 +81,22 @@
                 case 1:
                   return "<a href=" +
                     "{{ url_for('main.rate', filter=1, dataset=DS.name) }} "+
-                    "class='text-success'>Pass</a>";
+                    "class='text-success text-decoration-none'>Pass</a>";
                   break;
                 case 2:
                   return "<a href=" +
                     "{{ url_for('main.rate', filter=2, dataset=DS.name) }} "+
-                    "class='text-warning'>Warning</a>";
+                    "class='text-warning text-decoration-none'>Warning</a>";
                   break;
                 case 3:
                   return "<a href=" +
                     "{{ url_for('main.rate', filter=3, dataset=DS.name) }} "+
-                    "class='text-danger'>Fail</a>";
+                    "class='text-danger text-decoration-none'>Fail</a>";
                   break;
                 default:
                   return "<a href=" +
                     "{{ url_for('main.rate', filter=0, dataset=DS.name) }} "+
-                    "class='text-secondary'>Pending</a>";
+                    "class='text-secondary text-decoration-none'>Pending</a>";
               }
             }
             return data;
