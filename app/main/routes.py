@@ -112,7 +112,7 @@ def rate_img(dataset, image):
         img.set_comment(user=current_user, comment=form.comment.data)
         return redirect(request.url)
     return render_template('rate.html', DS=DS, form=form, pag=False,
-                           img_path=(path), img_name=img.name,
+                           img_path=(path), img_name=img.name, filter=image,
                            comment=img.comment_by_user(current_user),
                            rating=img.rating_by_user(current_user))
 
@@ -179,7 +179,6 @@ def edit_dataset(dataset=None):
         test_names[Set.name] = [img.name for img in Set.images.limit(5).all()]
 
     changes = False
-    print("Pre Pass")
     if form.validate_on_submit():
         print('First Pass')
         if form.new_name.data and form.new_name.data != ds_model.name:
@@ -191,12 +190,14 @@ def edit_dataset(dataset=None):
                 return redirect(request.url)
             os.rename(os.path.join('app/static/datasets', ds_model.name),
                       os.path.join('app/static/datasets', form.new_name.data))
+            for img in ds_model.images.all():
+                img.path = img.path.replace(ds_model.name, form.new_name.data)
+                db.session.add(img)
             ds_model.name = form.new_name.data
             db.session.add(ds_model)
             db.session.commit()
             changes = True
 
-        print('Second Pass')
         files = request.files.getlist(form.imgs_to_upload.name)
         if files[0].filename != "":
             savedir = os.path.join('app/static/datasets', ds_model.name)
@@ -224,7 +225,6 @@ def edit_dataset(dataset=None):
                 db.session.commit()
             changes = True
 
-        print('Third Pass')
         if form.sub_regex.data or form.sess_regex.data:
             for img in ds_model.images.all():
                 if form.sub_regex.data:
@@ -241,7 +241,6 @@ def edit_dataset(dataset=None):
                 db.session.commit()
             changes = True
 
-        print('Fourth pass')
         if changes:
             flash(f'{ds_model.name} successfully edited!', 'success')
             return redirect(url_for('main.dashboard'))
