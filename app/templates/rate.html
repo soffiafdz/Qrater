@@ -80,8 +80,8 @@
     alt="{{ img_name }}"
     >
 </div>
-<div class="row my-3 justify-content-evenly">
-  <div class="col-7">
+<div class="row my-3 justify-content-center">
+  <div class="col-sm-12 col-xl-7">
     {% if pag %}
     <nav aria-label="Page navigation">
       <ul class="pagination justify-content-center">
@@ -136,15 +136,15 @@
     </nav>
     {% endif %}
   </div>
-  <div class="col-5">
+  <div class="col-sm-12 col-xl-5">
     <form method="post" id="ratingForm">
       {{ form.csrf_token() }}
       <div
-        class="btn-toolbar"
+        class="btn-toolbar justify-content-center"
         role="toolbar"
         aria-label="Toolbar with button groups"
         >
-        <div class="form-check p-0">
+        <div class="form-check p-0 m-0 mb-2">
           <div class="btn-group me-2" role="group" aria-label="First group">
             <input
               type="radio"
@@ -202,9 +202,9 @@
                         </label>
             </div>
         </div>
-        <div class="btn-group me-2" role="group" aria-label="Third group">
+        <div class="btn-group" role="group" aria-label="Third group">
           <button
-            class="col-2 btn btn-outline-info"
+            class="col-xl-12 btn btn-outline-info mb-2"
             type="button"
             id="collapseButton"
             data-bs-toggle="collapse"
@@ -215,7 +215,7 @@
           </button>
         </div>
       </div>
-      <div class="collapse mt-2" id="collapseComment">
+      <div class="collapse" id="collapseComment">
         <div class="card bg-light">
           <div class="card-body">
             <div class="form-floating">
