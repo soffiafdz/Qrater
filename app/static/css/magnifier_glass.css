@@ -1,0 +1,12 @@
+.img-magnifier-container {
+  position: relative;
+}
+
+.img-magnifier-glass {
+  position: absolute;
+  border: 3px solid #212121;
+  border-radius: 50%;
+  cursor: none;
+  width: 200px;
+  height: 200px
+}

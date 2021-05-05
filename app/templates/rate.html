@@ -4,6 +4,14 @@
 {% include "help_modal.html" %}
 {% endblock %}
 
+{% block styles %}
+{{ super() }}
+<link
+  rel="stylesheet"
+  type="text/css"
+  href="{{ url_for('static', filename=('css/magnifier_glass.css')) }}">
+{% endblock %}
+
 {% block help_btn %}
 <button
   type="button"
@@ -77,11 +85,14 @@
     <span class="badge rounded-pill bg-danger">Fail</span>
     {% endif %}
   </h1>
-  <img
-    src="{{ url_for('static', filename=(img_path)) }}"
-    class="img-fluid"
-    alt="{{ img_name }}"
-    >
+  <div class="img-magnifier-container">
+    <img
+      id="img"
+      src="{{ url_for('static', filename=(img_path)) }}"
+      class="img-fluid"
+      alt="{{ img_name }}"
+      >
+  </div>
 </div>
 <div class="row my-3 justify-content-center">
   <div class="col-sm-12 col-xl-7">
@@ -245,4 +256,5 @@
 {{ super() }}
 <script src="{{ url_for('static', filename=('js/auto_submit_rate.js')) }}"></script>
 <script src="{{ url_for('static', filename=('js/rate_keybindings.js')) }}"></script>
+<script src="{{ url_for('static', filename=('js/magnify.js')) }}"></script>
 {% endblock %}

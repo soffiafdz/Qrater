@@ -54,3 +54,32 @@ Mousetrap.bind("right", function() {
     window.location.assign(nlink)
   }
 })
+
+// Zoom
+var zoom;
+Mousetrap.bind("z", function() {
+  if ($(".img-magnifier-glass").length){
+    $(".img-magnifier-glass").remove();
+  } else {
+    zoom = 2;
+    magnify("img", zoom);
+  }
+})
+
+Mousetrap.bind("shift+down", function() {
+  if (zoom == 1.5) {
+    $(".img-magnifier-glass").remove();
+  } else {
+    zoom -= .5;
+    $(".img-magnifier-glass").remove();
+    magnify("img", zoom);
+  }
+})
+
+Mousetrap.bind("shift+up", function() {
+  if ($(".img-magnifier-glass").is(':visible')) {
+    zoom += .5;
+    $(".img-magnifier-glass").remove();
+    magnify("img", zoom);
+  }
+})
