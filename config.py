@@ -19,7 +19,6 @@ class Config():
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
         'sqlite:///' + os.path.join(basedir, "SQL.db")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    ELASTICSEARCH_URL = os.environ.get('ELASTICSEARCH_URL')
     ADMINS = ['soffiafdz@gmail.com']
     MAX_CONTENT_LENGTH = os.environ.get('MAX_CONTENT_LENGTH') or \
         1024 * 1024 * 1024  # 1GB

@@ -13,56 +13,6 @@ from flask import current_app
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import db, login
-from app.search import add_to_index, remove_from_index, query_index
-
-
-class SearchableMixin():
-    """Make a model searchable."""
-
-    @classmethod
-    def search(cls, expression, page, per_page):
-        """Search method."""
-        ids, total = query_index(cls.__tablename__, expression, page, per_page)
-        if total == 0:
-            return cls.query.filter_by(id=0), 0
-        when = []
-        for n, i in enumerate(ids):
-            when.append((i, n))
-        return cls.query.filter(cls.id.in_(ids)).order_by(
-            db.case(when, value=cls.id)), total
-
-    @classmethod
-    def before_commit(cls, session):
-        """Save objects before database commit."""
-        session._changes = {
-            'add': list(session.new),
-            'update': list(session.dirty),
-            'delete': list(session.deleted)
-        }
-
-    @classmethod
-    def after_commit(cls, session):
-        """Make changes after database commit."""
-        for obj in session._changes['add']:
-            if isinstance(obj, SearchableMixin):
-                add_to_index(obj.__tablename__, obj)
-        for obj in session._changes['update']:
-            if isinstance(obj, SearchableMixin):
-                add_to_index(obj.__tablename__, obj)
-        for obj in session._changes['delete']:
-            if isinstance(obj, SearchableMixin):
-                remove_from_index(obj.__tablename__, obj)
-        session._changes = None
-
-    @classmethod
-    def reindex(cls):
-        """Refresh index of class."""
-        for obj in cls.query:
-            add_to_index(cls.__tablename__, obj)
-
-
-db.event.listen(db.session, "before_commit", SearchableMixin.before_commit)
-db.event.listen(db.session, "after_commit", SearchableMixin.after_commit)
 
 
 class Rater(UserMixin, db.Model):
@@ -130,7 +80,7 @@ class Dataset(db.Model):
         return f'<Dataset {self.name}>'
 
 
-class Image(SearchableMixin, db.Model):
+class Image(db.Model):
     """SQLAlchemy Model for MRI."""
 
     __searchable__ = ['body']
