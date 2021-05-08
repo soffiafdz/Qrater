@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+
+{% block breadcrumb %}
+<ol class="breadcrumb m-0">
+  <li class="breadcrumb-item">
+    <a
+      class="text-decoration-none text-light"
+      href="{{ url_for('main.dashboard') }}"
+      >Dashboard</a>
+  </li>
+  <li class="breadcrumb-item">
+    <a
+      class="text-decoration-none text-light"
+      href="#"
+      >Export Ratings</a>
+  </li>
+</ol>
+{% endblock %}
+
+{% block app_content %}
+  <h1>Download Ratings</h1>
+  <form
+    class="form disabled"
+    id="exportForm"
+    action=""
+    method="POST"
+    role="form"
+  >
+    {{ form.csrf_token() }}
+    <div class="col-lg-9">
+      <div class="row mb-3 mx-0">
+        <div class="col">
+          <select
+            class="form-select form-select-lg"
+            id="datasetSelect"
+            name="dataset"
+            aria-label="Select a dataset"
+            >
+              <option value="">Select a Dataset</option>
+              {%- for name in form.dataset.choices -%}
+              <option
+                {% if name == dataset %}selected{% endif %}
+                >{{ name }}</option>
+              {%- endfor -%}
+          </select>
+        </div>
+      </div>
+      <div class="row mb-3 mx-0">
+        <label class="col-sm-12 col-md-3 p-md-2 col-form-label" for="fileType">
+          Filetype
+        </label>
+        <div class="col-sm-12 col-md-9 p-md-2 ps-md-5" id="fileType">
+          <div class="form-check form-check-inline">
+            <input
+              type="radio"
+              class="form-check-input"
+              id="fileTypeCSV"
+              name="file_type"
+              value="CSV"
+              checked
+              >
+            <label
+              class="form-check-label"
+              for="fileTypeCSV"
+              >CSV</label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input
+              type="radio"
+              class="form-check-input"
+              id="fileTypeJSON"
+              name="file_type"
+              value="JSON"
+              >
+            <label
+              class="form-check-label"
+              for="fileTypeJSON"
+              >JSON</label>
+          </div>
+        </div>
+      </div>
+      <div class="row mb-3 mx-0">
+        <label class="col-sm-12 col-md-3 p-md-2 col-form-label" for="raterFilter">
+          Rater(s)
+        </label>
+        <div class="col-sm-12 col-md-9 p-md-2 ps-md-5" id="raterFilter">
+          <div class="form-check form-check-inline">
+            <input
+              type="radio"
+              class="form-check-input"
+              id="raterFilter1"
+              name="rater_filter"
+              value="1"
+              checked
+              >
+            <label
+              class="form-check-label"
+              for="raterFilter1"
+              >{{ current_user.username }}</label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input
+              type="radio"
+              class="form-check-input"
+              id="raterFilter0"
+              name="rater_filter"
+              value="0"
+              >
+            <label
+              class="form-check-label"
+              for="raterFilter0"
+              >All Raters</label>
+          </div>
+        </div>
+      </div>
+      <div class="row mb-3 mx-0">
+        <label class="col-sm-12 col-md-3 p-md-2 col-form-label" for="ratingsColumns">
+          Fields to include
+        </label>
+        <div class="col-sm-12 col-md-9 p-md-2 ps-md-5" id="ratingsColumns">
+          <div class="form-check form-switch">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              id="nameSwitch"
+              checked
+              {% if nsub or nsess %}
+              disabled
+              {% endif %}
+              >
+            <label class="form-check-label" for="nameSwitch">Image name</label>
+          </div>
+          <div class="form-check form-switch">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              id="subSwitch"
+              name="col_sub"
+              {% if nsub %}
+              disabled
+              {% endif %}
+              >
+            <label class="form-check-label" for="sessSwitch">Subject</label>
+          </div>
+          <div class="form-check form-switch">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              id="sessSwitch"
+              name="col_sess"
+              {% if nsess %}
+              disabled
+              {% endif %}
+              >
+            <label class="form-check-label" for="sessSwitch">Session</label>
+          </div>
+          <div class="form-check form-switch">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              id="raterSwitch"
+              name="col_rater"
+              >
+            <label class="form-check-label" for="raterSwitch">Rater</label>
+          </div>
+          <div class="form-check form-switch">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              id="ratingSwitch"
+              checked
+              disabled>
+            <label class="form-check-label" for="ratingSwitch">Rating</label>
+          </div>
+          <div class="form-check form-switch">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              id="commentSwitch"
+              name="col_comment"
+              {% if ncomms %}
+              disabled
+              {% endif %}
+              >
+            <label class="form-check-label" for="commentSwitch">Comment</label>
+          </div>
+          <div class="form-check form-switch">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              id="timestampSwitch"
+              name="col_timestamp"
+              >
+            <label class="form-check-label" for="timestampSwitch">Timestamp</label>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button
+      class="btn btn-primary bn-lg"
+      id="submitBtn"
+      type="submit"
+      form="exportForm"
+      value="Download"
+      {% if dataset is none %}disabled{% endif %}
+      >Downlad</button>
+  </form>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+  $(document).ready(function () {
+    $("#datasetSelect").change(function() {
+      if($(this).val() == "") {
+        $("#exportForm :input").attr("disabled", true);
+        $(this).attr("disabled", false);
+      } else {
+        window.location.href = "{{ url_for('main.export_ratings') }}/" +
+          $(this).val();
+      }
+    });
+    $("input[type=radio][name=rater_filter]").change(function(){
+      if ($("#raterFilter1").prop("checked")) {
+        $("#raterSwitch").prop("checked", false);
+      } else {
+        $("#raterSwitch").prop("checked", true);
+      }
+    });
+  });
+</script>
+{% endblock %}
+

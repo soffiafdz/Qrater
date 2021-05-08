@@ -6,16 +6,19 @@ Module with different HTML routes for the webapp.
 
 import os
 import re
+import csv
+import json
 from shutil import rmtree
 from datetime import datetime
 from werkzeug.utils import secure_filename
 from flask import (render_template, flash, redirect, url_for, request,
-                   current_app)
+                   current_app, send_file)
 from flask_login import current_user, login_required
 from app import db
 from app.upload import allowed_file
-from app.main.forms import UploadDatasetForm, EditDatasetForm, RatingForm
-from app.models import Dataset, Image, Ratings
+from app.main.forms import (UploadDatasetForm, EditDatasetForm, RatingForm,
+                            ExportRatingsForm)
+from app.models import Dataset, Image, Ratings, Rater
 from app.main import bp
 
 
@@ -62,7 +65,7 @@ def dashboard():
 
 
 @bp.route('/<dataset>', methods=['GET', 'POST'])
-@bp.route('/<dataset>/filter_<int:filter>', methods=['GET', 'POST'])
+@bp.route('/<dataset>/filter-<int:filter>', methods=['GET', 'POST'])
 @login_required
 def rate(dataset, filter=None):
     """Page to view images and rate them."""
@@ -117,7 +120,8 @@ def rate_img(dataset, image):
                            comment=img.comment_by_user(current_user),
                            rating=img.rating_by_user(current_user))
 
-@bp.route('/upload_dataset', methods=['GET', 'POST'])
+
+@bp.route('/upload-dataset', methods=['GET', 'POST'])
 @login_required
 def upload_dataset():
     """Page to upload new dataset of MRI."""
@@ -163,12 +167,11 @@ def upload_dataset():
                            title='Upload Dataset')
 
 
-@bp.route('/edit_dataset', methods=['GET', 'POST'])
-@bp.route('/edit_dataset/<dataset>', methods=['GET', 'POST'])
+@bp.route('/edit-dataset', methods=['GET', 'POST'])
+@bp.route('/edit-dataset/<dataset>', methods=['GET', 'POST'])
 @login_required
 def edit_dataset(dataset=None):
     """Page to edit an existing dataset of MRI."""
-
     if dataset is not None:
         ds_model = Dataset.query.filter_by(name=dataset).first_or_404()
 
@@ -249,11 +252,10 @@ def edit_dataset(dataset=None):
                            names=test_names, title='Edit Dataset')
 
 
-@bp.route('/delete_dataset/<dataset>')
+@bp.route('/delete-dataset/<dataset>')
 @login_required
 def delete_dataset(dataset):
     """Page to delete a dataset of MRI, including images and ratings."""
-
     ds_model = Dataset.query.filter_by(name=dataset).first_or_404()
     ds_name = ds_model.name
     ds_dir = os.path.join('app/static/datasets', ds_name)
@@ -270,3 +272,95 @@ def delete_dataset(dataset):
     flash(f'Dataset: {ds_name} was successfully deleted!',
           'success')
     return redirect(url_for('main.dashboard'))
+
+
+@bp.route('/export-ratings', methods=['GET', 'POST'])
+@bp.route('/export-ratings/<dataset>', methods=['GET', 'POST'])
+@login_required
+def export_ratings(dataset=None):
+    """Page to configure and download a report of ratings."""
+    form = ExportRatingsForm()
+    form.dataset.choices = [ds.name for ds in Dataset.query.order_by('name')]
+
+    not_subs, not_sess, not_comms = False, False, False
+    if dataset is not None:
+        ds_model = Dataset.query.filter_by(name=dataset).first_or_404()
+        file_name = f'{ds_model.name}'
+
+        subs = [i.subject for i in ds_model.images.all()]
+        not_subs = (subs.count(None) == len(subs))
+        sess = [i.session for i in ds_model.images.all()]
+        not_sess = (sess.count(None) == len(sess))
+        comments = [i.comment for i in
+                    ds_model.
+                    images.
+                    join(Ratings).
+                    add_columns(Ratings.comment).
+                    all()]
+        not_comms = (comments.count("") == len(comments))
+
+    if form.validate_on_submit():
+        query = Ratings.query.\
+            join(Image).\
+            filter(Image.dataset_id == ds_model.id).\
+            order_by(Image.id.asc()).\
+            add_columns(Image.name, Ratings.rating)
+        keys = ['Image']
+        if form.col_sub.data:
+            query = query.add_columns(Image.subject)
+            keys.append('Subject')
+        if form.col_sess.data:
+            query = query.add_columns(Image.session)
+            keys.append('Session')
+        if form.col_rater.data:
+            query = query.join(Rater).add_columns(Rater.username)
+            keys.append('Rater')
+        keys.append('Rating')
+        if form.col_comment.data:
+            query = query.add_columns(Ratings.comment)
+            keys.append('Comment')
+        if form.col_timestamp.data:
+            query = query.add_columns(Ratings.timestamp)
+            keys.append('Date')
+        if int(form.rater_filter.data):
+            query = query.filter(Ratings.rater_id == current_user.id)
+            file_name = f'{file_name}_{current_user.username}'
+
+        ratings = []
+        rating_codes = {0: 'Pending', 1: 'Pass', 2: 'Warning', 3: 'Fail'}
+        for rating in query.all():
+            rating_dict = {**dict.fromkeys(keys, None)}
+            rating_dict['Image'] = rating.name
+            rating_dict['Rating'] = rating_codes[rating.rating]
+            if 'Subject' in rating_dict:
+                rating_dict['Subject'] = rating.subject
+            if 'Session' in rating_dict:
+                rating_dict['Session'] = rating.session
+            if 'Rater' in rating_dict:
+                rating_dict['Rater'] = rating.username
+            if 'Comment' in rating_dict:
+                rating_dict['Comment'] = rating.comment
+            if 'Date' in rating_dict:
+                rating_dict['Date'] = rating.timestamp.isoformat() + 'Z'
+            ratings.append(rating_dict)
+
+        path = 'app/static/reports'
+        if not os.path.isdir(path):
+            os.makedirs(path)
+
+        if form.file_type.data == "CSV":
+            file = ('static/reports/'
+                    f'{file_name}_{datetime.now().date().isoformat()}.csv')
+            with open(f'app/{file}', 'w', newline='') as csv_file:
+                writer = csv.DictWriter(csv_file, fieldnames=keys)
+                writer.writeheader
+                writer.writerows(ratings)
+        else:
+            file = ('static/reports/'
+                    f'{file_name}_{datetime.now().date().isoformat()}.json')
+            with open(f'app/{file}', 'w', newline='') as json_file:
+                json.dump(ratings, json_file, indent=4)
+        return send_file(file, as_attachment=True)
+    return render_template('export_ratings.html', form=form, dataset=dataset,
+                           nsub=not_subs, nsess=not_sess, ncomms=not_comms,
+                           title='Downlad Ratings')

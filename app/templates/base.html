@@ -50,12 +50,12 @@
         </button>
 
         <div class="collapse navbar-collapse" id="Navbar">
-          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <ul class="navbar-nav mb-2 mb-lg-0">
             <li class="nav-item dropdown">
               <a
                 class="nav-link dropdown-toggle"
                 href="#"
-                id="navbarDropdownDatasetLink"
+                id="navbarDropdownDatasetsLink"
                 role="button"
                 data-bs-toggle="dropdown"
                 aria-haspopup="true"
@@ -63,7 +63,7 @@
                 >Datasets</a>
               <ul
                 class="dropdown-menu dropdown-menu-dark dropdown-menu-start"
-                aria-labelledby="navbarDropdownDatasetLink">
+                aria-labelledby="navbarDropdownDatasetsLink">
                 <li>
                   <a
                     class="dropdown-item"
@@ -79,7 +79,36 @@
               </ul>
             </li>
           </ul>
-          <div class="navbar-nav mb-2 mb-lg-0">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item dropdown">
+              <a
+                class="nav-link dropdown-toggle"
+                href="#"
+                id="navbarDropdownRatingsLink"
+                role="button"
+                data-bs-toggle="dropdown"
+                aria-haspopup="true"
+                aria-expanded="false"
+                >Ratings</a>
+              <ul
+                class="dropdown-menu dropdown-menu-dark dropdown-menu-start"
+                aria-labelledby="navbarDropdownRatingsLink">
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="{{ url_for('main.export_ratings') }}"
+                    >Export</a>
+                </li>
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="#"
+                    >Import</a>
+                </li>
+              </ul>
+            </li>
+          </ul>
+          <div class="navbar-nav mb-2 mb-lg-0 py-2">
             <nav aria-label="breadcrumb">
               {%- block breadcrumb %}{% endblock -%}
             </nav>
