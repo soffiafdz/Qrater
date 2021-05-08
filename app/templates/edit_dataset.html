@@ -34,23 +34,25 @@
     enctype="multipart/form-data"
   >
     {{ form.csrf_token() }}
-    <div class="col-lg-9 mb-3">
-      <select
-        class="form-select form-select-lg"
-        id="datasetSelect"
-        name="dataset"
-        aria-label="Select a dataset"
-        >
-          <option value="">Select a Dataset</option>
-          {%- for name in form.dataset.choices -%}
-          <option
-            {% if name == dataset %}selected{% endif %}
-            >{{ name }}</option>
-          {%- endfor -%}
-      </select>
-    </div>
-    <div class="col-lg-9 mb-3">
-      <div class="row">
+    <div class="col-lg-9">
+      <div class="row mb-3 mx-0">
+        <div class="col">
+          <select
+            class="form-select form-select-lg"
+            id="datasetSelect"
+            name="dataset"
+            aria-label="Select a dataset"
+            >
+            <option value="">Select a Dataset</option>
+            {%- for name in form.dataset.choices -%}
+            <option
+              {% if name == dataset %}selected{% endif %}
+              >{{ name }}</option>
+            {%- endfor -%}
+          </select>
+        </div>
+      </div>
+      <div class="row mb-3 mx-0">
         <label class="col-sm-12 col-md-3 col-form-label" for="newName">
           New name
         </label>
@@ -68,9 +70,7 @@
           </div>
         </div>
       </div>
-    </div>
-    <div class="col-lg-9 mb-3">
-      <div class="row">
+      <div class="row mb-3 mx-0">
         <label
           class="col-sm-12 col-md-3 col-form-label"
           for="reSub">Subject label</label>
@@ -95,9 +95,7 @@
           <div id="reSubResults" class="form-text d-none"></div>
         </div>
       </div>
-    </div>
-    <div class="col-lg-9 mb-3">
-      <div class="row">
+      <div class="row mb-3 mx-0">
         <label
           class="col-sm-12 col-md-3 col-form-label"
           for="reSess">Session label</label>
@@ -122,9 +120,7 @@
           <div id="reSessResults" class="form-text d-none"></div>
         </div>
       </div>
-    </div>
-    <div class="col-lg-9 mb-3">
-      <div class="row">
+      <div class="row mb-3 mx-0">
         <label class="col-sm-12 col-md-3 col-form-label" for="uploadImgs">
           Add MRI
         </label>
@@ -137,23 +133,23 @@
             multiple>
         </div>
       </div>
+      <button
+        class="btn btn-primary bn-lg"
+        id="submitBtn"
+        type="submit"
+        form="datasetForm"
+        value="Upload"
+        {% if dataset is none %}disabled{% endif %}
+        >Update</button>
+      <button
+        class="btn btn-danger bn-lg"
+        id="deleteBtn"
+        type="button"
+        data-bs-toggle="modal"
+        data-bs-target="#deleteConfirmModal"
+        {% if dataset is none %}disabled{% endif %}
+        >Delete</button>
     </div>
-    <button
-      class="btn btn-primary bn-lg"
-      id="submitBtn"
-      type="submit"
-      form="datasetForm"
-      value="Upload"
-      {% if dataset is none %}disabled{% endif %}
-      >Update</button>
-    <button
-      class="btn btn-danger bn-lg"
-      id="deleteBtn"
-      type="button"
-      data-bs-toggle="modal"
-      data-bs-target="#deleteConfirmModal"
-      {% if dataset is none %}disabled{% endif %}
-      >Delete</button>
   </form>
 {% endblock %}
 

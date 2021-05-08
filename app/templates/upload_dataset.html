@@ -28,21 +28,25 @@
     enctype="multipart/form-data"
   >
     {{ form.csrf_token() }}
-    <div class="form-floating col-md-8 mb-3">
-      <input
-        type="text"
-        class="form-control"
-        id="dataset_name"
-        name="dataset_name"
-        required
-        placeholder="Dataset Name"
-        >
-      <label for="dataset_name">
-        Dataset name
-      </label>
+    <div class="row">
+      <div class="col-lg-9 mb-3">
+        <div class="form-floating">
+          <input
+            type="text"
+            class="form-control"
+            id="dataset_name"
+            name="dataset_name"
+            required
+            placeholder="Dataset Name"
+            >
+            <label for="dataset_name">
+              Dataset name
+            </label>
+        </div>
+      </div>
     </div>
-    <div class="col-md-8 mb-3">
-      <div class="row">
+    <div class="col-lg-9 mb-3">
+      <div class="row mx-0">
         <label class="col-sm-2 col-form-label" for="uploadImgs">
           MRI files
         </label>

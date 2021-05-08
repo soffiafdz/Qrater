@@ -168,53 +168,53 @@
               value="0"
               {% if rating == 0 %}checked{% endif %}
               >
-              <label
-                class="btn btn-outline-secondary{% if rating == 0 %} active{% endif %}"
-                for="rating-0"
-                >Pending
-              </label>
+            <label
+              class="btn btn-outline-secondary{% if rating == 0 %} active{% endif %}"
+              for="rating-0"
+              >Pending
+            </label>
           </div>
-            <div class="btn-group me-2" role="group" aria-label="Second group">
-              <input
-                type="radio"
-                name="rating"
-                id="rating-1"
-                class="btn-check"
-                value="1"
-                {% if rating == 1 %}checked{% endif %}
-                >
-                <label
-                  class="btn btn-outline-success{% if rating == 1 %} active{% endif %}"
-                  for="rating-1"
-                  >Pass
-                </label>
-                  <input
-                    type="radio"
-                    name="rating"
-                    id="rating-2"
-                    class="btn-check"
-                    value="2"
-                    {% if rating == 2 %}checked{% endif %}
-                    >
-                    <label
-                      class="btn btn-outline-warning{% if rating == 2 %} active{% endif %}"
-                      for="rating-2"
-                      >Warning
-                    </label>
-                      <input
-                        type="radio"
-                        name="rating"
-                        id="rating-3"
-                        class="btn-check"
-                        value="3"
-                        {% if rating == 3 %}checked{% endif %}
-                        >
-                        <label
-                          class="btn btn-outline-danger{% if rating == 3 %} active{% endif %}"
-                          for="rating-3"
-                          >Fail
-                        </label>
-            </div>
+          <div class="btn-group me-2" role="group" aria-label="Second group">
+            <input
+              type="radio"
+              name="rating"
+              id="rating-1"
+              class="btn-check"
+              value="1"
+              {% if rating == 1 %}checked{% endif %}
+              >
+            <label
+              class="btn btn-outline-success{% if rating == 1 %} active{% endif %}"
+              for="rating-1"
+              >Pass
+            </label>
+            <input
+              type="radio"
+              name="rating"
+              id="rating-2"
+              class="btn-check"
+              value="2"
+              {% if rating == 2 %}checked{% endif %}
+              >
+            <label
+              class="btn btn-outline-warning{% if rating == 2 %} active{% endif %}"
+              for="rating-2"
+              >Warning
+            </label>
+            <input
+              type="radio"
+              name="rating"
+              id="rating-3"
+              class="btn-check"
+              value="3"
+              {% if rating == 3 %}checked{% endif %}
+              >
+            <label
+              class="btn btn-outline-danger{% if rating == 3 %} active{% endif %}"
+              for="rating-3"
+              >Fail
+            </label>
+          </div>
         </div>
         <div class="btn-group" role="group" aria-label="Third group">
           <button
