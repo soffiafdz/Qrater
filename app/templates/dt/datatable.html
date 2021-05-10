@@ -13,12 +13,6 @@
   <li class="breadcrumb-item">
     <a
       class="text-decoration-none text-light"
-      href="{{ url_for('main.dashboard') }}"
-      >Dashboard</a>
-  </li>
-  <li class="breadcrumb-item">
-    <a
-      class="text-decoration-none text-light"
       href="#"
       >{{ DS.name }}</a>
   </li>
@@ -81,22 +75,22 @@
               switch(data) {
                 case 1:
                   return "<a href=" +
-                    "{{ url_for('main.rate', filter=1, dataset=DS.name) }} "+
+                    "{{ url_for('main.rate', r_filter=1, dataset=DS.name) }} "+
                     "class='text-success text-decoration-none'>Pass</a>";
                   break;
                 case 2:
                   return "<a href=" +
-                    "{{ url_for('main.rate', filter=2, dataset=DS.name) }} "+
+                    "{{ url_for('main.rate', r_filter=2, dataset=DS.name) }} "+
                     "class='text-warning text-decoration-none'>Warning</a>";
                   break;
                 case 3:
                   return "<a href=" +
-                    "{{ url_for('main.rate', filter=3, dataset=DS.name) }} "+
+                    "{{ url_for('main.rate', r_filter=3, dataset=DS.name) }} "+
                     "class='text-danger text-decoration-none'>Fail</a>";
                   break;
                 default:
                   return "<a href=" +
-                    "{{ url_for('main.rate', filter=0, dataset=DS.name) }} "+
+                    "{{ url_for('main.rate', r_filter=0, dataset=DS.name) }} "+
                     "class='text-secondary text-decoration-none'>Pending</a>";
               }
             }

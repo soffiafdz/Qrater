@@ -4,17 +4,17 @@
       <div class="progress" style="height: 5px">
         <div class="progress-bar bg-success"
              role="progressbar"
-             style="width: {{ npass100[loop_.index0] }}%"
+             style="width: {{ n_imgs['pass100'][loop_.index0] }}%"
              aria-valuemin="0"
              aria-valuemax="100"></div>
         <div class="progress-bar bg-warning"
              role="progressbar"
-             style="width: {{ nwarn100[loop_.index0] }}%"
+             style="width: {{ n_imgs['warning100'][loop_.index0] }}%"
              aria-valuemin="0"
              aria-valuemax="100"></div>
         <div class="progress-bar bg-danger"
              role="progressbar"
-             style="width: {{ nfail100[loop_.index0] }}%"
+             style="width: {{ n_imgs['fail100'][loop_.index0] }}%"
              aria-valuemin="0"
              aria-valuemax="100"></div>
       </div>
@@ -28,51 +28,51 @@
       <h4 class="card-subtitle text-center">
         <span
           class="badge rounded-pill badge-light"
-          >Uploaded: {{ n_tot[loop_.index0] }}</span>
+          >Uploaded: {{ n_imgs['total'][loop_.index0] }}</span>
       </h4>
       <div class="d-grid gap-2 my-3">
-        {% if npend[loop_.index0] > 0 %}
+        {% if n_imgs['pending'][loop_.index0] > 0 %}
         <a
           class="btn btn-lg btn-secondary text-start"
-          href="{{ url_for('main.rate', dataset=DS.name, filter=0) }}"
+          href="{{ url_for('main.rate', dataset=DS.name, r_filter=0) }}"
           role="button"
           >Pending
           <span
             class="badge rounded-pill bg-light text-dark"
-            >{{ npend[loop_.index0] }}</span>
+            >{{ n_imgs['pending'][loop_.index0] }}</span>
         </a>
         {% endif %}
-        {% if npass[loop_.index0] > 0 %}
+        {% if n_imgs['pass'][loop_.index0] > 0 %}
         <a
           class="btn btn-lg btn-success text-start"
-          href="{{ url_for('main.rate', dataset=DS.name, filter=1) }}"
+          href="{{ url_for('main.rate', dataset=DS.name, r_filter=1) }}"
           role="button"
           >Pass
           <span
             class="badge rounded-pill bg-light text-dark"
-            >{{ npass[loop_.index0] }}</span>
+            >{{ n_imgs['pass'][loop_.index0] }}</span>
         </a>
         {% endif %}
-        {% if nwarn[loop_.index0] > 0 %}
+        {% if n_imgs['warning'][loop_.index0] > 0 %}
         <a
           class="btn btn-lg btn-warning text-start"
-          href="{{ url_for('main.rate', dataset=DS.name, filter=2) }}"
+          href="{{ url_for('main.rate', dataset=DS.name, r_filter=2) }}"
           role="button"
           >Warning
           <span
             class="badge rounded-pill bg-light text-dark"
-            >{{ nwarn[loop_.index0] }}</span>
+            >{{ n_imgs['warning'][loop_.index0] }}</span>
         </a>
         {% endif %}
-        {% if nfail[loop_.index0] > 0 %}
+        {% if n_imgs['fail'][loop_.index0] > 0 %}
         <a
           class="btn btn-lg btn-danger text-start"
-          href="{{ url_for('main.rate', dataset=DS.name, filter=3) }}"
+          href="{{ url_for('main.rate', dataset=DS.name, r_filter=3) }}"
           role="button"
           >Fail
           <span
             class="badge rounded-pill bg-light text-dark"
-            >{{ nfail[loop_.index0] }}</span>
+            >{{ n_imgs['fail'][loop_.index0] }}</span>
         </a>
         {% endif %}
         <a
