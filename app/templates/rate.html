@@ -36,28 +36,28 @@
     <a
       class="text-decoration-none text-light"
       href="{{ url_for('main.rate',
-        dataset=DS.name) if filter is not none else '#' }}"
+        dataset=DS.name) if r_filter is not none else '#' }}"
       >Rating</a>
   </li>
-  {% if filter is not none %}
+  {% if r_filter is not none %}
   <li class="breadcrumb-item">
     <a
       href="#"
-      {%- if filter == 0 -%}
+      {%- if r_filter == 0 -%}
       class="text-decoration-none text-secondary"
       >Pending
-      {%- elif filter == 1 -%}
+      {%- elif r_filter == 1 -%}
       class="text-decoration-none text-success"
       >Pass
-      {%- elif filter == 2 -%}
+      {%- elif r_filter == 2 -%}
       class="text-decoration-none text-warning"
       >Warning
-      {%- elif filter == 3 -%}
+      {%- elif r_filter == 3 -%}
       class="text-decoration-none text-danger"
       >Fail
       {%- else -%}
       class="text-decoration-none text-white"
-      >{{ filter }}
+      >{{ r_filter }}
       {%- endif -%}
     </a>
   </li>
@@ -97,7 +97,7 @@
           <a
             class="page-link"
             id="prevPage"
-            href="{{ url_for('main.rate', filter=filter, dataset=DS.name,
+            href="{{ url_for('main.rate', r_filter=r_filter, dataset=DS.name,
               page=imgs.prev_num) if imgs.has_prev else '#' }}"
               >
             <i class="bi-arrow-left"></i>
@@ -109,7 +109,7 @@
         <li class="page-item">
           <a
             class="page-link"
-            href="{{ url_for('main.rate', filter=filter, dataset=DS.name,
+            href="{{ url_for('main.rate', r_filter=r_filter, dataset=DS.name,
               page=page) }}"
             >{{ page }}</a>
         </li>
@@ -135,7 +135,7 @@
             <a
               class="page-link"
               id="nextPage"
-              href="{{ url_for('main.rate', filter=filter, dataset=DS.name,
+              href="{{ url_for('main.rate', r_filter=r_filter, dataset=DS.name,
                 page=imgs.next_num) if imgs.has_next else '#' }}">
               <i class="bi-arrow-right"></i>
             </a>

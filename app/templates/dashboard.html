@@ -9,7 +9,8 @@
 {% endblock %}
 
 {% block app_content %}
-<div class="row row-cols-1 row-cols-lg-2 row-cols-xl-3 g-2 g-lg-3 g-xl-4">
+<div
+  class="row row-cols-1 row-cols-lg-2 row-cols-xl-3 g-2 g-lg-3 g-xl-4 justify-content-center">
   {% for DS in datasets %}
     {% set loop_ = loop %}
     {% include 'dataset_card.html' %}

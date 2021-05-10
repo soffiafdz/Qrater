@@ -99,7 +99,7 @@ def rate(dataset, r_filter=None):
         img.set_comment(user=current_user, comment=form.comment.data)
         return redirect(request.url)
     return render_template('rate.html', DS=DS, form=form, imgs=imgs, pag=True,
-                           img_path=(path),
+                           r_filter=r_filter, img_path=(path),
                            img_name=imgs.items[0].name,
                            comment=imgs.items[0].comment_by_user(current_user),
                            rating=imgs.items[0].rating_by_user(current_user))
@@ -118,7 +118,7 @@ def rate_img(dataset, image):
         img.set_comment(user=current_user, comment=form.comment.data)
         return redirect(request.url)
     return render_template('rate.html', DS=DS, form=form, pag=False,
-                           img_path=(path), img_name=img.name, filter=image,
+                           img_path=(path), img_name=img.name, r_filter=image,
                            comment=img.comment_by_user(current_user),
                            rating=img.rating_by_user(current_user))
 
