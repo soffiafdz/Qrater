@@ -33,25 +33,41 @@ def before_request():
 
 @bp.route("/", methods=['GET', 'POST'])
 @bp.route("/dashboard", methods=['GET', 'POST'])
-@bp.route("/dashboard_<int:all_raters>", methods=['GET', 'POST'])
-def dashboard(all_raters=None):
+@bp.route("/<all_raters_string>", methods=['GET', 'POST'])
+def dashboard(all_raters_string=None):
     """Construct the landing page."""
-    if all_raters is not None and all_raters > 1:
+    if all_raters_string == "all_raters":
+        all_raters = 1
+    elif all_raters_string is not None:
         abort(404)
+    else:
+        all_raters = 0
     if Dataset.query.first() is None:
         return render_template('no_datasets.html', title='Dashboard',
                                rater=current_user)
-    # keys = ["total", "pass", "pass100", "warning", "warning100", "fail",
-    # "fail100", "pending"]
     n_imgs = defaultdict(list)
+    print(f'all_raters: {all_raters}')
+    print(f'allraters: {all_raters_string}')
     for dataset in Dataset.query.all():
         imgs = dataset.images
         ntot = imgs.count()
-        n_0 = imgs.filter_by(ratings=None)\
-            .union(imgs.join(Ratings).filter_by(rating=0)).count()
-        n_1 = imgs.join(Ratings).filter_by(rating=1).count()
-        n_2 = imgs.join(Ratings).filter_by(rating=2).count()
-        n_3 = imgs.join(Ratings).filter_by(rating=3).count()
+        #TODO: Fix n_0
+        if all_raters or current_user.is_anonymous:
+            n_0 = imgs.filter_by(ratings=None).union(
+                imgs.join(Ratings).filter_by(rating=0)).count()
+            n_1 = imgs.join(Ratings).filter_by(rating=1).count()
+            n_2 = imgs.join(Ratings).filter_by(rating=2).count()
+            n_3 = imgs.join(Ratings).filter_by(rating=3).count()
+        else:
+            n_0 = imgs.filter_by(ratings=None).union(
+                imgs.join(Ratings).filter_by(rating=0, rater=current_user))\
+                .count()
+            n_1 = imgs.join(Ratings).filter_by(rating=1, rater=current_user)\
+                .count()
+            n_2 = imgs.join(Ratings).filter_by(rating=2, rater=current_user)\
+                .count()
+            n_3 = imgs.join(Ratings).filter_by(rating=3, rater=current_user)\
+                .count()
         n_imgs['total'].append(ntot)
         n_imgs['pending'].append(n_0)
         n_imgs['pass'].append(n_1)
@@ -60,37 +76,60 @@ def dashboard(all_raters=None):
         n_imgs['pass100'].append(round(n_1 / ntot * 100))
         n_imgs['warning100'].append(round(n_2 / ntot * 100))
         n_imgs['fail100'].append(round(n_3 / ntot * 100))
-        print(n_imgs)
     return render_template('dashboard.html', title='Dashboard',
                            Image=Image, Ratings=Ratings,
                            datasets=Dataset.query.all(),
-                           n_imgs=n_imgs)
+                           all_raters=all_raters, n_imgs=n_imgs)
 
 
-@bp.route('/<dataset>', methods=['GET', 'POST'])
-@bp.route('/<dataset>/filter-<int:r_filter>', methods=['GET', 'POST'])
+@bp.route('/rate/<name_dataset>', methods=['GET', 'POST'])
+@bp.route('/rate/<name_dataset>/filter-<int:r_filter>',
+          methods=['GET', 'POST'])
 @login_required
-def rate(dataset, r_filter=None):
+def rate(name_dataset, r_filter=None):
     """Page to view images and rate them."""
-    DS = Dataset.query.filter_by(name=dataset).first_or_404()
+    dataset = Dataset.query.filter_by(name=name_dataset).first_or_404()
+    all_raters = request.args.get('all_raters', 0, type=int)
     page = request.args.get('page', 1, type=int)
     if r_filter is None:
-        imgs = DS.images.order_by(Image.id.asc()).paginate(page, 1, False)
-    elif r_filter == 0:
-        unrated = DS.images.filter_by(ratings=None)
-        pending = DS.images.join(Ratings).filter_by(rating=r_filter)
-        imgs = unrated.union(pending).order_by(Image.id.asc()).paginate(
-            page, 1, False)
-    elif r_filter < 4:
-        imgs = DS.images.join(Ratings).filter_by(rating=r_filter).order_by(
-            Image.id.asc()).paginate(page, 1, False)
+        imgs = dataset.images\
+            .order_by(Image.id.asc()).paginate(page, 1, False)
     else:
-        flash('Invalid filtering; Showing all images...', 'danger')
-        return redirect(url_for('main.rate', dataset=dataset))
+        if all_raters:
+            if r_filter == 0:
+                unrated = dataset.images.filter_by(ratings=None)
+                pending = dataset.images.join(Ratings)\
+                    .filter_by(rating=r_filter)
+                imgs = unrated.union(pending)\
+                    .order_by(Image.id.asc()).paginate(page, 1, False)
+            elif r_filter < 4:
+                imgs = dataset.images.join(Ratings)\
+                    .filter_by(rating=r_filter)\
+                    .order_by(Image.id.asc()).paginate(page, 1, False)
+            else:
+                flash('Invalid filtering; Showing all images...', 'danger')
+                return redirect(url_for('main.rate', all_raters=all_raters,
+                                        name_dataset=name_dataset))
+        else:
+            if r_filter == 0:
+                unrated = dataset.images.filter_by(ratings=None)
+                pending = dataset.images.join(Ratings)\
+                    .filter_by(rating=r_filter, rater=current_user)
+                imgs = unrated.union(pending)\
+                    .order_by(Image.id.asc()).paginate(page, 1, False)
+            elif r_filter < 4:
+                imgs = dataset.images.join(Ratings)\
+                    .filter_by(rating=r_filter, rater=current_user)\
+                    .order_by(Image.id.asc()).paginate(page, 1, False)
+            else:
+                flash('Invalid filtering; Showing all images...', 'danger')
+                return redirect(url_for('main.rate', all_raters=all_raters,
+                                        name_dataset=name_dataset))
     if not imgs.items:
         flash('Filter ran out of images in filter; Showing all images...',
               'info')
-        return redirect(url_for('main.rate', dataset=dataset))
+        return redirect(url_for('main.rate', all_raters=all_raters,
+                                name_dataset=name_dataset))
     path = imgs.items[0].path.replace("app/static/", "")
     form = RatingForm()
     if form.validate_on_submit():
@@ -98,14 +137,14 @@ def rate(dataset, r_filter=None):
         img.set_rating(user=current_user, rating=form.rating.data)
         img.set_comment(user=current_user, comment=form.comment.data)
         return redirect(request.url)
-    return render_template('rate.html', DS=DS, form=form, imgs=imgs, pag=True,
-                           r_filter=r_filter, img_path=(path),
-                           img_name=imgs.items[0].name,
+    return render_template('rate.html', DS=dataset, form=form, imgs=imgs,
+                           pag=True, r_filter=r_filter, all_raters=all_raters,
+                           img_path=(path), img_name=imgs.items[0].name,
                            comment=imgs.items[0].comment_by_user(current_user),
                            rating=imgs.items[0].rating_by_user(current_user))
 
 
-@bp.route('/<dataset>/<image>', methods=['GET', 'POST'])
+@bp.route('/rate/<dataset>/<image>', methods=['GET', 'POST'])
 @login_required
 def rate_img(dataset, image):
     """Page to view a single image and rate it."""

@@ -36,7 +36,8 @@
     <a
       class="text-decoration-none text-light"
       href="{{ url_for('main.rate',
-        dataset=DS.name) if r_filter is not none else '#' }}"
+        all_raters=all_raters,
+        name_dataset=DS.name) if r_filter is not none else '#' }}"
       >Rating</a>
   </li>
   {% if r_filter is not none %}
@@ -97,7 +98,8 @@
           <a
             class="page-link"
             id="prevPage"
-            href="{{ url_for('main.rate', r_filter=r_filter, dataset=DS.name,
+            href="{{ url_for('main.rate', r_filter=r_filter,
+              name_dataset=DS.name, all_raters=all_raters,
               page=imgs.prev_num) if imgs.has_prev else '#' }}"
               >
             <i class="bi-arrow-left"></i>
@@ -109,8 +111,8 @@
         <li class="page-item">
           <a
             class="page-link"
-            href="{{ url_for('main.rate', r_filter=r_filter, dataset=DS.name,
-              page=page) }}"
+            href="{{ url_for('main.rate', r_filter=r_filter,
+              name_dataset=DS.name, all_raters=all_raters, page=page) }}"
             >{{ page }}</a>
         </li>
         {% else %}
@@ -135,7 +137,8 @@
             <a
               class="page-link"
               id="nextPage"
-              href="{{ url_for('main.rate', r_filter=r_filter, dataset=DS.name,
+              href="{{ url_for('main.rate', r_filter=r_filter,
+                name_dataset=DS.name, all_raters=all_raters,
                 page=imgs.next_num) if imgs.has_next else '#' }}">
               <i class="bi-arrow-right"></i>
             </a>

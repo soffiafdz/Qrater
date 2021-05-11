@@ -3,7 +3,13 @@
 {% block breadcrumb %}
 <ol class="breadcrumb m-0">
   <li class="breadcrumb-item">
-    <a class="text-decoration-none text-light" href="#">Dashboard</a>
+    <a class="text-decoration-none text-light" href="#">
+      {%- if all_raters -%}
+      Dashboard [All Raters]
+      {%- else -%}
+      Dashboard
+      {%- endif -%}
+    </a>
   </li>
 </ol>
 {% endblock %}

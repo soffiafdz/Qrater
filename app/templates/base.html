@@ -36,7 +36,11 @@
       <div class="container-fluid">
         <a
           class="navbar-brand"
+          {% if all_raters %}
+          href="{{ url_for('main.dashboard', all_raters_string='all_raters') }}"
+          {% else %}
           href="{{ url_for('main.dashboard') }}"
+          {% endif %}
           >Qrater</a>
         <button
           class="navbar-toggler"
@@ -137,9 +141,19 @@
                 class="dropdown-menu dropdown-menu-dark dropdown-menu-end"
                 aria-labelledby="navbarDropdownMenuLink">
                 <li>
+                  {% if all_raters == 1 %}
                   <a
                     class="dropdown-item"
-                    href="#">All Raters</a>
+                    href="{{ url_for('main.dashboard',
+                      all_raters_string=None) }}"
+                    >Not all Raters</a>
+                  {% else %}
+                  <a
+                    class="dropdown-item"
+                    href="{{ url_for('main.dashboard',
+                      all_raters_string='all_raters') }}"
+                    >All Raters</a>
+                  {% endif %}
                 </li>
                 <li>
                   <hr class="dropdown-divider">
