@@ -61,6 +61,7 @@
           render: function ( data, type, row ) {
             if ( type === 'display' ) { {# NEED TO CHANGE IF rate_img URL CHANGES #}
               return "<a href='/rate/{{ DS.name }}/" + data +
+                "?all_raters={{ all_raters }}" +
                 "' class='text-dark text-decoration-none'>" + data + "</a>"
             }
             return data;
@@ -75,22 +76,26 @@
               switch(data) {
                 case 1:
                   return "<a href=" +
-                    "{{ url_for('main.rate', r_filter=1, name_dataset=DS.name) }} "+
+                    "{{ url_for('main.rate', r_filter=1,
+                      all_raters=all_raters, name_dataset=DS.name) }} "+
                     "class='text-success text-decoration-none'>Pass</a>";
                   break;
                 case 2:
                   return "<a href=" +
-                    "{{ url_for('main.rate', r_filter=2, name_dataset=DS.name) }} "+
+                    "{{ url_for('main.rate', r_filter=2,
+                      all_raters=all_raters, name_dataset=DS.name) }} "+
                     "class='text-warning text-decoration-none'>Warning</a>";
                   break;
                 case 3:
                   return "<a href=" +
-                    "{{ url_for('main.rate', r_filter=3, name_dataset=DS.name) }} "+
+                    "{{ url_for('main.rate', r_filter=3,
+                      all_raters=all_raters, name_dataset=DS.name) }} "+
                     "class='text-danger text-decoration-none'>Fail</a>";
                   break;
                 default:
                   return "<a href=" +
-                    "{{ url_for('main.rate', r_filter=0, name_dataset=DS.name) }} "+
+                    "{{ url_for('main.rate', r_filter=0,
+                      all_raters=all_raters, name_dataset=DS.name) }} "+
                     "class='text-secondary text-decoration-none'>Pending</a>";
               }
             }

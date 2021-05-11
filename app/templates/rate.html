@@ -68,18 +68,77 @@
 
 {% block app_content %}
 <div class="row">
+  {% if all_raters %}
+  <h1 class="display-4 text-center mb-1">{{ img_name }}
+    <sup>
+    {% if rating == 0 -%}
+    <span class="badge rounded-pill bg-secondary">
+      <span class="fs-2 lead">Pending</span>
+    </span>
+    {%- elif rating == 1 -%}
+    <span class="badge rounded-pill bg-success">
+      <span class="fs-2 lead">Pass</span>
+    </span>
+    {%- elif rating == 2 -%}
+    <span class="badge rounded-pill bg-warning">
+      <span class="fs-2 lead">Warning</span>
+    </span>
+    {%- elif rating == 3 -%}
+    <span class="badge rounded-pill bg-danger">
+      <span class="fs-2 lead">Fail</span>
+    </span>
+    {%- endif -%}
+    </sup>
+  </h1>
+  <div class="row row-cols-auto m-0 mb-2 justify-content-around">
+    {% for rating in all_ratings %}
+    <div class="col">
+      <h2 class="mb-0">
+      {%- if rating.rating == 0 %}
+      <span class="badge bg-secondary">
+        <span class="fs-3 lead">{{ rating.rater.username }}</span>
+      </span>
+      {%- elif rating.rating == 1 %}
+      <span class="badge bg-success">
+        <span class="fs-3 lead">{{ rating.rater.username }}</span>
+      </span>
+      {%- elif rating.rating == 2 %}
+      <span class="badge bg-warning">
+        <span class="fs-3 lead">{{ rating.rater.username }}</span>
+      </span>
+      {%- elif rating.rating == 3 %}
+      <span class="badge bg-danger">
+        <span class="fs-3 lead">{{ rating.rater.username }}</span>
+      </span>
+      {% endif -%}
+      </h2>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
   <h1 class="display-4 text-center">
     {{ img_name }}
-    {% if rating == 0 %}
-    <span class="badge rounded-pill bg-secondary">Pending</span>
-    {% elif rating == 1 %}
-    <span class="badge rounded-pill bg-success">Pass</span>
-    {% elif rating == 2 %}
-    <span class="badge rounded-pill bg-warning">Warning</span>
-    {% elif rating == 3 %}
-    <span class="badge rounded-pill bg-danger">Fail</span>
-    {% endif %}
+    <sup>
+    {% if rating == 0 -%}
+    <span class="badge rounded-pill bg-secondary">
+      <span class="fs-2 lead">Pending</span>
+    </span>
+    {%- elif rating == 1 -%}
+    <span class="badge rounded-pill bg-success">
+      <span class="fs-2 lead">Pass</span>
+    </span>
+    {%- elif rating == 2 -%}
+    <span class="badge rounded-pill bg-warning">
+      <span class="fs-2 lead">Warning</span>
+    </span>
+    {%- elif rating == 3 -%}
+    <span class="badge rounded-pill bg-danger">
+      <span class="fs-2 lead">Fail</span>
+    </span>
+    {%- endif -%}
+    </sup>
   </h1>
+  {% endif %}
   <div class="img-magnifier-container">
     <img
       id="img"

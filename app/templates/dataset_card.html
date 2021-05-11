@@ -20,70 +20,92 @@
       </div>
     </div>
     <div class="card-body">
-      <h3 class="card-title text-center">
+      <h3 class="card-title text-center mb-2">
         <a
-          href="{{ url_for('dt.datatable', dataset=DS.name) }}"
+          href="{{ url_for('dt.datatable',
+            dataset=DS.name, all_raters=all_raters) }}"
           class="text-light text-decoration-none">{{ DS.name }}</a>
       </h3>
-      <h4 class="card-subtitle text-center">
-        <span
-          class="badge rounded-pill badge-light"
-          >Uploaded: {{ n_imgs['total'][loop_.index0] }}</span>
-      </h4>
-      <div class="d-grid gap-2 my-3">
-        {% if n_imgs['pending'][loop_.index0] > 0 %}
+      <div class="d-flex justify-content-around my-3">
         <a
-          class="btn btn-lg btn-secondary text-start"
-          href="{{ url_for('main.rate',
-            name_dataset=DS.name, r_filter=0, all_raters=all_raters) }}"
-          role="button"
-          >Pending
+          href="{{ url_for('dt.datatable',
+            dataset=DS.name, all_raters=all_raters) }}"
+          class="btn btn-light text-dark"
+          >
+          <span>Images </span>
           <span
-            class="badge rounded-pill bg-light text-dark"
-            >{{ n_imgs['pending'][loop_.index0] }}</span>
-        </a>
-        {% endif %}
-        {% if n_imgs['pass'][loop_.index0] > 0 %}
+            class="badge rounded-pill bg-dark"
+            >{{ n_imgs['total'][loop_.index0] }}</span></a>
         <a
-          class="btn btn-lg btn-success text-start"
-          href="{{ url_for('main.rate',
-            name_dataset=DS.name, r_filter=1, all_raters=all_raters) }}"
-          role="button"
-          >Pass
+          href="#"
+          class="btn btn-light text-dark"
+          >
+          <span>Ratings </span>
           <span
-            class="badge rounded-pill bg-light text-dark"
-            >{{ n_imgs['pass'][loop_.index0] }}</span>
-        </a>
-        {% endif %}
-        {% if n_imgs['warning'][loop_.index0] > 0 %}
+            class="badge rounded-pill bg-dark"
+            >{{ n_imgs['ratings'][loop_.index0] }}</span></a>
+      </div>
+      <div class="container mb-5">
+        <div class="list-group">
+          {% if n_imgs['pending'][loop_.index0] > 0 %}
+          <a
+            class="list-group-item list-group-item-action list-group-item-dark
+              d-flex justify-content-between"
+            href="{{ url_for('main.rate',
+              name_dataset=DS.name, r_filter=0, all_raters=all_raters) }}"
+            ><div class="me-auto">Pending</div>
+            <span
+              class="badge rounded-pill bg-light text-dark"
+              >{{ n_imgs['pending'][loop_.index0] }}</span>
+          </a>
+          {% endif %}
+          {% if n_imgs['pass'][loop_.index0] > 0 %}
+          <a
+            class="list-group-item list-group-item-action list-group-item-success
+              d-flex justify-content-between"
+            href="{{ url_for('main.rate',
+              name_dataset=DS.name, r_filter=1, all_raters=all_raters) }}"
+            ><div class="me-auto">Pass</div>
+            <span
+              class="badge rounded-pill bg-light text-dark"
+              >{{ n_imgs['pass'][loop_.index0] }}</span>
+          </a>
+          {% endif %}
+          {% if n_imgs['warning'][loop_.index0] > 0 %}
+          <a
+            class="list-group-item list-group-item-action list-group-item-warning
+              d-flex justify-content-between"
+            href="{{ url_for('main.rate',
+              name_dataset=DS.name, r_filter=2, all_raters=all_raters) }}"
+            ><div class="me-auto">Warning</div>
+            <span
+              class="badge rounded-pill bg-light text-dark"
+              >{{ n_imgs['warning'][loop_.index0] }}</span>
+          </a>
+          {% endif %}
+          {% if n_imgs['fail'][loop_.index0] > 0 %}
+          <a
+            class="list-group-item list-group-item-action list-group-item-danger
+              d-flex justify-content-between"
+            href="{{ url_for('main.rate',
+              name_dataset=DS.name, r_filter=3, all_raters=all_raters) }}"
+            ><div class="me-auto">Fail</div>
+            <span
+              class="badge rounded-pill bg-light text-dark"
+              >{{ n_imgs['fail'][loop_.index0] }}</span>
+          </a>
+          {% endif %}
+        </div>
+      </div>
+      <div
+        class="position-absolute bottom-0 start-50 translate-middle-x
+          d-grid gap-2 col-6 mx-auto"
+          >
         <a
-          class="btn btn-lg btn-warning text-start"
-          href="{{ url_for('main.rate',
-            name_dataset=DS.name, r_filter=2, all_raters=all_raters) }}"
-          role="button"
-          >Warning
-          <span
-            class="badge rounded-pill bg-light text-dark"
-            >{{ n_imgs['warning'][loop_.index0] }}</span>
-        </a>
-        {% endif %}
-        {% if n_imgs['fail'][loop_.index0] > 0 %}
-        <a
-          class="btn btn-lg btn-danger text-start"
-          href="{{ url_for('main.rate',
-            name_dataset=DS.name, r_filter=3, all_raters=all_raters) }}"
-          role="button"
-          >Fail
-          <span
-            class="badge rounded-pill bg-light text-dark"
-            >{{ n_imgs['fail'][loop_.index0] }}</span>
-        </a>
-        {% endif %}
-        <a
-          href="{{ url_for('main.rate',
-            name_dataset=DS.name, all_raters=all_raters) }}"
-          class="btn btn-lg btn-light mt-3"
-          >Rate
+        href="{{ url_for('main.rate',
+        name_dataset=DS.name, all_raters=all_raters) }}"
+        class="btn btn-light mb-2"
+        >Rate
         </a>
       </div>
     </div>
