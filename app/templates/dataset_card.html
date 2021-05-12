@@ -21,10 +21,7 @@
     </div>
     <div class="card-body">
       <h3 class="card-title text-center mb-2">
-        <a
-          href="{{ url_for('dt.datatable',
-            dataset=DS.name, all_raters=all_raters) }}"
-          class="text-light text-decoration-none">{{ DS.name }}</a>
+        {{ DS.name }}
       </h3>
       <div class="d-flex justify-content-around my-3">
         <a
@@ -37,7 +34,8 @@
             class="badge rounded-pill bg-dark"
             >{{ n_imgs['total'][loop_.index0] }}</span></a>
         <a
-          href="#"
+          href="{{ url_for('dt.datatable', dataset=DS.name,
+            all_raters=all_raters, only_ratings=1) }}"
           class="btn btn-light text-dark"
           >
           <span>Ratings </span>

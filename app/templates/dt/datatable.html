@@ -26,11 +26,12 @@
     <table id="dataTable" class="table" cellspacing="0" width="100%">
       <thead class="table-dark">
         <tr>
-          <th>Image</th>
-          {%- if sub_labs %}<th>Subject</th>{% endif -%}
-          {%- if sess_labs %}<th>Session</th>{% endif -%}
-          <th>Rating</th>
-          <th>Rated on</th>
+          <th class="image">Image</th>
+          {% if sub_labs %}<th class="subject">Subject</th>{% endif %}
+          {% if sess_labs %}<th class="session">Session</th>{% endif %}
+          <th class="rating">Rating</th>
+          <th class="rater">Rater</th>
+          <th class="datetime">Rated on</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -54,12 +55,15 @@
     var table = $('#dataTable').DataTable({
       "processing": true,
       "serverSide": true,
-      "ajax": "{{ url_for('dt.data', dset_id=DS.id, subs=sub_labs, sess=sess_labs) }}",
+      "ajax": "{{ url_for('dt.data', dset_id=DS.id,
+                  all_raters=all_raters, only_ratings=only_ratings,
+                  subject=sub_labs, session=sess_labs) }}",
       "columnDefs": [
         {
-          targets: [0],
+          targets: "image",
           render: function ( data, type, row ) {
-            if ( type === 'display' ) { {# NEED TO CHANGE IF rate_img URL CHANGES #}
+            if ( type === 'display' ) {
+              {# NEED TO CHANGE IF rate_img URL CHANGES #}
               return "<a href='/rate/{{ DS.name }}/" + data +
                 "?all_raters={{ all_raters }}" +
                 "' class='text-dark text-decoration-none'>" + data + "</a>"
@@ -70,7 +74,7 @@
         },
         { targets: '_all', searchable: false },
         {
-          targets: [-2],
+          targets: "rating",
           render: function ( data, type, row ) {
             if ( type === 'display' ) {
               switch(data) {
@@ -103,7 +107,7 @@
           }
         },
         {
-          targets: [-1],
+          targets: "datetime",
           render: function ( data, type, row ) {
             return data ? moment(data).format("LLL") : "Unrated";
           }
