@@ -60,7 +60,7 @@ def data(dset_id, subject, session, only_ratings=0):
             filter(Image.dataset_id == dset_id).\
             join(Ratings, isouter=True).\
             join(Rater, isouter=True)
-    elif all_raters:
+    elif all_raters or current_user.is_anonymous:
         query = db.session.query().\
             select_from(Image).\
             filter(Image.dataset_id == dset_id,
