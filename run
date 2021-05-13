@@ -1,0 +1,10 @@
+#!/bin/sh
+
+source /ipl/quarantine/conda/etc/profile.d/conda.sh
+
+echo "Loading conda environment..."
+
+conda activate qrater
+
+export FLASK_APP=/home/bic/sfernandez/qrater/qrater.py
+flask run
