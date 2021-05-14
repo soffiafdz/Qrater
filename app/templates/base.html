@@ -1,213 +1,213 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    {% block head %}
-    <!-- Required meta tags -->
-    <meta charset="utf-8">
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<head>
+{% block head %}
+<!-- Required meta tags -->
+<meta charset="utf-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    {% block styles %}
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-      integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
-      crossorigin="anonymous">
-    <link
-      rel="stylesheet"
-      type="text/css"
-      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css">
-    {% endblock %}
+{% block styles %}
+<link
+  href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+  rel="stylesheet"
+  integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+  crossorigin="anonymous">
+<link
+  rel="stylesheet"
+  type="text/css"
+  href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css">
+{% endblock %}
 
-    {% block title -%}
-    <title>
-      {%- if title -%}{{ title }} - Qrater
-      {%- else -%}Qrater
-      {%- endif -%}
-    </title>
-    {% endblock %}
+{% block title -%}
+<title>
+  {%- if title -%}{{ title }} - Qrater
+  {%- else -%}Qrater
+  {%- endif -%}
+</title>
+{% endblock %}
 
-    {% endblock %}
-  </head>
-  <body>
-    {% block modal %}{% endblock %}
-    {% block navbar %}
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-      <div class="container-fluid">
-        <a
-          class="navbar-brand"
-          {% if all_raters %}
-          href="{{ url_for('main.dashboard', all_raters_string='all_raters') }}"
-          {% else %}
-          href="{{ url_for('main.dashboard') }}"
-          {% endif %}
-          >Qrater</a>
-        <button
-          class="navbar-toggler"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#Navbar"
-          aria-controls="Navbar"
-          aria-expanded="false"
-          aria-label="Toggle navigation"
-          ><span class="navbar-toggler-icon"></span>
-        </button>
+{% endblock %}
+</head>
+<body>
+{% block modal %}{% endblock %}
+{% block navbar %}
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container-fluid">
+    <a
+      class="navbar-brand"
+      {% if all_raters %}
+      href="{{ url_for('main.dashboard', all_raters_string='all_raters') }}"
+      {% else %}
+      href="{{ url_for('main.dashboard') }}"
+      {% endif %}
+      >Qrater</a>
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#Navbar"
+      aria-controls="Navbar"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+      ><span class="navbar-toggler-icon"></span>
+    </button>
 
-        <div class="collapse navbar-collapse" id="Navbar">
-          <ul class="navbar-nav mb-2 mb-lg-0">
-            <li class="nav-item dropdown">
+    <div class="collapse navbar-collapse" id="Navbar">
+      <ul class="navbar-nav mb-2 mb-lg-0">
+        <li class="nav-item dropdown">
+          <a
+            class="nav-link dropdown-toggle"
+            href="#"
+            id="navbarDropdownDatasetsLink"
+            role="button"
+            data-bs-toggle="dropdown"
+            aria-haspopup="true"
+            aria-expanded="false"
+            >Datasets</a>
+          <ul
+            class="dropdown-menu dropdown-menu-dark dropdown-menu-start"
+            aria-labelledby="navbarDropdownDatasetsLink">
+            <li>
               <a
-                class="nav-link dropdown-toggle"
-                href="#"
-                id="navbarDropdownDatasetsLink"
-                role="button"
-                data-bs-toggle="dropdown"
-                aria-haspopup="true"
-                aria-expanded="false"
-                >Datasets</a>
-              <ul
-                class="dropdown-menu dropdown-menu-dark dropdown-menu-start"
-                aria-labelledby="navbarDropdownDatasetsLink">
-                <li>
-                  <a
-                    class="dropdown-item"
-                    href="{{ url_for('main.upload_dataset') }}"
-                    >New Dataset</a>
-                </li>
-                <li>
-                  <a
-                    class="dropdown-item"
-                    href="{{ url_for('main.edit_dataset') }}"
-                    >Edit Dataset</a>
-                </li>
-              </ul>
+                class="dropdown-item"
+                href="{{ url_for('main.upload_dataset') }}"
+                >New Dataset</a>
+            </li>
+            <li>
+              <a
+                class="dropdown-item"
+                href="{{ url_for('main.edit_dataset') }}"
+                >Edit Dataset</a>
             </li>
           </ul>
-          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-            <li class="nav-item dropdown">
+        </li>
+      </ul>
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item dropdown">
+          <a
+            class="nav-link dropdown-toggle"
+            href="#"
+            id="navbarDropdownRatingsLink"
+            role="button"
+            data-bs-toggle="dropdown"
+            aria-haspopup="true"
+            aria-expanded="false"
+            >Ratings</a>
+          <ul
+            class="dropdown-menu dropdown-menu-dark dropdown-menu-start"
+            aria-labelledby="navbarDropdownRatingsLink">
+            <li>
               <a
-                class="nav-link dropdown-toggle"
+                class="dropdown-item"
+                href="{{ url_for('main.export_ratings') }}"
+                >Export</a>
+            </li>
+            <li>
+              <a
+                class="dropdown-item disabled"
                 href="#"
-                id="navbarDropdownRatingsLink"
-                role="button"
-                data-bs-toggle="dropdown"
-                aria-haspopup="true"
-                aria-expanded="false"
-                >Ratings</a>
-              <ul
-                class="dropdown-menu dropdown-menu-dark dropdown-menu-start"
-                aria-labelledby="navbarDropdownRatingsLink">
-                <li>
-                  <a
-                    class="dropdown-item"
-                    href="{{ url_for('main.export_ratings') }}"
-                    >Export</a>
-                </li>
-                <li>
-                  <a
-                    class="dropdown-item disabled"
-                    href="#"
-                    >Import</a>
-                </li>
-              </ul>
+                >Import</a>
             </li>
           </ul>
-          <div class="navbar-nav mb-2 mb-lg-0 py-2">
-            <nav aria-label="breadcrumb">
-              {%- block breadcrumb %}{% endblock -%}
-            </nav>
-          </div>
-
-          <div class="navbar-nav ms-auto">
-            {%- block help_btn %}{% endblock -%}
-          </div>
-          <ul class="navbar-nav">
-            {% if current_user.is_anonymous %}
-            <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('auth.login') }}">Log In</a>
-            </li>
-            {% else %}
-            <li class="nav-item dropdown">
-              <a
-                class="nav-link dropdown-toggle"
-                href="#"
-                id="navbarDropdownMenuLink"
-                role="button"
-                data-bs-toggle="dropdown"
-                aria-haspopup="true"
-                aria-expanded="false"
-                >{{ current_user.username }}</a>
-              <ul
-                class="dropdown-menu dropdown-menu-dark dropdown-menu-end"
-                aria-labelledby="navbarDropdownMenuLink">
-                <li>
-                  {% if all_raters == 1 %}
-                  <a
-                    class="dropdown-item"
-                    href="{{ url_for('main.dashboard',
-                      all_raters_string=None) }}"
-                    >Not all Raters</a>
-                  {% else %}
-                  <a
-                    class="dropdown-item"
-                    href="{{ url_for('main.dashboard',
-                      all_raters_string='all_raters') }}"
-                    >All Raters</a>
-                  {% endif %}
-                </li>
-                <li>
-                  <hr class="dropdown-divider">
-                </li>
-                <li>
-                  <a
-                    class="dropdown-item"
-                    href="{{ url_for('auth.logout') }}">Log out</a>
-                </li>
-              </ul>
-            </li>
-            {% endif %}
-          </ul>
-        </div>
+        </li>
+      </ul>
+      <div class="navbar-nav mb-2 mb-lg-0 py-2">
+        <nav aria-label="breadcrumb">
+          {%- block breadcrumb %}{% endblock -%}
+        </nav>
       </div>
-    </nav>
-    {% endblock %}
 
-    {% block content %}
-    <br>
-    {% with messages = get_flashed_messages(with_categories=True) -%}
-    {% if messages -%}
-      <div class="container flashed-messages">
-        <div class="row">
-          <div class="col-md-12">
-            {% for cat, msg in messages %}
-              <div class="alert alert-{{ cat.lower() }}" role="alert">
-                {{ msg }}
-              </div>
-            {%- endfor -%}
-          </div>
-        </div>
+      <div class="navbar-nav ms-auto">
+        {%- block help_btn %}{% endblock -%}
       </div>
-    {% endif -%}
-    {% endwith -%}
-
-    <div class="container">
-      {# application content needs to be provided in the app_content block #}
-      {% block app_content %}{% endblock %}
+      <ul class="navbar-nav">
+        {% if current_user.is_anonymous %}
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('auth.login') }}">Log In</a>
+        </li>
+        {% else %}
+        <li class="nav-item dropdown">
+          <a
+            class="nav-link dropdown-toggle"
+            href="#"
+            id="navbarDropdownMenuLink"
+            role="button"
+            data-bs-toggle="dropdown"
+            aria-haspopup="true"
+            aria-expanded="false"
+            >{{ current_user.username }}</a>
+          <ul
+            class="dropdown-menu dropdown-menu-dark dropdown-menu-end"
+            aria-labelledby="navbarDropdownMenuLink">
+            <li>
+              {% if all_raters == 1 %}
+              <a
+                class="dropdown-item"
+                href="{{ url_for('main.dashboard',
+                  all_raters_string=None) }}"
+                >Not all Raters</a>
+              {% else %}
+              <a
+                class="dropdown-item"
+                href="{{ url_for('main.dashboard',
+                  all_raters_string='all_raters') }}"
+                >All Raters</a>
+              {% endif %}
+            </li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+            <li>
+              <a
+                class="dropdown-item"
+                href="{{ url_for('auth.logout') }}">Log out</a>
+            </li>
+          </ul>
+        </li>
+        {% endif %}
+      </ul>
     </div>
-    {% endblock %}
+  </div>
+</nav>
+{% endblock %}
 
-    {% block scripts %}
-    <!-- Optional JavaScript -->
-    <script
-      src="https://code.jquery.com/jquery-3.6.0.min.js"
-      integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
-      crossorigin="anonymous"></script>
-    <script
-      src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
-      integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
-      crossorigin="anonymous"></script>
-    {{ moment.include_moment() }}
-    <script src="{{ url_for('static', filename=('js/mousetrap.min.js')) }}" ></script>
-    {% endblock %}
-  </body>
+{% block content %}
+<br>
+{% with messages = get_flashed_messages(with_categories=True) -%}
+{% if messages -%}
+  <div class="container flashed-messages">
+    <div class="row">
+      <div class="col-md-12">
+        {% for cat, msg in messages %}
+          <div class="alert alert-{{ cat.lower() }}" role="alert">
+            {{ msg }}
+          </div>
+        {%- endfor -%}
+      </div>
+    </div>
+  </div>
+{% endif -%}
+{% endwith -%}
+
+<div class="container">
+{# application content needs to be provided in the app_content block #}
+{% block app_content %}{% endblock %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Optional JavaScript -->
+<script
+  src="https://code.jquery.com/jquery-3.6.0.min.js"
+  integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+  crossorigin="anonymous"></script>
+<script
+  src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+  integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+  crossorigin="anonymous"></script>
+{{ moment.include_moment() }}
+<script src="{{ url_for('static', filename=('js/mousetrap.min.js')) }}" ></script>
+{% endblock %}
+</body>
 </html>

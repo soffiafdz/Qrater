@@ -5,19 +5,19 @@ Mousetrap.bind(["?", "h"], function() {
 
 // Keybindings for Rating
 Mousetrap.bind("0", function() {
-  $("#rating-0").prop("checked", true).trigger("click");
+  $("#rating-0").trigger("click");
 })
 
 Mousetrap.bind("1", function() {
-  $("#rating-1").prop("checked", true).trigger("click");
+  $("#rating-1").trigger("click");
 })
 
 Mousetrap.bind("2", function() {
-  $("#rating-2").prop("checked", true).trigger("click");
+  $("#rating-2").trigger("click");
 })
 
 Mousetrap.bind("3", function() {
-  $("#rating-3").prop("checked", true).trigger("click");
+  $("#rating-3").trigger("click");
 })
 
 // Open/Close Collapsible

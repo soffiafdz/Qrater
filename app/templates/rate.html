@@ -311,7 +311,16 @@
 
 {% block scripts %}
 {{ super() }}
-<script src="{{ url_for('static', filename=('js/auto_submit_rate.js')) }}"></script>
+<script>
+//Submit rate (Button)
+$(".form-check").change(function(){
+  $("form").submit();
+})
+//Submit rate (Comment)
+$("textarea").change(function(){
+  $("form").submit();
+})
+</script>
 <script src="{{ url_for('static', filename=('js/rate_keybindings.js')) }}"></script>
 <script src="{{ url_for('static', filename=('js/magnify.js')) }}"></script>
 {% endblock %}
