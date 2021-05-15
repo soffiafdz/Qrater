@@ -135,3 +135,4 @@ SQL.db
 test_images
 app/static/datasets
 app/static/reports
+datasets/*

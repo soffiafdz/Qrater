@@ -17,8 +17,8 @@ from flask import (render_template, flash, abort, redirect, url_for, request,
 from flask_login import current_user, login_required
 from app import db
 from app.upload import allowed_file
-from app.main.forms import (UploadDatasetForm, EditDatasetForm, RatingForm,
-                            ExportRatingsForm)
+from app.main.forms import (LoadDatasetForm, UploadDatasetForm,
+                            EditDatasetForm, RatingForm, ExportRatingsForm)
 from app.models import Dataset, Image, Ratings, Rater
 from app.main import bp
 
@@ -49,7 +49,6 @@ def dashboard(all_raters_string=None):
     for dataset in Dataset.query.all():
         imgs = dataset.images
         ntot = imgs.count()
-        #TODO: Fix n_0
         if all_raters or current_user.is_anonymous:
             n_0 = imgs.join(Ratings).filter_by(rating=0).\
                 except_(imgs.join(Ratings).filter(Ratings.rating > 0)).\
@@ -67,15 +66,18 @@ def dashboard(all_raters_string=None):
                 .count()
             n_r = sum((n_1, n_2, n_3))
             n_0 = ntot - n_r
+        n1_100 = (n_1 / ntot * 100) if ntot > 0 else 0
+        n2_100 = (n_2 / ntot * 100) if ntot > 0 else 0
+        n3_100 = (n_3 / ntot * 100) if ntot > 0 else 0
         n_imgs['total'].append(ntot)
         n_imgs['ratings'].append(n_r)
         n_imgs['pending'].append(n_0)
         n_imgs['pass'].append(n_1)
         n_imgs['warning'].append(n_2)
         n_imgs['fail'].append(n_3)
-        n_imgs['pass100'].append(round(n_1 / ntot * 100))
-        n_imgs['warning100'].append(round(n_2 / ntot * 100))
-        n_imgs['fail100'].append(round(n_3 / ntot * 100))
+        n_imgs['pass100'].append(round(n1_100))
+        n_imgs['warning100'].append(round(n2_100))
+        n_imgs['fail100'].append(round(n3_100))
     return render_template('dashboard.html', title='Dashboard',
                            Image=Image, Ratings=Ratings,
                            datasets=Dataset.query.all(),
@@ -145,6 +147,7 @@ def rate(name_dataset, r_filter=None):
                            pag=True, r_filter=r_filter, all_raters=all_raters,
                            all_ratings=all_ratings, img_path=(path),
                            img_name=imgs.items[0].name,
+                           title=imgs.items[0].name,
                            comment=imgs.items[0].comment_by_user(current_user),
                            rating=imgs.items[0].rating_by_user(current_user))
 
@@ -166,6 +169,7 @@ def rate_img(name_dataset, image):
     return render_template('rate.html', DS=dataset, form=form, r_filter=image,
                            all_raters=all_raters, img_path=(path), pag=False,
                            all_ratings=all_ratings, img_name=img.name,
+                           title=img.name,
                            comment=img.comment_by_user(current_user),
                            rating=img.rating_by_user(current_user))
 
@@ -216,6 +220,55 @@ def upload_dataset():
                            title='Upload Dataset')
 
 
+@bp.route('/load-dataset', methods=['GET', 'POST'])
+@bp.route('/load-dataset/<dataset>', methods=['GET', 'POST'])
+@login_required
+def load_dataset(dataset=None):
+    """Page to load new datasets from within HOST."""
+    ds_model = None
+    if dataset is not None:
+        ds_model = Dataset.query.filter_by(name=dataset).first()
+
+    form = LoadDatasetForm()
+    form.dir_name.choices = os.listdir('app/static/datasets/')
+    if form.validate_on_submit():
+        # If dir is not a Dataset, create it.
+        if not ds_model:
+            ds_model = Dataset(name=form.dir_name.data)
+            db.session.add(ds_model)
+            db.session.commit()
+
+        # Loop through files
+        path = os.path.join('app/static/datasets', form.dir_name.data)
+        counter = 0
+        for root, _, files in os.walk(path):
+            for file in files:
+                # Check which images are already loaded
+                bname = file.rsplit('.', 1)[0]
+                if not Image.query.filter_by(name=bname).first():
+                    fpath = os.path.join(root, file)
+                    ext = file.rsplit('.', 1)[1]
+                    if allowed_file(file,
+                                    current_app.config['DSET_ALLOWED_EXTS']):
+                        img = Image(name=bname, path=fpath, extension=ext,
+                                    dataset=ds_model)
+                        db.session.add(img)
+                        db.session.commit()
+                        counter += 1
+                else:
+                    flash(f'.{ext} from {file} is not a supported filetype',
+                          'danger')
+                    return redirect(url_for('main.dashboard'))
+        if counter > 0:
+            flash(f"{counter} file(s) were successfully loaded for {dataset}",
+                  'success')
+        return redirect(url_for('main.dashboard'))
+    for _, error in form.errors.items():
+        flash(error[0], 'danger')
+    return render_template('load_dataset.html', form=form, title="Load",
+                           dataset=dataset)
+
+
 @bp.route('/edit-dataset', methods=['GET', 'POST'])
 @bp.route('/edit-dataset/<dataset>', methods=['GET', 'POST'])
 @login_required
@@ -233,7 +286,6 @@ def edit_dataset(dataset=None):
 
     changes = False
     if form.validate_on_submit():
-        print('First Pass')
         if form.new_name.data and form.new_name.data != ds_model.name:
             if Dataset.query.filter_by(name=form.new_name.data).first() \
                     is not None:

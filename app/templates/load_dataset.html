@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block breadcrumb %}
+<ol class="breadcrumb m-0">
+  <li class="breadcrumb-item">
+    <a
+      class="text-decoration-none text-light"
+      href="{{ url_for('main.dashboard') }}"
+      >Dashboard</a>
+  </li>
+  <li class="breadcrumb-item">
+    <a
+      class="text-decoration-none text-light"
+      href="#"
+      >Load Data</a>
+  </li>
+</ol>
+{% endblock %}
+
+{% block app_content %}
+  <h1>Load Dataset</h1>
+  <form
+    class="form"
+    id="datasetForm"
+    action=""
+    method="POST"
+    role="form"
+  >
+    {{ form.csrf_token() }}
+    <div class="col-lg-9 mb-3">
+      <select
+        class="form-select form-select-lg"
+        id="datasetSelect"
+        name="dir_name"
+        aria-label="Select a dataset directory"
+        >
+        <option value="">Select a directory to load</option>
+        {%- for name in form.dir_name.choices -%}
+        <option
+          {% if name == dataset %}selected{% endif %}
+          >{{ name }}</option>
+        {%- endfor -%}
+      </select>
+      <div class="form-text">
+      </div>
+    </div>
+    <button
+      class="btn btn-primary btn-lg"
+      id="submitBtn"
+      type="submit"
+      form="datasetForm"
+      value="Load"
+      {% if dataset is none %}disabled{% endif %}
+      >Load Data</button>
+  </form>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+  $(document).ready(function () {
+    $("#datasetSelect").change(function() {
+      if($(this).val() == "") {
+        $("#datasetForm :input").attr("disabled", true);
+        $(this).attr("disabled", false);
+      } else {
+        window.location.href = "{{ url_for('main.load_dataset') }}/" +
+          $(this).val();
+      }
+    });
+    $("#datasetForm").submit(function() {
+      $("#submitBtn").html(
+        `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...`
+      );
+      $("#datasetForm :input").prop("readonly", true);
+    });
+  });
+</script>
+{% endblock %}

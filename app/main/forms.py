@@ -11,6 +11,13 @@ from wtforms.validators import DataRequired, ValidationError
 from app.models import Dataset
 
 
+class LoadDatasetForm(FlaskForm):
+    """Form for loading a new dataset from within host."""
+
+    dir_name = SelectField("Directory", validators=[DataRequired()])
+    submit = SubmitField('Load')
+
+
 class UploadDatasetForm(FlaskForm):
     """Form for uploading a new dataset."""
 
