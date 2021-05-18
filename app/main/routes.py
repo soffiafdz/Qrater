@@ -136,7 +136,8 @@ def rate(name_dataset, r_filter=None):
         return redirect(url_for('main.rate', all_raters=all_raters,
                                 name_dataset=name_dataset))
     all_ratings = imgs.items[0].ratings.all()
-    path = imgs.items[0].path.replace("app/static/", "")
+    statics_dir = os.path.join(current_app.config['ABS_PATH'], 'static')
+    path = imgs.items[0].path.replace(statics_dir, "")
     form = RatingForm()
     if form.validate_on_submit():
         img = imgs.items[0]
@@ -158,9 +159,10 @@ def rate_img(name_dataset, image):
     """Page to view a single image and rate it."""
     dataset = Dataset.query.filter_by(name=name_dataset).first_or_404()
     img = dataset.images.filter_by(name=image).first_or_404()
-    all_ratings = img.ratings.all()
     all_raters = request.args.get('all_raters', 0, type=int)
-    path = img.path.replace("app/static/", "")
+    all_ratings = img.ratings.all()
+    statics_dir = os.path.join(current_app.config['ABS_PATH'], 'static')
+    path = img.path.replace(statics_dir, "")
     form = RatingForm()
     if form.validate_on_submit():
         img.set_rating(user=current_user, rating=form.rating.data)
@@ -178,10 +180,13 @@ def rate_img(name_dataset, image):
 @login_required
 def upload_dataset():
     """Page to upload new dataset of MRI."""
+    datasets_dir = os.path.join(current_app.config['ABS_PATH'],
+                                'static/datasets')
+
     form = UploadDatasetForm()
     if form.validate_on_submit():
         files = request.files.getlist(form.dataset.name)
-        savedir = os.path.join('app/static/datasets', form.dataset_name.data)
+        savedir = os.path.join(datasets_dir, form.dataset_name.data)
 
         if not os.path.isdir(savedir):
             os.makedirs(savedir)
@@ -229,8 +234,11 @@ def load_dataset(dataset=None):
     if dataset is not None:
         ds_model = Dataset.query.filter_by(name=dataset).first()
 
+    datasets_dir = os.path.join(current_app.config['ABS_PATH'],
+                                'static/datasets')
+
     form = LoadDatasetForm()
-    form.dir_name.choices = os.listdir('app/static/datasets/')
+    form.dir_name.choices = os.listdir(datasets_dir)
     if form.validate_on_submit():
         # If dir is not a Dataset, create it.
         if not ds_model:
@@ -239,8 +247,10 @@ def load_dataset(dataset=None):
             db.session.commit()
 
         # Loop through files
-        path = os.path.join('app/static/datasets', form.dir_name.data)
+        path = os.path.join(datasets_dir, form.dir_name.data)
         counter = 0
+        # os.walk(path, followlinks=True) :: This would follow symlink location
+        # TODO Test walk with links on BIC
         for root, _, files in os.walk(path):
             for file in files:
                 # Check which images are already loaded
@@ -277,12 +287,15 @@ def edit_dataset(dataset=None):
     if dataset is not None:
         ds_model = Dataset.query.filter_by(name=dataset).first_or_404()
 
+    datasets_dir = os.path.join(current_app.config['ABS_PATH'],
+                                'static/datasets')
+
     form = EditDatasetForm()
     form.dataset.choices = [ds.name for ds in Dataset.query.order_by('name')]
 
     test_names = {}
-    for ds in Dataset.query.all():
-        test_names[ds.name] = [img.name for img in ds.images.limit(5).all()]
+    for set in Dataset.query.all():
+        test_names[set.name] = [img.name for img in set.images.limit(5).all()]
 
     changes = False
     if form.validate_on_submit():
@@ -293,8 +306,8 @@ def edit_dataset(dataset=None):
                       'already exists. Please choose another name'),
                       'danger')
                 return redirect(request.url)
-            os.rename(os.path.join('app/static/datasets', ds_model.name),
-                      os.path.join('app/static/datasets', form.new_name.data))
+            os.rename(os.path.join(datasets_dir, ds_model.name),
+                      os.path.join(datasets_dir, form.new_name.data))
             for img in ds_model.images.all():
                 img.path = img.path.replace(ds_model.name, form.new_name.data)
                 db.session.add(img)
@@ -305,7 +318,7 @@ def edit_dataset(dataset=None):
 
         files = request.files.getlist(form.imgs_to_upload.name)
         if files[0].filename != "":
-            savedir = os.path.join('app/static/datasets', ds_model.name)
+            savedir = os.path.join(datasets_dir, ds_model.name)
             new_imgs = []
             for file in files:
                 ext = file.filename.rsplit('.', 1)[1]
@@ -358,8 +371,12 @@ def edit_dataset(dataset=None):
 def delete_dataset(dataset):
     """Page to delete a dataset of MRI, including images and ratings."""
     ds_model = Dataset.query.filter_by(name=dataset).first_or_404()
+
+    datasets_dir = os.path.join(current_app.config['ABS_PATH'],
+                                'static/datasets')
+
     ds_name = ds_model.name
-    ds_dir = os.path.join('app/static/datasets', ds_name)
+    ds_dir = os.path.join(datasets_dir, ds_name)
 
     for image in ds_model.images.all():
         for rating in image.ratings.all():
@@ -445,7 +462,7 @@ def export_ratings(dataset=None):
                 rating_dict['Date'] = rating.timestamp.isoformat() + 'Z'
             ratings.append(rating_dict)
 
-        path = 'app/static/reports'
+        path = os.path.join(current_app.config['ABS_PATH'], 'static/reports')
         if not os.path.isdir(path):
             os.makedirs(path)
 
@@ -454,7 +471,6 @@ def export_ratings(dataset=None):
                     f'{file_name}_{datetime.now().date().isoformat()}.csv')
             with open(f'app/{file}', 'w', newline='') as csv_file:
                 writer = csv.DictWriter(csv_file, fieldnames=keys)
-                writer.writeheader
                 writer.writerows(ratings)
         else:
             file = ('static/reports/'
