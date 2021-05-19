@@ -180,13 +180,12 @@ def rate_img(name_dataset, image):
 @login_required
 def upload_dataset():
     """Page to upload new dataset of MRI."""
-    datasets_dir = os.path.join(current_app.config['ABS_PATH'],
-                                'static/datasets')
+    data_dir = os.path.join(current_app.config['ABS_PATH'], 'static/datasets')
 
     form = UploadDatasetForm()
     if form.validate_on_submit():
         files = request.files.getlist(form.dataset.name)
-        savedir = os.path.join(datasets_dir, form.dataset_name.data)
+        savedir = os.path.join(data_dir, form.dataset_name.data)
 
         if not os.path.isdir(savedir):
             os.makedirs(savedir)
@@ -226,57 +225,67 @@ def upload_dataset():
 
 
 @bp.route('/load-dataset', methods=['GET', 'POST'])
-@bp.route('/load-dataset/<dataset>', methods=['GET', 'POST'])
+@bp.route('/load-dataset/<directory>', methods=['GET', 'POST'])
 @login_required
-def load_dataset(dataset=None):
+def load_dataset(directory=None):
     """Page to load new datasets from within HOST."""
-    ds_model = None
-    if dataset is not None:
-        ds_model = Dataset.query.filter_by(name=dataset).first()
+    data_dir = os.path.join(current_app.config['ABS_PATH'], 'static/datasets')
 
-    datasets_dir = os.path.join(current_app.config['ABS_PATH'],
-                                'static/datasets')
+    info = {'directory': directory, 'new_imgs': 0}
+    if directory is not None:
+        # Count the files in the directory
+        n_files = 0
+        for _, _, files in os.walk(os.path.join(data_dir, directory)):
+            for file in files:
+                n_files += 1
+        # Save useful info for template
+        info['model'] = Dataset.query.filter_by(name=directory).first()
+        info['saved_imgs'] = info['model'].images.count() \
+            if info['model'] else 0
+        info['new_imgs'] = n_files - info['saved_imgs']
 
     form = LoadDatasetForm()
-    form.dir_name.choices = os.listdir(datasets_dir)
+    form.dir_name.choices = os.listdir(data_dir)
     if form.validate_on_submit():
-        # If dir is not a Dataset, create it.
-        if not ds_model:
-            ds_model = Dataset(name=form.dir_name.data)
-            db.session.add(ds_model)
+        # If dataset is not a Dataset Model, create it.
+        if not info['model']:
+            info['model'] = Dataset(name=form.dir_name.data)
+            db.session.add(info['model'])
             db.session.commit()
 
         # Loop through files
-        path = os.path.join(datasets_dir, form.dir_name.data)
-        counter = 0
         # os.walk(path, followlinks=True) :: This would follow symlink location
         # TODO Test walk with links on BIC
-        for root, _, files in os.walk(path):
+        loaded_images = 0
+        for root, _, files in os.walk(os.path.join(data_dir,
+                                                   form.dir_name.data)):
             for file in files:
                 # Check which images are already loaded
-                bname = file.rsplit('.', 1)[0]
-                if not Image.query.filter_by(name=bname).first():
+                basename = file.rsplit('.', 1)[0]
+                if not Image.query.filter(Image.name == basename,
+                                          Image.dataset == info['model']).\
+                        first():
                     fpath = os.path.join(root, file)
                     ext = file.rsplit('.', 1)[1]
                     if allowed_file(file,
                                     current_app.config['DSET_ALLOWED_EXTS']):
-                        img = Image(name=bname, path=fpath, extension=ext,
-                                    dataset=ds_model)
+                        img = Image(name=basename, path=fpath, extension=ext,
+                                    dataset=info['model'])
                         db.session.add(img)
                         db.session.commit()
-                        counter += 1
-                else:
-                    flash(f'.{ext} from {file} is not a supported filetype',
-                          'danger')
-                    return redirect(url_for('main.dashboard'))
-        if counter > 0:
-            flash(f"{counter} file(s) were successfully loaded for {dataset}",
-                  'success')
+                        loaded_images += 1
+                    else:
+                        flash((f'.{ext} from {file}'
+                               ' is not a supported filetype'), 'danger')
+                        return redirect(url_for('main.dashboard'))
+        if loaded_images > 0:
+            flash((f"{loaded_images} file(s)"
+                   f" were successfully loaded for {directory}"), 'success')
         return redirect(url_for('main.dashboard'))
     for _, error in form.errors.items():
         flash(error[0], 'danger')
     return render_template('load_dataset.html', form=form, title="Load",
-                           dataset=dataset)
+                           dict=info)
 
 
 @bp.route('/edit-dataset', methods=['GET', 'POST'])
@@ -287,8 +296,7 @@ def edit_dataset(dataset=None):
     if dataset is not None:
         ds_model = Dataset.query.filter_by(name=dataset).first_or_404()
 
-    datasets_dir = os.path.join(current_app.config['ABS_PATH'],
-                                'static/datasets')
+    data_dir = os.path.join(current_app.config['ABS_PATH'], 'static/datasets')
 
     form = EditDatasetForm()
     form.dataset.choices = [ds.name for ds in Dataset.query.order_by('name')]
@@ -300,14 +308,13 @@ def edit_dataset(dataset=None):
     changes = False
     if form.validate_on_submit():
         if form.new_name.data and form.new_name.data != ds_model.name:
-            if Dataset.query.filter_by(name=form.new_name.data).first() \
-                    is not None:
+            if Dataset.query.filter_by(name=form.new_name.data).first():
                 flash((f'A Dataset named "{form.new_name.data}" '
                       'already exists. Please choose another name'),
                       'danger')
                 return redirect(request.url)
-            os.rename(os.path.join(datasets_dir, ds_model.name),
-                      os.path.join(datasets_dir, form.new_name.data))
+            os.rename(os.path.join(data_dir, ds_model.name),
+                      os.path.join(data_dir, form.new_name.data))
             for img in ds_model.images.all():
                 img.path = img.path.replace(ds_model.name, form.new_name.data)
                 db.session.add(img)
@@ -318,7 +325,7 @@ def edit_dataset(dataset=None):
 
         files = request.files.getlist(form.imgs_to_upload.name)
         if files[0].filename != "":
-            savedir = os.path.join(datasets_dir, ds_model.name)
+            savedir = os.path.join(data_dir, ds_model.name)
             new_imgs = []
             for file in files:
                 ext = file.filename.rsplit('.', 1)[1]
@@ -372,11 +379,10 @@ def delete_dataset(dataset):
     """Page to delete a dataset of MRI, including images and ratings."""
     ds_model = Dataset.query.filter_by(name=dataset).first_or_404()
 
-    datasets_dir = os.path.join(current_app.config['ABS_PATH'],
-                                'static/datasets')
+    data_dir = os.path.join(current_app.config['ABS_PATH'], 'static/datasets')
 
     ds_name = ds_model.name
-    ds_dir = os.path.join(datasets_dir, ds_name)
+    ds_dir = os.path.join(data_dir, ds_name)
 
     for image in ds_model.images.all():
         for rating in image.ratings.all():

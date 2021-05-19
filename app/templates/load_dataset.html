@@ -27,21 +27,45 @@
     role="form"
   >
     {{ form.csrf_token() }}
-    <div class="col-lg-9 mb-3">
-      <select
-        class="form-select form-select-lg"
-        id="datasetSelect"
-        name="dir_name"
-        aria-label="Select a dataset directory"
-        >
-        <option value="">Select a directory to load</option>
-        {%- for name in form.dir_name.choices -%}
-        <option
-          {% if name == dataset %}selected{% endif %}
-          >{{ name }}</option>
-        {%- endfor -%}
-      </select>
-      <div class="form-text">
+    <div class="col-lg-9">
+      <div class="row my-3 mx-0">
+        <div class="col">
+          <select
+            class="form-select form-select-lg"
+            id="datasetSelect"
+            name="dir_name"
+            aria-label="Select a dataset directory"
+            >
+            <option value="">Select a directory to load</option>
+            {%- for dir in form.dir_name.choices -%}
+            <option
+              {% if dir == dict['directory'] %}selected{% endif %}
+              >{{ dir }}</option>
+            {%- endfor -%}
+          </select>
+        </div>
+        <div
+          id="dirInfo"
+          class="form-text px-3 fs-6"
+          >
+          {% if dict['directory'] is none %}
+          {% elif dict['model'] is none %}
+          <span
+            class="text-danger"
+            >Dataset Not Loaded: {{ dict['new_imgs'] }} unloaded files</span>
+          {% elif dict['new_imgs'] == 0 %}
+          <span
+            class="text-success"
+            >Loaded Dataset: {{ dict['saved_imgs'] }} images</span>
+          {% elif dict['new_imgs'] > 0 %}
+          <span
+            class="text-success"
+            >Loaded Dataset: {{ dict['saved_imgs'] }} images;</span>
+          <span
+            class="text-danger"
+            > {{ dict['new_imgs'] }} unloaded files</span>
+          {% endif %}
+        </div>
       </div>
     </div>
     <button
@@ -50,7 +74,9 @@
       type="submit"
       form="datasetForm"
       value="Load"
-      {% if dataset is none %}disabled{% endif %}
+      {% if dict['directory'] is none or dict['new_imgs'] == 0 -%}
+      disabled
+      {%- endif %}
       >Load Data</button>
   </form>
 {% endblock %}
@@ -63,7 +89,9 @@
       if($(this).val() == "") {
         $("#datasetForm :input").attr("disabled", true);
         $(this).attr("disabled", false);
+        $("#dirInfo").addClass("d-none");
       } else {
+        $("#dirInfo").removeClass("d-none");
         window.location.href = "{{ url_for('main.load_dataset') }}/" +
           $(this).val();
       }
