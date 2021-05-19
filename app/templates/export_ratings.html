@@ -28,7 +28,7 @@
   >
     {{ form.csrf_token() }}
     <div class="col-lg-9">
-      <div class="row mb-3 mx-0">
+      <div class="row my-3 mx-0">
         <div class="col">
           <select
             class="form-select form-select-lg"
@@ -197,13 +197,13 @@
       </div>
     </div>
     <button
-      class="btn btn-primary bn-lg"
+      class="btn btn-primary btn-lg"
       id="submitBtn"
       type="submit"
       form="exportForm"
       value="Download"
       {% if dataset is none %}disabled{% endif %}
-      >Downlad</button>
+      >Download</button>
   </form>
 {% endblock %}
 
