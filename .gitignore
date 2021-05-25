@@ -136,3 +136,9 @@ test_images
 app/static/datasets
 app/static/reports
 datasets/*
+
+# Text lists
+*.txt
+
+# Run script
+run
