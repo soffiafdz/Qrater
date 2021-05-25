@@ -21,17 +21,18 @@
 
 {% block app_content %}
 <div class="row">
-  <div class="col-lg-12 m-4">
+  <div class="col-lg-12 my-3">
     {# <h2>DataTables 1.10.x example: Users and their address.</h2> #}
     <table id="dataTable" class="table" cellspacing="0" width="100%">
       <thead class="table-dark">
         <tr>
           <th class="image">Image</th>
-          {% if sub_labs %}<th class="subject">Subject</th>{% endif %}
-          {% if sess_labs %}<th class="session">Session</th>{% endif %}
+          {% if types %}<th class="type">Type</th>{% endif %}
+          {% if subs %}<th class="subject">Subject</th>{% endif %}
+          {% if sess %}<th class="session">Session</th>{% endif %}
           <th class="rating">Rating</th>
-          <th class="rater">Rater</th>
-          <th class="datetime">Rated on</th>
+          {% if ratings %}<th class="rater">Rater</th>{% endif %}
+          {% if ratings %}<th class="datetime">Rated on</th>{% endif %}
         </tr>
       </thead>
       <tbody></tbody>
@@ -57,7 +58,7 @@
       "serverSide": true,
       "ajax": "{{ url_for('dt.data', dset_id=DS.id,
                   all_raters=all_raters, only_ratings=only_ratings,
-                  subject=sub_labs, session=sess_labs) }}",
+                  type=types, subject=subs, session=sess, ratings=ratings) }}",
       "columnDefs": [
         {
           targets: "image",
@@ -107,9 +108,38 @@
           }
         },
         {
+          targets: "type",
+          render: function ( data, type, row ) {
+            return data ? data :
+              '<span class="text-muted fw-light"> NA</span>';
+          }
+        },
+        {
+          targets: "subject",
+          render: function ( data, type, row ) {
+            return data ? data :
+              '<span class="text-muted fw-light"> NA</span>';
+          }
+        },
+        {
+          targets: "session",
+          render: function ( data, type, row ) {
+            return data ? data :
+              '<span class="text-muted fw-light"> NA</span>';
+          }
+        },
+        {
+          targets: "rater",
+          render: function ( data, type, row ) {
+            return data ? data :
+              '<span class="text-muted fw-light"> Unrated</span>';
+          }
+        },
+        {
           targets: "datetime",
           render: function ( data, type, row ) {
-            return data ? moment(data).format("LLL") : "Unrated";
+            return data ? moment(data).calendar() :
+              '<span class="text-muted fw-light"> Unrated</span>';
           }
         }
       ]
