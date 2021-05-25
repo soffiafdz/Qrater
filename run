@@ -1,10 +1,24 @@
 #!/bin/sh
 
-source /ipl/quarantine/conda/etc/profile.d/conda.sh
-
-echo "Loading conda environment..."
-
-conda activate qrater
-
-export FLASK_APP=/home/bic/sfernandez/qrater/qrater.py
-flask run
+# Check if Qrater is already running (FLASK process)
+if $(pgrep -f flask >/dev/null); then
+	# App would crash so output helpful text instead.
+	printf "\nThere is already an instance of Qrater running on %s.\n" \
+		$HOSTNAME
+	printf "You can access Qrater in your browser at localhost:8080, "
+	printf "after only making a ssh port forward.\n\n"
+	printf "This can be done with the following command:\n"
+	printf "ssh -L 8080:127.0.0.1:5000 -J "
+	printf "%s@login.bic.mni.mcgill.ca %s@%s.bic.mni.mcgill.ca\n\n" \
+	$USER $USER $HOSTNAME
+else
+	#Load conda environment
+	source /ipl/quarantine/conda/etc/profile.d/conda.sh
+	echo "Loading conda environment..."
+	conda activate qrater
+	# FLASK environmental variables
+	export FLASK_APP=/home/bic/sfernandez/qrater/qrater.py
+	export FLASK_ENV=development
+	# QRATER
+	flask run
+fi
