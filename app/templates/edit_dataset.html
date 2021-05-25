@@ -66,8 +66,33 @@
               class="form-control"
               id="newName"
               name="new_name"
-              placeholder="Change the Name (Optional)">
+              placeholder="Change the Dataset's Name (Optional)">
           </div>
+        </div>
+      </div>
+      <div class="row mb-3 mx-0">
+        <label
+          class="col-sm-12 col-md-3 col-form-label"
+          for="reType">Image type label</label>
+        <div class="col-sm-12 col-md-9">
+          <div class="input-group">
+            <span class="input-group-text">
+              <i class="bi bi-image-fill"></i>
+            </span>
+            <input
+              type="text"
+              class="form-control"
+              id="reType"
+              name="type_regex"
+              placeholder="Regular Expression (Optional)">
+            <button
+              class="btn btn-outline-secondary"
+              type="button"
+              id="regexBtn1"
+              {% if dataset is none %}disabled{% endif %}
+              ><i class="bi bi-search"></i></button>
+          </div>
+          <div id="reTypeResults" class="form-text d-none"></div>
         </div>
       </div>
       <div class="row mb-3 mx-0">
@@ -88,7 +113,7 @@
             <button
               class="btn btn-outline-secondary"
               type="button"
-              id="regexBtn1"
+              id="regexBtn2"
               {% if dataset is none %}disabled{% endif %}
               ><i class="bi bi-search"></i></button>
           </div>
@@ -113,7 +138,7 @@
             <button
               class="btn btn-outline-secondary"
               type="button"
-              id="regexBtn2"
+              id="regexBtn3"
               {% if dataset is none %}disabled{% endif %}
               ><i class="bi bi-search"></i></button>
           </div>
@@ -168,6 +193,28 @@
       }
     });
     $("#regexBtn1").click(function() {
+      if ($("#reType").val() == "") {
+        $("#reTypeResults").addClass("d-none");
+      } else {
+        var results = [];
+        var dataset = $("#datasetSelect").val()
+        var imgs = imgsArray[dataset];
+        var regex = new RegExp($("#reType").val());
+        $("#reTypeResults").removeClass("d-none");
+        $("#reTypeResults").removeClass("text-danger");
+        imgs.forEach(function(img) {
+          var res = img.match(regex);
+          if (res) results.push(res[0]);
+        });
+        if (!results.length) {
+          $("#reTypeResults").addClass("text-danger");
+          $("#reTypeResults").html("No results with this REGEX");
+        } else {
+          $("#reTypeResults").html(results.join(', '));
+        }
+      }
+    });
+    $("#regexBtn2").click(function() {
       if ($("#reSub").val() == "") {
         $("#reSubResults").addClass("d-none");
       } else {
@@ -176,6 +223,7 @@
         var imgs = imgsArray[dataset];
         var regex = new RegExp($("#reSub").val());
         $("#reSubResults").removeClass("d-none");
+        $("#reSubResults").removeClass("text-danger");
         imgs.forEach(function(img) {
           var res = img.match(regex);
           if (res) results.push(res[0]);
@@ -188,7 +236,7 @@
         }
       }
     });
-    $("#regexBtn2").click(function() {
+    $("#regexBtn3").click(function() {
       if ($("#reSess").val() == "") {
         $("#reSessResults").addClass("d-none");
       } else {
@@ -197,6 +245,7 @@
         var imgs = imgsArray[dataset];
         var regex = new RegExp($("#reSess").val());
         $("#reSessResults").removeClass("d-none");
+        $("#reSessResults").removeClass("text-danger");
         imgs.forEach(function(img) {
           var res = img.match(regex);
           if (res) results.push(res[0]);

@@ -91,6 +91,7 @@ class Image(db.Model):
     dataset_id = db.Column(db.Integer, db.ForeignKey('dataset.id'))
     subject = db.Column(db.String(16))
     session = db.Column(db.String(16))
+    imgtype = db.Column(db.String(16))
     ratings = db.relationship("Ratings", backref="image", lazy="dynamic")
 
     def __repr__(self):

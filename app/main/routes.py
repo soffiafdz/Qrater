@@ -350,20 +350,32 @@ def edit_dataset(dataset=None):
                 db.session.commit()
             changes = True
 
-        if form.sub_regex.data or form.sess_regex.data:
+        if form.sub_regex.data \
+                or form.sess_regex.data \
+                or form.type_regex.data:
             for img in ds_model.images.all():
+                img_change = False
                 if form.sub_regex.data:
                     pattern = form.sub_regex.data
                     result = re.search(pattern, img.name)
                     if result:
                         img.subject = result.group()
+                        img_change = True
                 if form.sess_regex.data:
                     pattern = form.sess_regex.data
                     result = re.search(pattern, img.name)
                     if result:
                         img.session = result.group()
-                db.session.add(img)
-                db.session.commit()
+                        img_change = True
+                if form.type_regex.data:
+                    pattern = form.type_regex.data
+                    result = re.search(pattern, img.name)
+                    if result:
+                        img.imgtype = result.group()
+                        img_change = True
+                if img_change:
+                    db.session.add(img)
+                    db.session.commit()
             changes = True
 
         if changes:

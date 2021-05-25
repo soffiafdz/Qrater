@@ -139,6 +139,3 @@ datasets/*
 
 # Text lists
 *.txt
-
-# Run script
-run
