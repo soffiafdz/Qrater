@@ -6,6 +6,20 @@
   rel="stylesheet"
   type="text/css"
   href="https://cdn.datatables.net/1.10.24/css/dataTables.bootstrap5.min.css">
+<link
+  rel="stylesheet"
+  type="text/css"
+  href="https://cdn.datatables.net/buttons/1.7.0/css/buttons.bootstrap5.min.css">
+{#
+<link
+  rel="stylesheet"
+  type="text/css"
+  href="https://cdn.datatables.net/responsive/2.2.7/css/responsive.bootstrap5.min.css">
+<link
+  rel="stylesheet"
+  type="text/css"
+  href="https://cdn.datatables.net/scroller/2.0.3/css/scroller.bootstrap5.min.css">
+#}
 {% endblock %}
 
 {% block breadcrumb %}
@@ -26,7 +40,7 @@
     <table id="dataTable" class="table" cellspacing="0" width="100%">
       <thead class="table-dark">
         <tr>
-          <th class="image">Image</th>
+          <th class="image">Image name</th>
           {% if types %}<th class="type">Type</th>{% endif %}
           {% if subs %}<th class="subject">Subject</th>{% endif %}
           {% if sess %}<th class="session">Session</th>{% endif %}
@@ -51,6 +65,32 @@
   type="text/javascript"
   src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap5.min.js">
 </script>
+<script
+  type="text/javascript"
+  src="https://cdn.datatables.net/buttons/1.7.0/js/dataTables.buttons.min.js">
+</script>
+<script
+  type="text/javascript"
+  src="https://cdn.datatables.net/buttons/1.7.0/js/buttons.bootstrap5.min.js">
+</script>
+<script
+  type="text/javascript"
+  src="https://cdn.datatables.net/buttons/1.7.0/js/buttons.colVis.min.js">
+</script>
+{#
+<script
+  type="text/javascript"
+  src="https://cdn.datatables.net/responsive/2.2.7/js/dataTables.responsive.min.js">
+</script>
+<script
+  type="text/javascript"
+  src="https://cdn.datatables.net/responsive/2.2.7/js/responsive.bootstrap5.min.js">
+</script>
+<script
+  type="text/javascript"
+  src="https://cdn.datatables.net/responsive/2.0.3/js/dataTables.scroller.min.js">
+</script>
+#}
 <script type="text/javascript" charset="utf-8">
   $(document).ready(function () {
     var table = $('#dataTable').DataTable({
@@ -59,6 +99,11 @@
       "ajax": "{{ url_for('dt.data', dset_id=DS.id,
                   all_raters=all_raters, only_ratings=only_ratings,
                   type=types, subject=subs, session=sess, ratings=ratings) }}",
+      "lengthChange": false,
+      "lengthMenu": [
+          [ 10, 25, 50, 100 ],
+          [ '10 rows', '25 rows', '50 rows', '100 rows' ]
+      ],
       "columnDefs": [
         {
           targets: "image",
@@ -138,12 +183,17 @@
         {
           targets: "datetime",
           render: function ( data, type, row ) {
-            return data ? moment(data).calendar() :
+            return data ? moment(data).format('HH:mm; Y/MM/DD') :
               '<span class="text-muted fw-light"> Unrated</span>';
           }
         }
       ]
     });
+    new $.fn.dataTable.Buttons( table, {
+        buttons: [ 'pageLength', 'colvis' ]
+    } );
+    table.buttons().container()
+    .appendTo( '#dataTable_wrapper .col-md-6:eq(0)' );
   });
 </script>
 {% endblock %}
