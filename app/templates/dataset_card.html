@@ -49,8 +49,8 @@
           <a
             class="list-group-item list-group-item-action list-group-item-dark
               d-flex justify-content-between"
-            href="{{ url_for('main.rate',
-              name_dataset=DS.name, r_filter=0, all_raters=all_raters) }}"
+            href="{{ url_for('main.rate', name_dataset=DS.name,
+              rating_filter=0, all_raters=all_raters) }}"
             ><div class="me-auto">Pending</div>
             <span
               class="badge rounded-pill bg-light text-dark"
@@ -61,8 +61,8 @@
           <a
             class="list-group-item list-group-item-action list-group-item-success
               d-flex justify-content-between"
-            href="{{ url_for('main.rate',
-              name_dataset=DS.name, r_filter=1, all_raters=all_raters) }}"
+            href="{{ url_for('main.rate', name_dataset=DS.name,
+              rating_filter=1, all_raters=all_raters) }}"
             ><div class="me-auto">Pass</div>
             <span
               class="badge rounded-pill bg-light text-dark"
@@ -73,8 +73,8 @@
           <a
             class="list-group-item list-group-item-action list-group-item-warning
               d-flex justify-content-between"
-            href="{{ url_for('main.rate',
-              name_dataset=DS.name, r_filter=2, all_raters=all_raters) }}"
+            href="{{ url_for('main.rate', name_dataset=DS.name,
+              rating_filter=2, all_raters=all_raters) }}"
             ><div class="me-auto">Warning</div>
             <span
               class="badge rounded-pill bg-light text-dark"
@@ -85,8 +85,8 @@
           <a
             class="list-group-item list-group-item-action list-group-item-danger
               d-flex justify-content-between"
-            href="{{ url_for('main.rate',
-              name_dataset=DS.name, r_filter=3, all_raters=all_raters) }}"
+            href="{{ url_for('main.rate', name_dataset=DS.name,
+              rating_filter=3, all_raters=all_raters) }}"
             ><div class="me-auto">Fail</div>
             <span
               class="badge rounded-pill bg-light text-dark"
@@ -100,8 +100,8 @@
           d-grid gap-2 col-6 mx-auto"
           >
         <a
-        href="{{ url_for('main.rate',
-        name_dataset=DS.name, all_raters=all_raters) }}"
+        href="{{ url_for('main.rate', name_dataset=DS.name,
+          all_raters=all_raters) }}"
         class="btn btn-light mb-2"
         >Rate
         </a>

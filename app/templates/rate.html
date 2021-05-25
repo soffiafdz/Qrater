@@ -36,30 +36,29 @@
   <li class="breadcrumb-item">
     <a
       class="text-decoration-none text-light"
-      href="{{ url_for('main.rate',
-        all_raters=all_raters,
-        name_dataset=DS.name) if r_filter is not none else '#' }}"
+      href="{{ url_for('main.rate', all_raters=all_raters,
+        name_dataset=DS.name) if filtering is not none else '#' }}"
       >Rating</a>
   </li>
-  {% if r_filter is not none %}
+  {% if filtering is not none %}
   <li class="breadcrumb-item">
     <a
       href="#"
-      {%- if r_filter == 0 -%}
+      {%- if filtering == 0 -%}
       class="text-decoration-none text-secondary"
       >Pending
-      {%- elif r_filter == 1 -%}
+      {%- elif filtering == 1 -%}
       class="text-decoration-none text-success"
       >Pass
-      {%- elif r_filter == 2 -%}
+      {%- elif filtering == 2 -%}
       class="text-decoration-none text-warning"
       >Warning
-      {%- elif r_filter == 3 -%}
+      {%- elif filtering == 3 -%}
       class="text-decoration-none text-danger"
       >Fail
       {%- else -%}
       class="text-decoration-none text-white"
-      >{{ r_filter }}
+      >{{ filtering }}
       {%- endif -%}
     </a>
   </li>
@@ -158,7 +157,7 @@
           <a
             class="page-link"
             id="prevPage"
-            href="{{ url_for('main.rate', r_filter=r_filter,
+            href="{{ url_for('main.rate', filtering=filtering,
               name_dataset=DS.name, all_raters=all_raters,
               page=imgs.prev_num) if imgs.has_prev else '#' }}"
               >
@@ -171,7 +170,7 @@
         <li class="page-item">
           <a
             class="page-link"
-            href="{{ url_for('main.rate', r_filter=r_filter,
+            href="{{ url_for('main.rate', filtering=filtering,
               name_dataset=DS.name, all_raters=all_raters, page=page) }}"
             >{{ page }}</a>
         </li>
@@ -197,7 +196,7 @@
             <a
               class="page-link"
               id="nextPage"
-              href="{{ url_for('main.rate', r_filter=r_filter,
+              href="{{ url_for('main.rate', filtering=filtering,
                 name_dataset=DS.name, all_raters=all_raters,
                 page=imgs.next_num) if imgs.has_next else '#' }}">
               <i class="bi-arrow-right"></i>

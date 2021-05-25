@@ -110,8 +110,9 @@
           render: function ( data, type, row ) {
             if ( type === 'display' ) {
               {# NEED TO CHANGE IF rate_img URL CHANGES #}
-              return "<a href='/rate/{{ DS.name }}/" + data +
+              return "<a href='/rate/{{ DS.name }}" +
                 "?all_raters={{ all_raters }}" +
+                "&image=" + data +
                 "' class='text-dark text-decoration-none'>" + data + "</a>"
             }
             return data;
@@ -126,26 +127,26 @@
               switch(data) {
                 case 1:
                   return "<a href=" +
-                    "{{ url_for('main.rate', r_filter=1,
-                      all_raters=all_raters, name_dataset=DS.name) }} "+
+                    "{{ url_for('main.rate', rating_filter=1,
+                          all_raters=all_raters, name_dataset=DS.name) }} "+
                     "class='text-success text-decoration-none'>Pass</a>";
                   break;
                 case 2:
                   return "<a href=" +
-                    "{{ url_for('main.rate', r_filter=2,
-                      all_raters=all_raters, name_dataset=DS.name) }} "+
+                    "{{ url_for('main.rate', rating_filter=2,
+                            all_raters=all_raters, name_dataset=DS.name) }} "+
                     "class='text-warning text-decoration-none'>Warning</a>";
                   break;
                 case 3:
                   return "<a href=" +
-                    "{{ url_for('main.rate', r_filter=3,
-                      all_raters=all_raters, name_dataset=DS.name) }} "+
+                    "{{ url_for('main.rate', rating_filter=3,
+                            all_raters=all_raters, name_dataset=DS.name) }} "+
                     "class='text-danger text-decoration-none'>Fail</a>";
                   break;
                 default:
                   return "<a href=" +
-                    "{{ url_for('main.rate', r_filter=0,
-                      all_raters=all_raters, name_dataset=DS.name) }} "+
+                    "{{ url_for('main.rate', rating_filter=0,
+                            all_raters=all_raters, name_dataset=DS.name) }} "+
                     "class='text-secondary text-decoration-none'>Pending</a>";
               }
             }
@@ -155,22 +156,43 @@
         {
           targets: "type",
           render: function ( data, type, row ) {
-            return data ? data :
-              '<span class="text-muted fw-light"> NA</span>';
+              if ( type === 'display' ) {
+                  return data ? "<a href='/rate/{{ DS.name }}" +
+                    "?type_filter=" + data +
+                    "&all_raters={{ all_raters }}" +
+                    "' class='text-dark text-decoration-none'>" +
+                    data + "</a>":
+                        '<span class="text-muted fw-light"> NA</span>';
+              }
+            return data;
           }
         },
         {
           targets: "subject",
           render: function ( data, type, row ) {
-            return data ? data :
-              '<span class="text-muted fw-light"> NA</span>';
+              if ( type === 'display' ) {
+                  return data ? "<a href='/rate/{{ DS.name }}" +
+                    "?sub_filter=" + data +
+                    "&all_raters={{ all_raters }}" +
+                    "' class='text-dark text-decoration-none'>" +
+                    data + "</a>":
+                        '<span class="text-muted fw-light"> NA</span>';
+              }
+            return data;
           }
         },
         {
           targets: "session",
           render: function ( data, type, row ) {
-            return data ? data :
-              '<span class="text-muted fw-light"> NA</span>';
+              if ( type === 'display' ) {
+                  return data ? "<a href='/rate/{{ DS.name }}" +
+                    "?sess_filter=" + data +
+                    "&all_raters={{ all_raters }}" +
+                    "' class='text-dark text-decoration-none'>" +
+                    data + "</a>":
+                        '<span class="text-muted fw-light"> NA</span>';
+              }
+            return data;
           }
         },
         {

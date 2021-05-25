@@ -85,93 +85,147 @@ def dashboard(all_raters_string=None):
 
 
 @bp.route('/rate/<name_dataset>', methods=['GET', 'POST'])
-@bp.route('/rate/<name_dataset>/filter-<int:r_filter>',
-          methods=['GET', 'POST'])
 @login_required
-def rate(name_dataset, r_filter=None):
+def rate(name_dataset):
     """Page to view images and rate them."""
+    # If dataset doesn't exist abort with 404
     dataset = Dataset.query.filter_by(name=name_dataset).first_or_404()
-    all_raters = request.args.get('all_raters', 0, type=int)
-    page = request.args.get('page', 1, type=int)
-    if r_filter is None:
-        imgs = dataset.images\
-            .order_by(Image.id.asc()).paginate(page, 1, False)
+
+    # Static directory
+    statics_dir = os.path.join(current_app.config['ABS_PATH'], 'static')
+
+    # Dictionary with all possible filters
+    filters = {
+        "image": request.args.get('image', None, type=str),
+        "all_raters": request.args.get('all_raters', 0, type=int),
+        "rating": request.args.get('rating_filter', None, type=int),
+        "type": request.args.get('type_filter', None, type=str),
+        "subject": request.args.get('sub_filter', None, type=str),
+        "session": request.args.get('sess_filter', None, type=str)
+    }
+
+    if filters["image"]:
+        # If there is an image filtering, just show the image
+        # There is nothing else to do (filter, query, etc...)
+        img = dataset.images.filter_by(name=filters["image"]).first_or_404()
+        imgs = None
+
+        # No need of pagination (Only 1 image)
+        pag, page = False, None
+
     else:
-        if all_raters:
-            if r_filter == 0:
-                unrated = dataset.images.filter_by(ratings=None)
-                pending = dataset.images.join(Ratings)\
-                    .filter_by(rating=r_filter)
-                rated = dataset.images.join(Ratings).\
-                    filter(Ratings.rating > 0)
-                imgs = pending.\
-                    except_(rated).\
-                    union(unrated).\
-                    order_by(Image.id.asc()).paginate(page, 1, False)
-            elif r_filter < 4:
-                imgs = dataset.images.join(Ratings)\
-                    .filter_by(rating=r_filter)\
-                    .order_by(Image.id.asc()).paginate(page, 1, False)
-            else:
-                flash('Invalid filtering; Showing all images...', 'danger')
-                return redirect(url_for('main.rate', all_raters=all_raters,
-                                        name_dataset=name_dataset))
+        # INIT with all dataset's images
+        imgs = dataset.images
+
+        # Paging
+        pag, page = True, request.args.get('page', 1, type=int)
+
+        # Initial filterings ##This can be accumulative?
+        # TODO: Inherit filters in paging
+        if filters["type"]:
+            imgs = imgs.filter_by(imgtype=filters["type"])
+        if filters["subject"]:
+            imgs = imgs.filter_by(subject=filters["subject"])
+        if filters["session"]:
+            imgs = imgs.filter_by(session=filters["session"])
+
+        # Secondary filtering by rating
+        # If none, just paginate and show
+        if filters["rating"] is None:
+            imgs = imgs.order_by(Image.id.asc()).paginate(page, 1, False)
         else:
-            if r_filter == 0:
-                rated = dataset.images.join(Ratings)\
-                    .filter_by(rater=current_user)
-                imgs = dataset.images.except_(rated)\
-                    .order_by(Image.id.asc()).paginate(page, 1, False)
-            elif r_filter < 4:
-                imgs = dataset.images.join(Ratings)\
-                    .filter_by(rating=r_filter, rater=current_user)\
-                    .order_by(Image.id.asc()).paginate(page, 1, False)
+            # For "ALL_RATERS", use all saved ratings
+            if filters["all_raters"]:
+                # PENDING
+                if filters["rating"] == 0:
+                    # Images without any rating saved
+                    unrated = imgs.filter_by(ratings=None)
+
+                    # Images marked 'PENDING' by any rater
+                    pending = imgs.join(Ratings)\
+                        .filter_by(rating=filters["rating"])
+
+                    # Images with ANY rating EXCEPT 'PENDING'
+                    rated = imgs.join(Ratings).filter(Ratings.rating > 0)
+
+                    # QUERY: UNRATED + PENDING
+                    # Unless they have another rating
+                    imgs = pending.except_(rated).union(unrated).\
+                        order_by(Image.id.asc()).paginate(page, 1, False)
+
+                # For ANY other rating; just filter by rating...
+                # TODO: BUG more pages than images
+                elif filters["rating"] < 4:
+                    imgs = imgs.join(Ratings)\
+                        .filter_by(rating=filters["rating"])\
+                        .order_by(Image.id.asc()).paginate(page, 1, False)
+
+                else:   # If 'rating' is >=4, there's an ERROR, so abort w/404
+                    flash('Invalid filtering; Showing all images...',
+                          'danger')
+                    return redirect(url_for('main.rate',
+                                            all_raters=filters["all_raters"],
+                                            name_dataset=name_dataset))
+
             else:
-                flash('Invalid filtering; Showing all images...', 'danger')
-                return redirect(url_for('main.rate', all_raters=all_raters,
-                                        name_dataset=name_dataset))
-    if not imgs.items:
-        flash('Filter ran out of images in filter; Showing all images...',
-              'info')
-        return redirect(url_for('main.rate', all_raters=all_raters,
-                                name_dataset=name_dataset))
-    all_ratings = imgs.items[0].ratings.all()
-    statics_dir = os.path.join(current_app.config['ABS_PATH'], 'static')
-    path = imgs.items[0].path.replace(statics_dir, "")
-    form = RatingForm()
-    if form.validate_on_submit():
+                # For single rater (current); filtering is more specific
+                if filters["rating"] == 0:
+                    # Images with ratings from CURRENT_RATER
+                    rated = imgs.join(Ratings)\
+                        .filter_by(rater=current_user)
+
+                    # All images, except Rated
+                    imgs = imgs.except_(rated)\
+                        .order_by(Image.id.asc()).paginate(page, 1, False)
+
+                elif filters["rating"] < 4:
+                    # Images where rating BY CURR_RATER matches rating filter
+                    imgs = imgs.join(Ratings)\
+                        .filter_by(rating=filters["rating"],
+                                   rater=current_user)\
+                        .order_by(Image.id.asc()).paginate(page, 1, False)
+                else:  # If 'rating' is >=4, there's an ERROR, so abort w/404
+                    flash('Invalid filtering; Showing all images...',
+                          'danger')
+                    return redirect(url_for('main.rate',
+                                            all_raters=filters["all_raters"],
+                                            name_dataset=name_dataset))
+
+        # If after filtering the query ends empty,
+        # return all of them (fuck it...)
+        if not imgs.items:
+            flash('Filter ran out of images in filter; Showing all images...',
+                  'info')
+            return redirect(url_for('main.rate',
+                                    all_raters=filters["all_raters"],
+                                    name_dataset=name_dataset))
+
+        # Image will be first image of list;
+        # .paginate takes care of everything
         img = imgs.items[0]
-        img.set_rating(user=current_user, rating=form.rating.data)
-        img.set_comment(user=current_user, comment=form.comment.data)
-        return redirect(request.url)
-    return render_template('rate.html', DS=dataset, form=form, imgs=imgs,
-                           pag=True, r_filter=r_filter, all_raters=all_raters,
-                           all_ratings=all_ratings, img_path=(path),
-                           img_name=imgs.items[0].name,
-                           title=imgs.items[0].name,
-                           comment=imgs.items[0].comment_by_user(current_user),
-                           rating=imgs.items[0].rating_by_user(current_user))
 
-
-@bp.route('/rate/<name_dataset>/<image>', methods=['GET', 'POST'])
-@login_required
-def rate_img(name_dataset, image):
-    """Page to view a single image and rate it."""
-    dataset = Dataset.query.filter_by(name=name_dataset).first_or_404()
-    img = dataset.images.filter_by(name=image).first_or_404()
-    all_raters = request.args.get('all_raters', 0, type=int)
+    # Ratings from the resulting query after filtering
     all_ratings = img.ratings.all()
-    statics_dir = os.path.join(current_app.config['ABS_PATH'], 'static')
+
+    # Fix PATH from database for showing the images in browser
     path = img.path.replace(statics_dir, "")
+
+    # Rating form
     form = RatingForm()
     if form.validate_on_submit():
         img.set_rating(user=current_user, rating=form.rating.data)
         img.set_comment(user=current_user, comment=form.comment.data)
         return redirect(request.url)
-    return render_template('rate.html', DS=dataset, form=form, r_filter=image,
-                           all_raters=all_raters, img_path=(path), pag=False,
-                           all_ratings=all_ratings, img_name=img.name,
-                           title=img.name,
+
+    return render_template('rate.html', DS=dataset, form=form, pag=pag,
+                           imgs=imgs, title=img.name, image=filters["image"],
+                           img_name=img.name,
+                           rating_filter=filters["rating"],
+                           type_filter=filters["type"],
+                           sub_filter=filters["subject"],
+                           sess_filter=filters["session"],
+                           all_raters=filters["all_raters"],
+                           all_ratings=all_ratings, img_path=(path),
                            comment=img.comment_by_user(current_user),
                            rating=img.rating_by_user(current_user))
 
