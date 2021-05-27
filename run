@@ -16,9 +16,10 @@ else
 	source /ipl/quarantine/conda/etc/profile.d/conda.sh
 	echo "Loading conda environment..."
 	conda activate qrater
-	# FLASK environmental variables
-	export FLASK_APP=/home/bic/sfernandez/qrater/qrater.py
-	export FLASK_ENV=development
+
+	# Add module to PYTHONPATH
+	export PYTHONPATH=/data/ipl/scratch22/qrater
+
 	# QRATER
 	gunicorn -w 3 qrater:app
 fi
