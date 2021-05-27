@@ -29,36 +29,45 @@
   <li class="breadcrumb-item">
     <a
       class="text-decoration-none text-light"
-      href="{{ url_for('dt.datatable',
-            dataset=DS.name, all_raters=all_raters) }}"
+      href="{{ url_for('dt.datatable', dataset=DS.name,
+        all_raters=all_raters) }}"
       >{{ DS.name }}</a>
   </li>
   <li class="breadcrumb-item">
     <a
       class="text-decoration-none text-light"
       href="{{ url_for('main.rate', all_raters=all_raters,
-        name_dataset=DS.name) if filtering is not none else '#' }}"
+        name_dataset=DS.name) if filtering else '#' }}"
       >Rating</a>
   </li>
-  {% if filtering is not none %}
+  {% if filtering %}
   <li class="breadcrumb-item">
     <a
       href="#"
-      {%- if filtering == 0 -%}
+      {%- if filters["rating"] == 0 -%}
       class="text-decoration-none text-secondary"
       >Pending
-      {%- elif filtering == 1 -%}
+      {%- elif filters["rating"] == 1 -%}
       class="text-decoration-none text-success"
       >Pass
-      {%- elif filtering == 2 -%}
+      {%- elif filters["rating"] == 2 -%}
       class="text-decoration-none text-warning"
       >Warning
-      {%- elif filtering == 3 -%}
+      {%- elif filters["rating"] == 3 -%}
       class="text-decoration-none text-danger"
       >Fail
       {%- else -%}
       class="text-decoration-none text-white"
-      >{{ filtering }}
+      >
+      {%- endif -%}
+      {%- if filters["image"] -%}
+      {{ filters["image"] }}
+      {%- elif filters["type"] -%}
+      {{ filters["type"] }}
+      {%- elif filters["subject"] -%}
+      {{ filters["subject"] }}
+      {%- elif filters["session"] -%}
+      {{ filters["session"] }}
       {%- endif -%}
     </a>
   </li>
@@ -116,8 +125,7 @@
     {% endfor %}
   </div>
   {% else %}
-  <h1 class="display-4 text-center">
-    {{ img_name }}
+  <h1 class="display-4 text-center">{{ img_name }}
     <sup>
     {% if rating == 0 -%}
     <span class="badge rounded-pill bg-secondary">
@@ -150,19 +158,19 @@
 </div>
 <div class="row my-3 justify-content-center">
   <div class="col-sm-12 col-xl-7">
-    {% if pag %}
+    {% if pagination %}
     <nav aria-label="Page navigation">
       <ul class="pagination justify-content-center">
         <li class="page-item {% if not imgs.has_prev %}disabled{% endif %}">
           <a
             class="page-link"
             id="prevPage"
-            href="{{ url_for('main.rate', filtering=filtering,
-              name_dataset=DS.name, all_raters=all_raters,
+            href="{{ url_for('main.rate', name_dataset=DS.name,
+              image=filters["image"], rating_filter=filters["rating"],
+              type_filter=filters["type"], sub_filter=filters["subject"],
+              sess_filter=filters["session"], all_raters=all_raters,
               page=imgs.prev_num) if imgs.has_prev else '#' }}"
-              >
-            <i class="bi-arrow-left"></i>
-          </a>
+            ><i class="bi-arrow-left"></i></a>
         </li>
         {%- for page in imgs.iter_pages(right_current=3) %}
         {% if page %}
@@ -170,8 +178,11 @@
         <li class="page-item">
           <a
             class="page-link"
-            href="{{ url_for('main.rate', filtering=filtering,
-              name_dataset=DS.name, all_raters=all_raters, page=page) }}"
+            href="{{ url_for('main.rate', name_dataset=DS.name,
+              image=filters["image"], rating_filter=filters["rating"],
+              type_filter=filters["type"], sub_filter=filters["subject"],
+              sess_filter=filters["session"], all_raters=all_raters,
+              page=page) }}"
             >{{ page }}</a>
         </li>
         {% else %}
@@ -196,11 +207,12 @@
             <a
               class="page-link"
               id="nextPage"
-              href="{{ url_for('main.rate', filtering=filtering,
-                name_dataset=DS.name, all_raters=all_raters,
-                page=imgs.next_num) if imgs.has_next else '#' }}">
-              <i class="bi-arrow-right"></i>
-            </a>
+              href="{{ url_for('main.rate', name_dataset=DS.name,
+                image=filters["image"], rating_filter=filters["rating"],
+                type_filter=filters["type"], sub_filter=filters["subject"],
+                sess_filter=filters["session"], all_raters=all_raters,
+                page=imgs.next_num) if imgs.has_next else '#' }}"
+              ><i class="bi-arrow-right"></i></a>
           </li>
       </ul>
     </nav>
