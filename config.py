@@ -8,7 +8,7 @@ They can be specified here or loaded from a dotfile (.env).
 import os
 from dotenv import load_dotenv
 
-basedir = os.path.abspath(os.path.dirname(__file__))
+basedir = os.path.realpath(os.path.dirname(__file__))
 load_dotenv(os.path.join(basedir, '.env'))
 
 

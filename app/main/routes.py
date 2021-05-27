@@ -199,7 +199,7 @@ def rate(name_dataset):
     all_ratings = img.ratings.all()
 
     # Fix PATH from database for showing the images in browser
-    path = img.path.replace(statics_dir, "")
+    path = img.path.replace(f'{statics_dir}/', "")
 
     # Filtering boolean for HTML purposes
     filtering = bool(filters["image"] or filters["rating"] or filters["type"]
