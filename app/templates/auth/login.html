@@ -51,6 +51,6 @@
   <br>
   <p>New User? <a href="{{ url_for('auth.register') }}">Register</a></p>
   <p>Forgot Your Password?
-    <a href="#" class="text-muted">Reset it</a>
+    <a href="{{ url_for('auth.reset_password_request') }}">Reset it</a>
   </p>
 {% endblock %}

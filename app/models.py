@@ -37,11 +37,6 @@ class Rater(UserMixin, db.Model):
         """Check password validity."""
         return check_password_hash(self.password_hash, password)
 
-    def avatar(self, size):
-        """Use gravatar avatars."""
-        digest = md5(self.email.lower().encode('utf-8')).hexdigest()
-        return f'https://www.gravatar.com/avatar/{digest}?d=identicon&s={size}'
-
     def get_reset_password_token(self, expires_in=600):
         """Generate token for password reset."""
         return jwt.encode(
@@ -49,7 +44,6 @@ class Rater(UserMixin, db.Model):
             current_app.config['SECRET_KEY'],
             algorithm='HS256').decode('utf-8')
 
-    # NOT IMPLEMENTED
     @staticmethod
     def verify_reset_password_token(token):
         """Verify password-reset token."""

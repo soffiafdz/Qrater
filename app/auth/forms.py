@@ -45,7 +45,6 @@ class RegistrationForm(FlaskForm):
                 'There is already a Rater registered with that email.')
 
 
-# TODO: IMPLEMENT THESE??
 class ResetPasswordRequestForm(FlaskForm):
     """Form to request a password reset."""
 
@@ -57,6 +56,6 @@ class ResetPasswordForm(FlaskForm):
     """Form to reset the password."""
 
     password = PasswordField('Password', validators=[DataRequired()])
-    password2 = PasswordField(
-        'Repeat Password', validators=[DataRequired(), EqualTo('password')])
+    password2 = PasswordField('Repeat Password',
+                              validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField('Request Password Reset')

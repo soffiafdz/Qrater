@@ -59,7 +59,6 @@ def register():
     return render_template('auth/register.html', title='Register', form=form)
 
 
-# TODO: IMPLEMENT??
 @bp.route('/reset_password_request', methods=['GET', 'POST'])
 def reset_password_request():
     """Page to request a password reset."""
@@ -80,7 +79,7 @@ def reset_password_request():
 # TODO: IMPLEMENT??
 @bp.route('/reset_password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
-    """Page to reset the password."""
+    """Page to reset the password. Landing from sent email."""
     if current_user.is_authenticated:
         return redirect(url_for('main.dashboard'))
     rater = Rater.verify_reset_password_token(token)
@@ -92,4 +91,5 @@ def reset_password(token):
         db.session.commit()
         flash('Your password has been reset.', 'success')
         return redirect(url_for('login'))
-    return render_template('reset_password.html', form=form)
+    return render_template('reset_password.html',
+                           form=form, username=rater.username)
