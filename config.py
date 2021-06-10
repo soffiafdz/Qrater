@@ -11,7 +11,6 @@ from dotenv import load_dotenv
 basedir = os.path.realpath(os.path.dirname(__file__))
 load_dotenv(os.path.join(basedir, '.env'))
 
-
 class Config():
     """Config class to be loaded by Flask app with config attributes."""
 
@@ -24,7 +23,7 @@ class Config():
     MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS') is not None
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
-    ADMINS = ['soffiafdz@gmail.com']
+    ADMINS = [admin for admin in os.environ.get("ADMINS_MAIL").split(",")]
     ABS_PATH = os.path.join(basedir, 'app')
     MAX_CONTENT_LENGTH = os.environ.get('MAX_CONTENT_LENGTH') or \
         1024 * 1024 * 1024  # 1GB

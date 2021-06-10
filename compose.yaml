@@ -1,0 +1,53 @@
+services:
+  db:
+    image: mysql:8.0.25
+    command: '--default-authentication-plugin=mysql_native_password'
+    restart: always
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent"]
+      interval: 3s
+      retries: 5
+      start_period: 30s
+    secrets:
+      - db-password
+    volumes:
+      - db-data:/var/lib/mysql
+    networks:
+      - backnet
+    environment:
+      - MYSQL_DATABASE=qrater
+      - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/db-password
+    expose:
+      - 3306
+      - 33060
+
+  backend:
+    build: .
+    restart: always
+    secrets:
+      - db-password
+      - mail-password
+    volumes:
+      - ./datasets:/home/qrater/app/static/datasets
+      - ./reports:/home/qrater/app/static/reports
+    env_file:
+      - qrater.env
+    ports:
+      - 8080:5000
+    networks:
+      - backnet
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db-data:
+
+secrets:
+  db-password:
+    file: db-password.txt
+  mail-password:
+    file: mail-password.txt
+
+networks:
+  backnet:
