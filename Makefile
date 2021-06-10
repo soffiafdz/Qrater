@@ -4,6 +4,8 @@ NO_CACHE				?= false
 BUILD_TYPE			?= development
 CONTAINER_NAME	?= qrater
 CLIENT_PORT		 ?= 8000
+RESTART				 ?= on-failure
+RESTART_TRIES	 ?= 3
 DOCKER_REPO		 ?= <URL to docker repo>
 HOST						?= $(shell hostname)
 
@@ -27,7 +29,13 @@ create:
 	echo 'Creating container in ${HOST} accessible at port: ${CLIENT_PORT}'
 	docker create \
 		--name ${CONTAINER_NAME}_${BUILD_TYPE} \
-		-p ${CLIENT_PORT}:5000 \
+		--publish ${CLIENT_PORT}:5000 \
+		--env "SECRET_KEY=${SECRET_KEY}"
+		--env "MAIL_SERVER=${MAIL_SERVER}"
+		--env "MAIL_PORT=${MAIL_PORT}"
+		--env "MAIL_USE_TLS=${MAIL_USE_TLS}"
+		--env "MAIL_USERNAME=${MAIL_USERNAME}"
+		--env "MAIL_PASSWORD=${MAIL_PASSWORD}"
 		${DOCKER_TAG}
 
 start:
@@ -41,6 +49,13 @@ run:
 		CLIENT_PORT=${CLIENT_PORT} \
 		CONTAINER_NAME=${CONTAINER_NAME} \
 		BUILD_TYPE=${BUILD_TYPE} \
+		CLIENT_PORT=${CLIENT_PORT} \
+		SECRET_KEY=${SECRET_KEY} \
+		MAIL_SERVER=${MAIL_SERVER} \
+		MAIL_PORT=${MAIL_PORT} \
+		MAIL_USE_TLS=${MAIL_USE_TLS} \
+		MAIL_USERNAME=${MAIL_USERNAME} \
+		MAIL_PASSWORD=${MAIL_PASSWORD} \
 		DOCKER_TAG=${DOCKER_TAG}
 	make start -e BUILD_TYPE=${BUILD_TYPE}
 	make show
@@ -101,8 +116,13 @@ help:
 	@echo 'Usage: make [TARGET] [EXTRA_ARGUMENTS]'
 	@echo 'Targets:'
 	@echo '  build            build docker --image--'
+	@echo '  create           create a --container-- from a docker --image--'
+	@echo '  start            start an existing --container--'
+	@echo '  stop             stop a running --container--'
 	@echo '  rebuild          rebuild docker --image--'
-	@echo '  login            run as service and login --container--'
+	@echo '  run              create + start'
+	@echo '  up               build + create + start'
+	#@echo '  login            run as service and login --container--'
 	@echo '  clean_image      remove docker --image-- '
 	@echo ''
 	@echo 'Extra arguments:'
