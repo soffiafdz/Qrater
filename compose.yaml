@@ -16,6 +16,7 @@ services:
       - backnet
     environment:
       - MYSQL_DATABASE=qrater
+      - MYSQL_ROOT_HOST=%
       - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/db-password
     expose:
       - 3306
