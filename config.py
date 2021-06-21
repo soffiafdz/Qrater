@@ -14,7 +14,7 @@ load_dotenv(os.path.join(basedir, '.env'))
 # Docker-compose: Secrets
 # MySQL
 try:
-    secret = open('db-password.txt', encoding='utf-8')
+    secret = open('/run/secrets/db-password', encoding='utf-8')
 except FileNotFoundError:
     # If no db-password secret check for DATABASE_URL environment variable
     DATABASE_URL = os.environ.get('DATABASE_URL')
@@ -25,7 +25,7 @@ else:
 
 # Mail
 try:
-    secret = open('mail-password.txt', encoding='utf-8')
+    secret = open('/run/secrets/mail-password', encoding='utf-8')
 except FileNotFoundError:
     mail_password = None
 else:
@@ -37,8 +37,7 @@ class Config():
     """Config class to be loaded by Flask app with config attributes."""
 
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'
-    SQLALCHEMY_DATABASE_URI = DATABASE_URL or \
-        'sqlite:///' + os.path.join(basedir, "SQL.db")
+    SQLALCHEMY_DATABASE_URI = DATABASE_URL
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     MAIL_SERVER = os.environ.get('MAIL_SERVER')
     MAIL_PORT = int(os.environ.get('MAIL_PORT') or 25)
