@@ -281,8 +281,11 @@ def load_dataset(directory=None):
         # Count the files in the directory
         n_files = 0
         for _, _, files in os.walk(os.path.join(data_dir, directory)):
+            # Ignore dotfiles
+            files[:] = [f for f in files if not f.startswith('.')]
             for file in files:
-                n_files += 1
+                if allowed_file(file, current_app.config['DSET_ALLOWED_EXTS']):
+                    n_files += 1
         # Save useful info for template
         info['model'] = Dataset.query.filter_by(name=directory).first()
         info['saved_imgs'] = info['model'].images.count() \
@@ -304,6 +307,7 @@ def load_dataset(directory=None):
         loaded_images = 0
         for root, _, files in os.walk(os.path.join(data_dir,
                                                    form.dir_name.data)):
+            files[:] = [f for f in files if not f.startswith('.')]
             for file in files:
                 # Check which images are already loaded
                 basename = file.rsplit('.', 1)[0]
@@ -433,7 +437,8 @@ def edit_dataset(dataset=None):
 @bp.route('/delete-dataset/<dataset>')
 @login_required
 def delete_dataset(dataset):
-    """Page to delete a dataset of MRI, including images and ratings."""
+    """Page to delete a dataset of MRI ratings."""
+    # If dataset does not exit, throw 404
     ds_model = Dataset.query.filter_by(name=dataset).first_or_404()
 
     data_dir = os.path.join(current_app.config['ABS_PATH'], 'static/datasets')
@@ -441,13 +446,17 @@ def delete_dataset(dataset):
     ds_name = ds_model.name
     ds_dir = os.path.join(data_dir, ds_name)
 
+    # Loop to delete ratings > images > dataset from dataset
     for image in ds_model.images.all():
         for rating in image.ratings.all():
             db.session.delete(rating)
         db.session.delete(image)
     db.session.delete(ds_model)
 
-    rmtree(ds_dir)
+    # Don't delete image data anymore, unless specified
+    nuke = request.args.get('nuke', 0, type=int)
+    if nuke:
+        rmtree(ds_dir)
     db.session.commit()
 
     flash(f'Dataset: {ds_name} was successfully deleted!',
