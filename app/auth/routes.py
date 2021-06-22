@@ -72,7 +72,7 @@ def reset_password_request():
         flash('Check your email for the instructions to reset your password',
               'info')
         return redirect(url_for('auth.login'))
-    return render_template('auth/reset_password_request',
+    return render_template('auth/reset_password_request.html',
                            title='Reset Password', form=form)
 
 
@@ -90,6 +90,6 @@ def reset_password(token):
         rater.set_password(form.password.data)
         db.session.commit()
         flash('Your password has been reset.', 'success')
-        return redirect(url_for('login'))
-    return render_template('reset_password.html',
+        return redirect(url_for('auth.login'))
+    return render_template('auth/reset_password.html',
                            form=form, username=rater.username)
