@@ -19,7 +19,7 @@ from app import db
 from app.upload import allowed_file
 from app.main.forms import (LoadDatasetForm, UploadDatasetForm,
                             EditDatasetForm, RatingForm, ExportRatingsForm)
-from app.models import Dataset, Image, Ratings, Rater
+from app.models import Dataset, Image, Rating, Rater
 from app.main import bp
 
 
@@ -53,18 +53,18 @@ def dashboard(all_raters_string=None):
         imgs = dataset.images
         ntot = imgs.count()
         if all_raters or current_user.is_anonymous:
-            n_0 = imgs.join(Ratings).filter_by(rating=0).\
+            n_0 = imgs.join(Rating).filter_by(rating=0).\
                 union(imgs.filter_by(ratings=None)).distinct().count()
-            n_1 = imgs.join(Ratings).filter_by(rating=1).distinct().count()
-            n_2 = imgs.join(Ratings).filter_by(rating=2).distinct().count()
-            n_3 = imgs.join(Ratings).filter_by(rating=3).distinct().count()
+            n_1 = imgs.join(Rating).filter_by(rating=1).distinct().count()
+            n_2 = imgs.join(Rating).filter_by(rating=2).distinct().count()
+            n_3 = imgs.join(Rating).filter_by(rating=3).distinct().count()
             n_r = sum((n_1, n_2, n_3))
         else:
-            n_1 = imgs.join(Ratings).filter_by(rating=1, rater=current_user)\
+            n_1 = imgs.join(Rating).filter_by(rating=1, rater=current_user)\
                 .count()
-            n_2 = imgs.join(Ratings).filter_by(rating=2, rater=current_user)\
+            n_2 = imgs.join(Rating).filter_by(rating=2, rater=current_user)\
                 .count()
-            n_3 = imgs.join(Ratings).filter_by(rating=3, rater=current_user)\
+            n_3 = imgs.join(Rating).filter_by(rating=3, rater=current_user)\
                 .count()
             n_r = sum((n_1, n_2, n_3))
             n_0 = ntot - n_r
@@ -81,7 +81,7 @@ def dashboard(all_raters_string=None):
         n_imgs['warning100'].append(round(n2_100))
         n_imgs['fail100'].append(round(n3_100))
     return render_template('dashboard.html', title='Dashboard',
-                           Image=Image, Ratings=Ratings,
+                           Image=Image, Rating=Rating,
                            datasets=Dataset.query.all(),
                            all_raters=all_raters, n_imgs=n_imgs)
 
@@ -143,7 +143,7 @@ def rate(name_dataset):
             unrated = imgs.filter_by(ratings=None)
 
             # Images marked 'PENDING' by any rater
-            pending = imgs.join(Ratings).filter_by(rating=filters["rating"])
+            pending = imgs.join(Rating).filter_by(rating=filters["rating"])
 
             # QUERY: UNRATED + PENDING
             # Unless they have another rating
@@ -152,7 +152,7 @@ def rate(name_dataset):
         # For ANY other rating; just filter by rating...
         # TODO: BUG more pages than images
         elif filters["rating"] < 4:
-            imgs = imgs.join(Ratings).\
+            imgs = imgs.join(Rating).\
                 filter_by(rating=filters["rating"]).\
                 distinct()
 
@@ -165,15 +165,15 @@ def rate(name_dataset):
         # For single rater (current); filtering is more specific
         if filters["rating"] == 0:
             # Images with ratings from CURRENT_RATER (except pending)
-            rated = imgs.join(Ratings).filter(Ratings.rater == current_user,
-                                              Ratings.rating > 0)
+            rated = imgs.join(Rating).filter(Rating.rater == current_user,
+                                              Rating.rating > 0)
 
             # All images, except Rated
             imgs = imgs.except_(rated)
 
         elif filters["rating"] < 4:
             # Images where rating BY CURR_RATER matches rating filter
-            imgs = imgs.join(Ratings).filter_by(rating=filters["rating"],
+            imgs = imgs.join(Rating).filter_by(rating=filters["rating"],
                                                 rater=current_user)
         else:  # If 'rating' is >=4, there's an ERROR, so abort w/404
             flash('Invalid filtering; Showing all images...',
@@ -484,17 +484,17 @@ def export_ratings(dataset=None):
         comments = [i.comment for i in
                     ds_model.
                     images.
-                    join(Ratings).
-                    add_columns(Ratings.comment).
+                    join(Rating).
+                    add_columns(Rating.comment).
                     all()]
         not_comms = (comments.count("") == len(comments))
 
     if form.validate_on_submit():
-        query = Ratings.query.\
+        query = Rating.query.\
             join(Image).\
             filter(Image.dataset_id == ds_model.id).\
             order_by(Image.id.asc()).\
-            add_columns(Image.name, Ratings.rating)
+            add_columns(Image.name, Rating.rating)
         keys = ['Image']
         if form.col_sub.data:
             query = query.add_columns(Image.subject)
@@ -507,13 +507,13 @@ def export_ratings(dataset=None):
             keys.append('Rater')
         keys.append('Rating')
         if form.col_comment.data:
-            query = query.add_columns(Ratings.comment)
+            query = query.add_columns(Rating.comment)
             keys.append('Comment')
         if form.col_timestamp.data:
-            query = query.add_columns(Ratings.timestamp)
+            query = query.add_columns(Rating.timestamp)
             keys.append('Date')
         if int(form.rater_filter.data):
-            query = query.filter(Ratings.rater_id == current_user.id)
+            query = query.filter(Rating.rater_id == current_user.id)
             file_name = f'{file_name}_{current_user.username}'
 
         ratings = []

@@ -4,7 +4,7 @@ Qrater.
 Global app module with Flask models.
 """
 
-# MODIFY...
+# MODIFY... What?
 from datetime import datetime
 from hashlib import md5
 from time import time
@@ -13,6 +13,8 @@ from flask import current_app
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import db, login
+import redis
+import rq
 
 
 class Rater(UserMixin, db.Model):
@@ -22,8 +24,11 @@ class Rater(UserMixin, db.Model):
     username = db.Column(db.String(64), index=True, unique=True)
     email = db.Column(db.String(120), index=True, unique=True)
     password_hash = db.Column(db.String(128))
-    ratings = db.relationship("Ratings", backref="rater", lazy="dynamic")
+    ratings = db.relationship("Rating", backref="rater", lazy="dynamic")
     last_seen = db.Column(db.DateTime, default=datetime.utcnow)
+    notifications = db.relationship('Notification', backref='user',
+                                    lazy='dynamic')
+    tasks = db.relationship('Task', backref='rater', lazy='dynamic')
 
     def __repr__(self):
         """Object representation."""
@@ -54,6 +59,23 @@ class Rater(UserMixin, db.Model):
             return
         return Rater.query.get(id)
 
+    def launch_task(self, name, description, *args, **kwargs):
+        """Launch a task to the redis queue."""
+        rq_job = current_app.task_queue.enqueue('app.tasks.' + name, self.id,
+                                                *args, **kwargs)
+        task = Task(id=rq_job.get_id(), name=name, description=description,
+                    rater=self)
+        db.session.add(task)
+        return task
+
+    def get_tasks_in_progress(self):
+        """Return complete list of rater's tasks currently in progress."""
+        return Task.query.filter_by(rater=self, complete=False).all()
+
+    def get_task_in_progress(self, name):
+        """Return a single task by name currently in progress."""
+        return Task.query.filter_by(name=name, rater=self,
+                                    complete=False).first()
 
 @login.user_loader
 def load_user(id):
@@ -86,7 +108,7 @@ class Image(db.Model):
     subject = db.Column(db.String(16))
     session = db.Column(db.String(16))
     imgtype = db.Column(db.String(16))
-    ratings = db.relationship("Ratings", backref="image", lazy="dynamic")
+    ratings = db.relationship("Rating", backref="image", lazy="dynamic")
 
     def __repr__(self):
         """Object representation."""
@@ -96,7 +118,7 @@ class Image(db.Model):
         """Set a rating to the current MRI."""
         rating_mod = self.ratings.filter_by(rater=user).first()
         if rating_mod is None:
-            rating_mod = Ratings(rater=user, image=self, rating=rating)
+            rating_mod = Rating(rater=user, image=self, rating=rating)
             db.session.add(rating_mod)
             db.session.commit()
         else:
@@ -108,7 +130,7 @@ class Image(db.Model):
         """Append a comment to the rating of current MRI."""
         rating_mod = self.ratings.filter_by(rater=user).first()
         if rating_mod is None:
-            rating_mod = Ratings(rater=user, image=self, comment=comment)
+            rating_mod = Rating(rater=user, image=self, comment=comment)
             db.session.add(rating_mod)
             db.session.commit()
         else:
@@ -130,7 +152,7 @@ class Image(db.Model):
         return rating_mod.comment
 
 
-class Ratings(db.Model):
+class Rating(db.Model):
     """SQLAlchemy Model for QC ratings."""
 
     id = db.Column(db.Integer, primary_key=True)
@@ -143,3 +165,37 @@ class Ratings(db.Model):
     def __repr__(self):
         """Object representation."""
         return f'<Rating {self.image_id}; {self.rating}>'
+
+
+class Notification(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(128), index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    timestamp = db.Column(db.Float, index=True, default=time)
+    payload_json = db.Column(db.Text)
+
+    def get_data(self):
+        return json.loads(str(self.payload_json))
+
+
+class Task(db.Model):
+    """SQLAlchemy Model for background tasks."""
+
+    id = db.Column(db.String(36), primary_key=True)
+    name = db.Column(db.String(128), index=True)
+    description = db.Column(db.String(128))
+    rater_id = db.Column(db.Integer, db.ForeignKey('rater.id'))
+    complete = db.Column(db.Boolean, default=False)
+
+    def get_rq_job(self):
+        """Load a job instance."""
+        try:
+            rq_job = rq.job.Job.fetch(self.id, connection=current_app.redis)
+        except (redis.exceptions.RedisError, rq.exceptions.NoSuchJobError):
+            return None
+        return rq_job
+
+    def get_progress(self):
+        """Return job progress."""
+        job = self.get_rq_job()
+        return job.meta.get('progress', 0) if job is not None else 100
