@@ -1,0 +1,8 @@
+# This files overrides/extends the default compose.yaml
+services:
+  backend:
+    # Add extra volumes to override the symlink cross-device error in Docker
+    # Useful to avoid redundant existing datasets in a cluster
+    volumes:
+    # - path/to/dir:/home/qrater/app/static/datasets/<DatasetName>
+      - /ipl/uk-biobank/qc:/home/qrater/app/static/datasets/UKBB

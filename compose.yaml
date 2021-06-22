@@ -30,7 +30,7 @@ services:
       - mail-password
     volumes:
       - ./datasets:/home/qrater/app/static/datasets
-      - ./reports:/home/qrater/app/static/reports
+      # Extra volumes in compose.override.yaml
     env_file:
       - qrater.env
     ports:
