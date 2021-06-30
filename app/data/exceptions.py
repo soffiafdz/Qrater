@@ -43,6 +43,23 @@ class NoExtensionError(Exception):
         return f'{self.filename} -> {self.message}'
 
 
+class EmptyLoadError(Exception):
+    """Exception raised when nothing is loaded.
+
+    Attributes:
+        message -- explanation of the error
+    """
+
+    def __init__(self, message="No images were uploaded"):
+        """Initialize exception."""
+        self.message = message
+        super().__init__(self.message)
+
+    def __str__(self):
+        """Express exception."""
+        return f'{self.message}'
+
+
 class OrphanDatasetError(Exception):
     """Exception raised when a dataset is created but left without images.
 
@@ -51,9 +68,9 @@ class OrphanDatasetError(Exception):
         message -- explanation of the error
     """
 
-    def __init__(self, filename, message="Dataset model left empty"):
+    def __init__(self, dataset, message="Dataset model left empty"):
         """Initialize exception."""
-        self.filename = filename
+        self.dataset = dataset
         self.message = message
         super().__init__(self.message)
 

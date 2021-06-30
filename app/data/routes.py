@@ -16,7 +16,7 @@ from app import db
 from app.main import bp
 from app.main.forms import LoadDatasetForm, UploadDatasetForm, EditDatasetForm
 from app.models import Dataset, Image
-from app.uploads.exceptions import OrphanDatasetError
+from app.uploads.exceptions import OrphanDatasetError, EmptyLoadError
 
 
 @bp.route('/upload-dataset', methods=['GET', 'POST'])
@@ -192,7 +192,6 @@ def edit_dataset(dataset=None):
 
         # Check that files is not an empty list??
         # Maybe to trigger upload
-        # TODO check this
         if files[0].filename != "":
             savedir = os.path.join(data_dir, ds_model.name)
 
@@ -201,8 +200,7 @@ def edit_dataset(dataset=None):
                 loaded_imgs = load_dataset(files, directory=savedir,
                                            dataset=ds_model,
                                            new_dataset=False)
-            except:
-                # TODO Implement exception for failed upload try
+            except EmptyLoadError:
                 pass
             else:
                 if loaded_imgs == 0:
