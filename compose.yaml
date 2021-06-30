@@ -30,7 +30,7 @@ services:
       - mail-password
     volumes:
       - ./datasets:/home/qrater/app/static/datasets
-      - ./reports:/home/qrater/app/static/reports
+      - /vault/preventAD_links:/home/qrater/app/static/datasets/PreventAD
     env_file:
       - qrater.env
     ports:
