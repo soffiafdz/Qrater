@@ -7,6 +7,8 @@ IN DEVELOPMENT
 
 import os
 import logging
+import rq
+from redis import Redis
 from logging.handlers import SMTPHandler, RotatingFileHandler
 from flask import Flask
 from flask.logging import create_logger
@@ -38,11 +40,17 @@ def create_app(config_class=Config):
     mail.init_app(app)
     moment.init_app(app)
 
+    app.redis = Redis.from_url(app.config['REDIS_URL'])
+    app.task_queue = rq.Queue('qrater-tasks', connection=app.redis)
+
     from app.errors import bp as errors_bp
     app.register_blueprint(errors_bp)
 
     from app.auth import bp as auth_bp
     app.register_blueprint(auth_bp, url_prefix='/auth')
+
+    from app.uploads import bp as uploads_bp
+    app.register_blueprint(uploads_bp, url_prefix='/uploads')
 
     from app.dt import bp as dt_bp
     app.register_blueprint(dt_bp, url_prefix='/dt')
