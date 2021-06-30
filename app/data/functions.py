@@ -1,15 +1,17 @@
 """
-Qrater Uploads.
+Qrater Data Management.
 
 Needed functions for uploading files
 """
 
 import os
+import sys
 from werkzeug.utils import secure_filename
-from flask import current_app
-from flask_login import current_user
+from flask import current_app, flash
 from app import db
 from app.models import Image
+from app.data.exceptions import (NoExtensionError, OrphanDatasetError,
+                                 UnsupportedExtensionError)
 
 
 def load_image(image, directory, dataset, upload=False):
@@ -47,7 +49,7 @@ def load_image(image, directory, dataset, upload=False):
         raise NoExtensionError(filename=filename)
 
 
-def load_dataset(files, directory, dataset, img_model=None, host=False
+def load_dataset(files, directory, dataset, img_model=None, host=False,
                  quiet=False, new_dataset=False):
     """Load data of several images from CLIENT.
 
@@ -70,8 +72,9 @@ def load_dataset(files, directory, dataset, img_model=None, host=False
         # Check existence of file in directory when loading from host
         # if uploading from client, assume non-existance
         # (as new dataset is created)
-        exists = model.query.filter(model.name == img.rsplit('.', 1)[0],
-                                    model.dataset == dataset).first() \
+        exists = img_model.query.filter(
+            img_model.name == img.rsplit('.', 1)[0],
+            img_model.dataset == dataset).first() \
             if host else None
 
         if not exists:
@@ -79,16 +82,18 @@ def load_dataset(files, directory, dataset, img_model=None, host=False
                 load_image(img, directory, dataset, upload=upload)
 
             except UnsupportedExtensionError:
-                app.logger.error(f'Error in uploading {img.filename}; '
-                                 'unsupported ext', exc_info=sys.exc_info())
+                current_app.logger.error(f'Error in uploading {img.filename}; '
+                                         'unsupported ext',
+                                         exc_info=sys.exc_info())
                 if not quiet:
                     flash(f'{img.filename} is an unsupported filetype',
                           'danger')
                 continue
 
             except NoExtensionError:
-                app.logger.error(f'Error in uploading: {img.filename}; '
-                                 'no extension', exc_info=sys.exc_info())
+                current_app.logger.error(f'Error in uploading {img.filename}; '
+                                         'no extension',
+                                         exc_info=sys.exc_info())
                 if not quiet:
                     flash(f'{img.filename} does not have an extension',
                           'danger')

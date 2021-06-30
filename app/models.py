@@ -6,7 +6,6 @@ Global app module with Flask models.
 
 # MODIFY... What?
 from datetime import datetime
-from hashlib import md5
 from time import time
 import jwt
 from flask import current_app

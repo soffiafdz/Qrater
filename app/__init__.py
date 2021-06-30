@@ -49,8 +49,8 @@ def create_app(config_class=Config):
     from app.auth import bp as auth_bp
     app.register_blueprint(auth_bp, url_prefix='/auth')
 
-    from app.uploads import bp as uploads_bp
-    app.register_blueprint(uploads_bp, url_prefix='/uploads')
+    from app.data import bp as data_bp
+    app.register_blueprint(data_bp, url_prefix='/data')
 
     from app.dt import bp as dt_bp
     app.register_blueprint(dt_bp, url_prefix='/dt')

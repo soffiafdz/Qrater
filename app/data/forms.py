@@ -1,5 +1,5 @@
 """
-Qrater Uploads.
+Qrater Data Management.
 
 Module with blueprint specific Forms
 """

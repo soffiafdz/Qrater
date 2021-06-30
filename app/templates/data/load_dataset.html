@@ -92,7 +92,7 @@
         $("#dirInfo").addClass("d-none");
       } else {
         $("#dirInfo").removeClass("d-none");
-        window.location.href = "{{ url_for('main.load_dataset') }}/" +
+        window.location.href = "{{ url_for('dsets.load_dataset') }}/" +
           $(this).val();
       }
     });

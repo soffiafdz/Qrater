@@ -188,7 +188,7 @@
         $("#datasetForm :input").attr("disabled", true);
         $(this).attr("disabled", false);
       } else {
-        window.location.href = "{{ url_for('main.edit_dataset') }}/" +
+        window.location.href = "{{ url_for('data.edit_dataset') }}/" +
           $(this).val();
       }
     });

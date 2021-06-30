@@ -1,8 +1,9 @@
 """
-Qrater Uploads.
+Qrater Data Management.
 
 Needed exceptions for uploading files
 """
+
 
 class UnsupportedExtensionError(Exception):
     """Exception raised when file has non-implemented extension.
@@ -13,11 +14,13 @@ class UnsupportedExtensionError(Exception):
     """
 
     def __init__(self, extension, message="Extension is not implemented"):
+        """Initialize exception."""
         self.extension = extension
         self.message = message
         super().__init__(self.message)
 
     def __str__(self):
+        """Express exception."""
         return f"{self.extension} -> {self.message}"
 
 
@@ -30,11 +33,13 @@ class NoExtensionError(Exception):
     """
 
     def __init__(self, filename, message="File has no declared extension"):
+        """Initialize exception."""
         self.filename = filename
         self.message = message
         super().__init__(self.message)
 
     def __str__(self):
+        """Express exception."""
         return f'{self.filename} -> {self.message}'
 
 
@@ -47,9 +52,11 @@ class OrphanDatasetError(Exception):
     """
 
     def __init__(self, filename, message="Dataset model left empty"):
+        """Initialize exception."""
         self.filename = filename
         self.message = message
         super().__init__(self.message)
 
     def __str__(self):
+        """Express exception."""
         return f'{self.dataset} -> {self.message}'
