@@ -1,4 +1,9 @@
 #!/bin/sh
 source env/bin/activate
 flask db upgrade
-exec gunicorn -b :5000 --access-logfile - --error-logfile - qrater:app
+exec gunicorn \
+	--bind :5000 \
+	--timeout 90 \
+	--access-logfile - \
+	--error-logfile - \
+	qrater:app

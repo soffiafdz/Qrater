@@ -6,7 +6,7 @@ IN DEVELOPMENT
 """
 
 from app import create_app, db
-from app.models import Dataset, Rater, Image, Ratings
+from app.models import Dataset, Rater, Image, Rating
 
 app = create_app()
 
@@ -15,4 +15,4 @@ app = create_app()
 def make_shell_context():
     """Pre-import models in shell context."""
     return {'db': db, 'Rater': Rater, 'Dataset': Dataset, 'Image': Image,
-            'Ratings': Ratings}
+            'Rating': Rating}

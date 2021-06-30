@@ -4,6 +4,7 @@ Qrater: Routes.
 Module with different HTML routes for the webapp.
 """
 
+#TODO Prune this list
 import os
 import re
 import csv
@@ -16,10 +17,9 @@ from flask import (render_template, flash, abort, redirect, url_for, request,
                    current_app, send_file)
 from flask_login import current_user, login_required
 from app import db
-from app.upload import allowed_file
 from app.main.forms import (LoadDatasetForm, UploadDatasetForm,
                             EditDatasetForm, RatingForm, ExportRatingsForm)
-from app.models import Dataset, Image, Ratings, Rater
+from app.models import Dataset, Image, Rating, Rater
 from app.main import bp
 
 
@@ -53,18 +53,18 @@ def dashboard(all_raters_string=None):
         imgs = dataset.images
         ntot = imgs.count()
         if all_raters or current_user.is_anonymous:
-            n_0 = imgs.join(Ratings).filter_by(rating=0).\
+            n_0 = imgs.join(Rating).filter_by(rating=0).\
                 union(imgs.filter_by(ratings=None)).distinct().count()
-            n_1 = imgs.join(Ratings).filter_by(rating=1).distinct().count()
-            n_2 = imgs.join(Ratings).filter_by(rating=2).distinct().count()
-            n_3 = imgs.join(Ratings).filter_by(rating=3).distinct().count()
+            n_1 = imgs.join(Rating).filter_by(rating=1).distinct().count()
+            n_2 = imgs.join(Rating).filter_by(rating=2).distinct().count()
+            n_3 = imgs.join(Rating).filter_by(rating=3).distinct().count()
             n_r = sum((n_1, n_2, n_3))
         else:
-            n_1 = imgs.join(Ratings).filter_by(rating=1, rater=current_user)\
+            n_1 = imgs.join(Rating).filter_by(rating=1, rater=current_user)\
                 .count()
-            n_2 = imgs.join(Ratings).filter_by(rating=2, rater=current_user)\
+            n_2 = imgs.join(Rating).filter_by(rating=2, rater=current_user)\
                 .count()
-            n_3 = imgs.join(Ratings).filter_by(rating=3, rater=current_user)\
+            n_3 = imgs.join(Rating).filter_by(rating=3, rater=current_user)\
                 .count()
             n_r = sum((n_1, n_2, n_3))
             n_0 = ntot - n_r
@@ -81,7 +81,7 @@ def dashboard(all_raters_string=None):
         n_imgs['warning100'].append(round(n2_100))
         n_imgs['fail100'].append(round(n3_100))
     return render_template('dashboard.html', title='Dashboard',
-                           Image=Image, Ratings=Ratings,
+                           Image=Image, Rating=Rating,
                            datasets=Dataset.query.all(),
                            all_raters=all_raters, n_imgs=n_imgs)
 
@@ -143,7 +143,7 @@ def rate(name_dataset):
             unrated = imgs.filter_by(ratings=None)
 
             # Images marked 'PENDING' by any rater
-            pending = imgs.join(Ratings).filter_by(rating=filters["rating"])
+            pending = imgs.join(Rating).filter_by(rating=filters["rating"])
 
             # QUERY: UNRATED + PENDING
             # Unless they have another rating
@@ -152,7 +152,7 @@ def rate(name_dataset):
         # For ANY other rating; just filter by rating...
         # TODO: BUG more pages than images
         elif filters["rating"] < 4:
-            imgs = imgs.join(Ratings).\
+            imgs = imgs.join(Rating).\
                 filter_by(rating=filters["rating"]).\
                 distinct()
 
@@ -165,15 +165,15 @@ def rate(name_dataset):
         # For single rater (current); filtering is more specific
         if filters["rating"] == 0:
             # Images with ratings from CURRENT_RATER (except pending)
-            rated = imgs.join(Ratings).filter(Ratings.rater == current_user,
-                                              Ratings.rating > 0)
+            rated = imgs.join(Rating).filter(Rating.rater == current_user,
+                                              Rating.rating > 0)
 
             # All images, except Rated
             imgs = imgs.except_(rated)
 
         elif filters["rating"] < 4:
             # Images where rating BY CURR_RATER matches rating filter
-            imgs = imgs.join(Ratings).filter_by(rating=filters["rating"],
+            imgs = imgs.join(Rating).filter_by(rating=filters["rating"],
                                                 rater=current_user)
         else:  # If 'rating' is >=4, there's an ERROR, so abort w/404
             flash('Invalid filtering; Showing all images...',
@@ -232,36 +232,30 @@ def upload_dataset():
         files = request.files.getlist(form.dataset.name)
         savedir = os.path.join(data_dir, form.dataset_name.data)
 
+        # If savedir does not exist; create it
         if not os.path.isdir(savedir):
             os.makedirs(savedir)
 
+        # Form checks that dataset does not exist already
+        # so there is no need to check here; just create it
         dataset = Dataset(name=form.dataset_name.data)
         db.session.add(dataset)
-        db.session.commit()
-        imgs = []
-        for file in files:
-            ext = file.filename.rsplit('.', 1)[1]
-            if file and allowed_file(file.filename,
-                                     current_app.config['DSET_ALLOWED_EXTS']):
-                filename = secure_filename(file.filename)
-                bname = filename.rsplit('.', 1)[0]
-                fpath = os.path.join(savedir, filename)
-                file.save(fpath)
-                # Maybe don't save and just use "fpath" to load the image??
-                img = Image(name=bname, path=fpath, extension=ext,
-                            dataset=dataset)
-                imgs.append(img)
-            else:
-                for img in imgs:
-                    os.remove(img.path)
-                db.session.delete(dataset)
-                db.session.commit()
-                flash(f'.{ext} is not a supported filetype', 'danger')
-                return redirect(request.url)
-        for img in imgs:
-            db.session.add(img)
+
+        try:
+            # Function returns number of uploaded images
+            loaded_imgs = load_dataset(files, directory=savedir,
+                                       dataset=dataset, new_dataset=True)
+        except OrphanDatasetError:
+            # If orphaned dataset, delete it
+            db.session.delete(dataset)
+        else:
+            # If not, that means at least one image was uploaded
+            # flash success with number of uploads
+            flash(f'{loaded_imgs} file(s) successfully uploaded!', 'success')
+        finally:
+            # Commit changes in database
             db.session.commit()
-        flash('File(s) successfully uploaded!', category='success')
+
         return redirect(url_for('main.dashboard'))
     for _, error in form.errors.items():
         flash(error[0], 'danger')
@@ -279,60 +273,70 @@ def load_dataset(directory=None):
     info = {'directory': directory, 'new_imgs': 0}
     if directory is not None:
         # Count the files in the directory
-        n_files = 0
+        num_files = 0
         for _, _, files in os.walk(os.path.join(data_dir, directory)):
-            # Ignore dotfiles
-            files[:] = [f for f in files if not f.startswith('.')]
-            for file in files:
-                if allowed_file(file, current_app.config['DSET_ALLOWED_EXTS']):
-                    n_files += 1
-        # Save useful info for template
+            files[:] = [f for f in files
+                        if not f.startswith('.')  # Omit dotfiles
+                        and '.' in f]             # Omit files w/o extension
+
+            # Count files of implemented filetypes
+            num_files += len([f for f in files if f.split('.', 1)[1].lower()
+                              in current_app.config['DSET_ALLOWED_EXTS']])
+
+        # Save useful info for jinja template
         info['model'] = Dataset.query.filter_by(name=directory).first()
         info['saved_imgs'] = info['model'].images.count() \
             if info['model'] else 0
-        info['new_imgs'] = n_files - info['saved_imgs']
+        info['new_imgs'] = num_files - info['saved_imgs']
 
     form = LoadDatasetForm()
     form.dir_name.choices = os.listdir(data_dir)
     if form.validate_on_submit():
-        # If dataset is not a Dataset Model, create it.
-        if not info['model']:
+        if info['model']:
+            new_dataset = False
+        else:
+            # If dataset is not a Dataset Model (does not exist), create it
             info['model'] = Dataset(name=form.dir_name.data)
             db.session.add(info['model'])
-            db.session.commit()
+            new_dataset = True
+            # db.session.commit()
 
         # Loop through files
         # os.walk(path, followlinks=True) :: This would follow symlink location
+
         # TODO Test walk with links on BIC
-        loaded_images = 0
-        for root, _, files in os.walk(os.path.join(data_dir,
-                                                   form.dir_name.data)):
-            files[:] = [f for f in files if not f.startswith('.')]
-            for file in files:
-                # Check which images are already loaded
-                basename = file.rsplit('.', 1)[0]
-                if not Image.query.filter(Image.name == basename,
-                                          Image.dataset == info['model']).\
-                        first():
-                    fpath = os.path.join(root, file)
-                    ext = file.rsplit('.', 1)[1]
-                    if allowed_file(file,
-                                    current_app.config['DSET_ALLOWED_EXTS']):
-                        img = Image(name=basename, path=fpath, extension=ext,
-                                    dataset=info['model'])
-                        db.session.add(img)
-                        db.session.commit()
-                        loaded_images += 1
-                    else:
-                        flash((f'.{ext} from {file}'
-                               ' is not a supported filetype'), 'danger')
-                        return redirect(url_for('main.dashboard'))
-        if loaded_images > 0:
-            flash((f"{loaded_images} file(s)"
-                   f" were successfully loaded for {directory}"), 'success')
+        for root, _, files in \
+                os.walk(os.path.join(data_dir, form.dir_name.data)):
+
+            files[:] = [f for f in files
+                        if not f.startswith('.')  # Omit dotfiles
+                        and '.' in f]             # Omit files w/o extension
+
+            try:
+                # Function returns number of uploaded images
+                loaded_imgs = load_dataset(files, directory=root,
+                                           dataset=dataset, img_model=Image,
+                                           host=True, new_dataset=new_dataset)
+            except OrphanDatasetError:
+                # If orphaned dataset, delete it
+                db.session.delete(dataset)
+
+            else:
+                if not new_dataset and loaded_imgs == 0:
+                    flash('No new files were successfully uploaded', 'info')
+                else:
+                    flash(f'{loaded_imgs} file(s) successfully uploaded!',
+                          'success')
+            finally:
+                # Commit changes in database
+                db.session.commit()
+
         return redirect(url_for('main.dashboard'))
+
+    # Form validation errors
     for _, error in form.errors.items():
         flash(error[0], 'danger')
+
     return render_template('load_dataset.html', form=form, title="Load",
                            dict=info)
 
@@ -350,55 +354,67 @@ def edit_dataset(dataset=None):
     form = EditDatasetForm()
     form.dataset.choices = [ds.name for ds in Dataset.query.order_by('name')]
 
+    # Test image names for regex helper
     test_names = {}
     for set in Dataset.query.all():
         test_names[set.name] = [img.name for img in set.images.limit(5).all()]
 
     changes = False
     if form.validate_on_submit():
+
+        # Check if there is a name change;
         if form.new_name.data and form.new_name.data != ds_model.name:
+
+            # If there is another dataset with that name, throw error
             if Dataset.query.filter_by(name=form.new_name.data).first():
                 flash((f'A Dataset named "{form.new_name.data}" '
                       'already exists. Please choose another name'),
                       'danger')
                 return redirect(request.url)
+
+            # Rename dataset directory
             os.rename(os.path.join(data_dir, ds_model.name),
                       os.path.join(data_dir, form.new_name.data))
+
+            # Change dataset name in images database
             for img in ds_model.images.all():
                 img.path = img.path.replace(ds_model.name, form.new_name.data)
                 db.session.add(img)
+
+            # Change dataset name in dataset database
             ds_model.name = form.new_name.data
             db.session.add(ds_model)
+
+            # Save database changes
             db.session.commit()
             changes = True
 
         files = request.files.getlist(form.imgs_to_upload.name)
+
+        # Check that files is not an empty list??
+        # Maybe to trigger upload
+        # TODO check this
         if files[0].filename != "":
             savedir = os.path.join(data_dir, ds_model.name)
-            new_imgs = []
-            for file in files:
-                ext = file.filename.rsplit('.', 1)[1]
-                if file and \
-                        allowed_file(file.filename,
-                                     current_app.config['DSET_ALLOWED_EXTS']):
-                    filename = secure_filename(file.filename)
-                    bname = filename.rsplit('.', 1)[0]
-                    fpath = os.path.join(savedir, filename)
-                    file.save(fpath)
-                    img = Image(name=bname, path=fpath, extension=ext,
-                                dataset=ds_model)
-                    new_imgs.append(img)
-                else:
-                    # First delete all uploaded new images then exit w/error
-                    for img in new_imgs:
-                        os.remove(img.path)
-                    flash(f'.{ext} is not a supported filetype', 'danger')
-                    return redirect(request.url)
-            for img in new_imgs:
-                db.session.add(img)
-                db.session.commit()
-            changes = True
 
+            try:
+                # Function returns number of uploaded images
+                loaded_imgs = load_dataset(files, directory=savedir,
+                                           dataset=ds_model,
+                                           new_dataset=False)
+            except:
+                # TODO Implement exception for failed upload try
+                pass
+            else:
+                if loaded_imgs == 0:
+                    flash('No new files were successfully uploaded', 'info')
+                else:
+                    flash(f'{loaded_imgs} file(s) successfully uploaded!',
+                          'success')
+                    db.session.commit()
+                    changes = True
+
+        # Regex for image type, subject and/or session
         if form.sub_regex.data \
                 or form.sess_regex.data \
                 or form.type_regex.data:
@@ -430,6 +446,7 @@ def edit_dataset(dataset=None):
         if changes:
             flash(f'{ds_model.name} successfully edited!', 'success')
             return redirect(url_for('main.dashboard'))
+
     return render_template('edit_dataset.html', form=form, dataset=dataset,
                            names=test_names, title='Edit Dataset')
 
@@ -484,17 +501,17 @@ def export_ratings(dataset=None):
         comments = [i.comment for i in
                     ds_model.
                     images.
-                    join(Ratings).
-                    add_columns(Ratings.comment).
+                    join(Rating).
+                    add_columns(Rating.comment).
                     all()]
         not_comms = (comments.count("") == len(comments))
 
     if form.validate_on_submit():
-        query = Ratings.query.\
+        query = Rating.query.\
             join(Image).\
             filter(Image.dataset_id == ds_model.id).\
             order_by(Image.id.asc()).\
-            add_columns(Image.name, Ratings.rating)
+            add_columns(Image.name, Rating.rating)
         keys = ['Image']
         if form.col_sub.data:
             query = query.add_columns(Image.subject)
@@ -507,13 +524,13 @@ def export_ratings(dataset=None):
             keys.append('Rater')
         keys.append('Rating')
         if form.col_comment.data:
-            query = query.add_columns(Ratings.comment)
+            query = query.add_columns(Rating.comment)
             keys.append('Comment')
         if form.col_timestamp.data:
-            query = query.add_columns(Ratings.timestamp)
+            query = query.add_columns(Rating.timestamp)
             keys.append('Date')
         if int(form.rater_filter.data):
-            query = query.filter(Ratings.rater_id == current_user.id)
+            query = query.filter(Rating.rater_id == current_user.id)
             file_name = f'{file_name}_{current_user.username}'
 
         ratings = []
@@ -553,3 +570,15 @@ def export_ratings(dataset=None):
     return render_template('export_ratings.html', form=form, dataset=dataset,
                            nsub=not_subs, nsess=not_sess, ncomms=not_comms,
                            title='Downlad Ratings')
+
+@bp.route('/notifications')
+@login_required
+def notifications():
+    since = request.args.get('since', 0.0, type=float)
+    notifications = current_user.notifications.filter(
+        Notification.timestamp > since).order_by(Notification.timestamp.asc())
+    return jsonify([{
+        'name': n.name,
+        'data': n.get_data(),
+        'timestamp': n.timestamp
+    } for n in notifications])
