@@ -59,6 +59,13 @@ class Rater(UserMixin, db.Model):
             return
         return Rater.query.get(id)
 
+    def add_notification(self, name, data):
+        """Add a notification for this rater to the database."""
+        self.notifications.filter_by(name=name).delete()
+        n = Notification(name=name, payload_json=json.dumps(data), user=self)
+        db.session.add(n)
+        return n
+
     def launch_task(self, name, description, *args, **kwargs):
         """Launch a task to the redis queue."""
         rq_job = current_app.task_queue.enqueue('app.tasks.' + name, self.id,
@@ -170,7 +177,7 @@ class Rating(db.Model):
 class Notification(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(128), index=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    rater_id = db.Column(db.Integer, db.ForeignKey('rater.id'))
     timestamp = db.Column(db.Float, index=True, default=time)
     payload_json = db.Column(db.Text)
 

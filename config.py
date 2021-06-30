@@ -13,15 +13,19 @@ load_dotenv(os.path.join(basedir, '.env'))
 
 # Docker-compose: Secrets
 # MySQL
-try:
-    secret = open('/run/secrets/db-password', encoding='utf-8')
-except FileNotFoundError:
-    # If no db-password secret check for DATABASE_URL environment variable
-    DATABASE_URL = os.environ.get('DATABASE_URL')
-else:
-    db_password = secret.read().splitlines()[0]
-    DATABASE_URL = f"mysql+pymysql://root:{db_password}@db/qrater"
-    secret.close()
+# If environment variable use it
+DATABASE_URL = os.environ.get('DATABASE_URL')
+if not DATABASE_URL:
+    try:
+        # Docker-compose secret
+        secret = open('/run/secrets/db-password', encoding='utf-8')
+    except FileNotFoundError:
+        # If no db-password secret or ENV_VAR; use local SQLite
+        DATABASE_URL = f"sqlite:///{os.path.join(basedir, 'SQL.db')}"
+    else:
+        db_password = secret.read().splitlines()[0]
+        DATABASE_URL = f"mysql+pymysql://root:{db_password}@db/qrater"
+        secret.close()
 
 # Mail
 try:
@@ -39,6 +43,7 @@ class Config():
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'
     SQLALCHEMY_DATABASE_URI = DATABASE_URL
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    REDIS_URL = os.environ.get('REDIS_URL') or 'redis://'
     MAIL_SERVER = os.environ.get('MAIL_SERVER')
     MAIL_PORT = int(os.environ.get('MAIL_PORT') or 25)
     MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS') is not None
