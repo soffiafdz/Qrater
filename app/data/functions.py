@@ -23,7 +23,6 @@ def load_image(image, directory, dataset, upload=False):
         dataset: dataset MODEL that the images pertain to
         upload: boolean to differentiate uploading vs linking (CLIENT v HOST)
     """
-
     filename = secure_filename(image.filename) \
         if upload else secure_filename(image)
     fpath = os.path.join(directory, filename)
@@ -64,7 +63,6 @@ def load_dataset(files, directory, dataset, img_model=None, host=False,
 
     Returns: Number of successfully loaded images.
     """
-
     loaded_imgs = 0
     upload = False if host else True
 
