@@ -10,11 +10,11 @@ import json
 from collections import defaultdict
 from datetime import datetime
 from flask import (render_template, flash, abort, redirect, url_for, request,
-                   current_app, send_file)
+                   current_app, send_file, jsonify)
 from flask_login import current_user, login_required
 from app import db
 from app.main.forms import RatingForm, ExportRatingsForm
-from app.models import Dataset, Image, Rating, Rater
+from app.models import Dataset, Image, Rating, Rater, Notification
 from app.main import bp
 
 
