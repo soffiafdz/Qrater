@@ -14,18 +14,18 @@ from app.data.exceptions import (NoExtensionError, OrphanDatasetError,
                                  UnsupportedExtensionError)
 
 
-def load_image(image, directory, dataset, upload=False):
+def load_image(image, savedir, dataset, upload=False):
     """Load data of an image to an EXISTING dataset.
 
     Arguments:
-        image: data file (CLIENT or HOST) of the image to load
-        directory: path (existing) where to save/link the images
-        dataset: dataset MODEL that the images pertain to
-        upload: boolean to differentiate uploading vs linking (CLIENT v HOST)
+        image   -- data file (CLIENT or HOST) of the image to load
+        savedir -- path (existing) where to save/link the images
+        dataset -- dataset MODEL that the images pertain to
+        upload  -- boolean to differentiate uploading vs linking (CLIENT/HOST)
     """
     filename = secure_filename(image.filename) \
         if upload else secure_filename(image)
-    fpath = os.path.join(directory, filename)
+    fpath = os.path.join(savedir, filename)
 
     try:
         basename, extension = filename.split('.', 1)
@@ -48,24 +48,22 @@ def load_image(image, directory, dataset, upload=False):
         raise NoExtensionError(filename=filename)
 
 
-def load_dataset(files, directory, dataset, img_model=None, host=False,
-                 quiet=False, new_dataset=False):
+def load_dataset(files, savedir, dataset, img_model=None, host=False,
+                 quiet=False, new_dataset=True):
     """Load data of several images from CLIENT.
 
     Arguments:
-        files: list of data files (CLIENT or HOST)
-        directory: path (existing) where to save/link the images
-        host: boolean for loading images within host
-        dataset: dataset MODEL that the images pertain to
-        img_model: image MODEL to check existance of data file
-        quiet: boolean to inhibit flash in browser
-        new_dataset: failsafe to avoid empty dataset in case of errors
+        files       -- list of data files (CLIENT or HOST)
+        savedir     -- path (existing) where to save/link the images
+        host        -- boolean for loading images within host
+        dataset     -- dataset MODEL that the images pertain to
+        img_model   -- image MODEL to check existance of data file
+        quiet       -- boolean to inhibit flash in browser
+        new_dataset -- failsafe to avoid empty dataset in case of errors
 
     Returns: Number of successfully loaded images.
     """
     loaded_imgs = 0
-    upload = False if host else True
-
     for img in files:
         # Check existence of file in directory when loading from host
         # if uploading from client, assume non-existance
@@ -77,7 +75,7 @@ def load_dataset(files, directory, dataset, img_model=None, host=False,
 
         if not exists:
             try:
-                load_image(img, directory, dataset, upload=upload)
+                load_image(img, savedir, dataset, upload=host)
 
             except UnsupportedExtensionError:
                 current_app.logger.error(f'Error in uploading {img.filename}; '
@@ -86,7 +84,6 @@ def load_dataset(files, directory, dataset, img_model=None, host=False,
                 if not quiet:
                     flash(f'{img.filename} is an unsupported filetype',
                           'danger')
-                continue
 
             except NoExtensionError:
                 current_app.logger.error(f'Error in uploading {img.filename}; '
@@ -95,7 +92,6 @@ def load_dataset(files, directory, dataset, img_model=None, host=False,
                 if not quiet:
                     flash(f'{img.filename} does not have an extension',
                           'danger')
-                continue
 
             else:
                 loaded_imgs += 1

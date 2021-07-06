@@ -10,7 +10,7 @@ import re
 from shutil import rmtree
 # from werkzeug.utils import secure_filename
 from flask import (render_template, flash, redirect, url_for, request,
-                   current_app)
+                   current_app, current_user)
 from flask_login import login_required
 from app import db
 from app.main import bp
@@ -39,20 +39,27 @@ def upload_dataset():
         dataset = Dataset(name=form.dataset_name.data)
         db.session.add(dataset)
 
-        try:
-            # Function returns number of uploaded images
-            loaded_imgs = load_dataset(files, directory=savedir,
-                                       dataset=dataset, new_dataset=True)
-        except OrphanDatasetError:
-            # If orphaned dataset, delete it
-            db.session.delete(dataset)
-        else:
-            # If not, that means at least one image was uploaded
-            # flash success with number of uploads
-            flash(f'{loaded_imgs} file(s) successfully uploaded!', 'success')
-        finally:
-            # Commit changes in database
+        if len(files) > 10:
+            current_user.launch_task('load_data',
+                                     f'Upload data to {dataset.name}',
+                                     files=files, savedir=savedir,
+                                     dataset_model=dataset, img_model=Image)
             db.session.commit()
+        else:
+            try:
+                # Function returns number of uploaded images
+                loaded_imgs = load_dataset(files, savedir, dataset=dataset,
+                                           img_model=Image)
+            except OrphanDatasetError:
+                # If orphaned dataset, delete it
+                db.session.delete(dataset)
+            else:
+                # If not, that means at least one image was uploaded
+                # flash success with number of uploads
+                flash(f'{loaded_imgs} file(s) successfully loaded!', 'success')
+            finally:
+                # Commit changes in database
+                db.session.commit()
 
         return redirect(url_for('main.dashboard'))
     for _, error in form.errors.items():
@@ -97,11 +104,9 @@ def load_dataset(directory=None):
             info['model'] = Dataset(name=form.dir_name.data)
             db.session.add(info['model'])
             new_dataset = True
-            # db.session.commit()
 
         # Loop through files
         # os.walk(path, followlinks=True) :: This would follow symlink location
-
         # TODO Test walk with links on BIC
         for root, _, files in \
                 os.walk(os.path.join(data_dir, form.dir_name.data)):
@@ -110,25 +115,34 @@ def load_dataset(directory=None):
                         if not f.startswith('.')  # Omit dotfiles
                         and '.' in f]             # Omit files w/o extension
 
-            try:
-                # Function returns number of uploaded images
-                loaded_imgs = load_dataset(files, directory=root,
-                                           dataset=info['model'],
-                                           img_model=Image, host=True,
-                                           new_dataset=new_dataset)
-            except OrphanDatasetError:
-                # If orphaned dataset, delete it
-                db.session.delete(info['model'])
-
-            else:
-                if not new_dataset and loaded_imgs == 0:
-                    flash('No new files were successfully uploaded', 'info')
-                else:
-                    flash(f'{loaded_imgs} file(s) successfully uploaded!',
-                          'success')
-            finally:
-                # Commit changes in database
+            if len(files) > 10:
+                current_user.launch_task('load_data',
+                                         f"Load data to {info['model'].name}",
+                                         files=files, savedir=root,
+                                         dataset=info['model'],
+                                         img_model=Image, host=True,
+                                         new_dataset=new_dataset)
                 db.session.commit()
+            else:
+                try:
+                    # Function returns number of uploaded images
+                    loaded_imgs = load_dataset(files, savedir=root,
+                                               dataset=info['model'],
+                                               img_model=Image, host=True,
+                                               new_dataset=new_dataset)
+                except OrphanDatasetError:
+                    # If orphaned dataset, delete it
+                    db.session.delete(info['model'])
+
+                else:
+                    if not new_dataset and loaded_imgs == 0:
+                        flash('No new files were successfully loaded', 'info')
+                    else:
+                        flash(f'{loaded_imgs} file(s) successfully loaded!',
+                              'success')
+                finally:
+                    # Commit changes in database
+                    db.session.commit()
 
         return redirect(url_for('main.dashboard'))
 

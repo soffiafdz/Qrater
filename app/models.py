@@ -4,9 +4,9 @@ Qrater.
 Global app module with Flask models.
 """
 
-# MODIFY... What?
 from datetime import datetime
 from time import time
+import json
 import jwt
 from flask import current_app
 from flask_login import UserMixin
