@@ -180,7 +180,25 @@
 
 {% block content %}
 <br>
-{% with messages = get_flashed_messages(with_categories=True) -%}
+{% if current_user.is_authenticated %}
+{% with tasks = current_user.get_tasks_in_progress() %}
+{% if tasks -%}
+  <div class="container flashed-messages">
+    <div class="row">
+      <div class="col-md-12">
+        {% for task in tasks %}
+          <div class="alert alert-dark" role="alert">
+            {{ task.description }}
+            <span id="{{ task.id }}-progress">{{ task.get_progress() }}</span>%
+          </div>
+        {%- endfor -%}
+      </div>
+    </div>
+  </div>
+{% endif -%}
+{% endwith %}
+{% endif %}
+{% with messages = get_flashed_messages(with_categories=True) %}
 {% if messages -%}
   <div class="container flashed-messages">
     <div class="row">
