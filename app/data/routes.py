@@ -13,9 +13,10 @@ from flask import (render_template, flash, redirect, url_for, request,
                    current_app)
 from flask_login import login_required, current_user
 from app import db
-from app.main import bp
-from app.data.forms import LoadDatasetForm, UploadDatasetForm, EditDatasetForm
+from app.data import bp
 from app.models import Dataset, Image
+from app.data.functions import load_data
+from app.data.forms import LoadDatasetForm, UploadDatasetForm, EditDatasetForm
 from app.data.exceptions import OrphanDatasetError, EmptyLoadError
 
 
@@ -49,8 +50,8 @@ def upload_dataset():
         else:
             try:
                 # Function returns number of uploaded images
-                loaded_imgs = load_dataset(files, savedir, dataset=dataset,
-                                           img_model=Image)
+                loaded_imgs = load_data(files, savedir, dataset=dataset,
+                                        img_model=Image)
             except OrphanDatasetError:
                 # If orphaned dataset, delete it
                 db.session.delete(dataset)
@@ -65,7 +66,7 @@ def upload_dataset():
         return redirect(url_for('main.dashboard'))
     for _, error in form.errors.items():
         flash(error[0], 'danger')
-    return render_template('uploads/upload_dataset.html', form=form,
+    return render_template('data/upload_dataset.html', form=form,
                            title='Upload Dataset')
 
 
@@ -128,10 +129,10 @@ def load_dataset(directory=None):
             else:
                 try:
                     # Function returns number of uploaded images
-                    loaded_imgs = load_dataset(files, savedir=root,
-                                               dataset=info['model'],
-                                               img_model=Image, host=True,
-                                               new_dataset=new_dataset)
+                    loaded_imgs = load_data(files, savedir=root,
+                                            dataset=info['model'],
+                                            img_model=Image, host=True,
+                                            new_dataset=new_dataset)
                 except OrphanDatasetError:
                     # If orphaned dataset, delete it
                     db.session.delete(info['model'])
@@ -152,7 +153,7 @@ def load_dataset(directory=None):
     for _, error in form.errors.items():
         flash(error[0], 'danger')
 
-    return render_template('uploads/load_dataset.html', form=form,
+    return render_template('data/load_dataset.html', form=form,
                            title="Load Dataset", dict=info)
 
 
@@ -213,9 +214,8 @@ def edit_dataset(dataset=None):
 
             try:
                 # Function returns number of uploaded images
-                loaded_imgs = load_dataset(files, directory=savedir,
-                                           dataset=ds_model,
-                                           new_dataset=False)
+                loaded_imgs = load_data(files, directory=savedir,
+                                        dataset=ds_model, new_dataset=False)
             except EmptyLoadError:
                 pass
             else:
@@ -260,8 +260,9 @@ def edit_dataset(dataset=None):
             flash(f'{ds_model.name} successfully edited!', 'success')
             return redirect(url_for('main.dashboard'))
 
-    return render_template('edit_dataset.html', form=form, dataset=dataset,
-                           names=test_names, title='Edit Dataset')
+    return render_template('data/edit_dataset.html', form=form,
+                           dataset=dataset, names=test_names,
+                           title='Edit Dataset')
 
 
 @bp.route('/delete-dataset/<dataset>')

@@ -83,6 +83,7 @@ class Rater(UserMixin, db.Model):
         return Task.query.filter_by(name=name, rater=self,
                                     complete=False).first()
 
+
 @login.user_loader
 def load_user(id):
     """Load rater."""

@@ -23,8 +23,9 @@ def load_image(image, savedir, dataset, upload=False):
         dataset -- dataset MODEL that the images pertain to
         upload  -- boolean to differentiate uploading vs linking (CLIENT/HOST)
     """
-    filename = secure_filename(image.filename) \
-        if upload else secure_filename(image)
+    file = image.filename if upload else image
+
+    filename = secure_filename(file)
     fpath = os.path.join(savedir, filename)
 
     try:
@@ -48,8 +49,8 @@ def load_image(image, savedir, dataset, upload=False):
         raise NoExtensionError(filename=filename)
 
 
-def load_dataset(files, savedir, dataset, img_model=None, host=False,
-                 quiet=False, new_dataset=True):
+def load_data(files, savedir, dataset, img_model=None, host=False,
+              quiet=False, new_dataset=True):
     """Load data of several images from CLIENT.
 
     Arguments:

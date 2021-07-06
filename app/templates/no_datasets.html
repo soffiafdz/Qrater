@@ -8,7 +8,7 @@
   <br>
   To start QCing
   {% if current_user.is_authenticated %}
-  <a href="{{ url_for('main.upload_dataset') }}"> upload your data.</a>
+  <a href="{{ url_for('data.upload_dataset') }}"> upload your data.</a>
   {% else %}
   <a href="{{ url_for('auth.register') }}"> create a Rater account</a>
   or
