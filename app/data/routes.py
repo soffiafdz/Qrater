@@ -10,13 +10,13 @@ import re
 from shutil import rmtree
 # from werkzeug.utils import secure_filename
 from flask import (render_template, flash, redirect, url_for, request,
-                   current_app, current_user)
-from flask_login import login_required
+                   current_app)
+from flask_login import login_required, current_user
 from app import db
 from app.main import bp
-from app.main.forms import LoadDatasetForm, UploadDatasetForm, EditDatasetForm
+from app.data.forms import LoadDatasetForm, UploadDatasetForm, EditDatasetForm
 from app.models import Dataset, Image
-from app.uploads.exceptions import OrphanDatasetError, EmptyLoadError
+from app.data.exceptions import OrphanDatasetError, EmptyLoadError
 
 
 @bp.route('/upload-dataset', methods=['GET', 'POST'])
