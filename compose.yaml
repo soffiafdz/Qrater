@@ -22,6 +22,14 @@ services:
       - 3306
       - 33060
 
+  redis:
+    image: redis:6.2.4-alpine
+    restart: always
+    networks:
+      - redisnet
+    expose:
+      - 6379
+
   backend:
     build: .
     restart: always
@@ -37,6 +45,7 @@ services:
       - 8080:5000
     networks:
       - backnet
+      - redisnet
     depends_on:
       db:
         condition: service_healthy
@@ -52,3 +61,4 @@ secrets:
 
 networks:
   backnet:
+  redisnet:
