@@ -74,9 +74,11 @@ def load_data(files, savedir, dataset, img_model=None, host=False,
             img_model.dataset == dataset).first() \
             if host else None
 
+        upload = not host
+
         if not exists:
             try:
-                load_image(img, savedir, dataset, upload=host)
+                load_image(img, savedir, dataset, upload=upload)
 
             except UnsupportedExtensionError:
                 current_app.logger.error(f'Error in uploading {img.filename}; '
