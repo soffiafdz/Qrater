@@ -41,7 +41,8 @@ def upload_dataset():
 
         if len(files) > 10:
             current_user.launch_task('load_data',
-                                     f'Upload data to {dataset.name}',
+                                     f'Uploading {len(files)} new images '
+                                     f'to {dataset.name} dataset...',
                                      files=files, savedir=savedir,
                                      dataset_model=dataset, img_model=Image)
             db.session.commit()
@@ -117,7 +118,8 @@ def load_dataset(directory=None):
 
             if len(files) > 10:
                 current_user.launch_task('load_data',
-                                         f"Load data to {info['model'].name}",
+                                         f"Loading {len(files)} new images "
+                                         f" to {info['model'].name} dataset",
                                          files=files, savedir=root,
                                          dataset=info['model'],
                                          img_model=Image, host=True,
