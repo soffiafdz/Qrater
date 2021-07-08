@@ -1,7 +1,7 @@
 FROM python:3.9-alpine
 
 RUN adduser -D admin
-RUN apk update && apk add python3-dev gcc g++ libc-dev
+RUN apk update && apk add bash python3-dev gcc g++ libc-dev
 
 WORKDIR /home/qrater
 
