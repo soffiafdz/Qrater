@@ -175,6 +175,8 @@ class Rating(db.Model):
 
 
 class Notification(db.Model):
+    """SQLAlchemy Model for Notifications."""
+
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(128), index=True)
     rater_id = db.Column(db.Integer, db.ForeignKey('rater.id'))
