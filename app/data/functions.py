@@ -14,39 +14,45 @@ from app.data.exceptions import (NoExtensionError, OrphanDatasetError,
                                  UnsupportedExtensionError)
 
 
-def load_image(image, savedir, dataset, upload=False):
+def upload_data(files, savedir):
+    """Upload all data to be sorted later.
+
+    Arguments:
+        files   -- list of FileStorage objects to be *quickly* uploaded
+        savedir -- path (existing) where to save the images
+
+    Returns:
+        list of file paths
+    """
+    list_files = []
+    for file in files:
+        filename = secure_filename(file.filename)
+        fpath = os.path.join(savedir, filename)
+        file.save(fpath)
+        list_files.append(fpath)
+    return list_files
+
+
+def load_image(image, dataset):
     """Load data of an image to an EXISTING dataset.
 
     Arguments:
-        image   -- data file (CLIENT or HOST) of the image to load
-        savedir -- path (existing) where to save/link the images
+        image   -- path to data file (HOST) of the image to load
         dataset -- dataset MODEL that the images pertain to
-        upload  -- boolean to differentiate uploading vs linking (CLIENT/HOST)
     """
-    file = image.filename if upload else image
-
-    filename = secure_filename(file)
-    fpath = os.path.join(savedir, filename)
-
+    file = image.rsplit('/', 1)[-1]
     try:
-        basename, extension = filename.split('.', 1)
+        basename, extension = file.split('.', 1)
         if extension.lower() in current_app.config['DSET_ALLOWED_EXTS']:
-            if upload:
-                image.save(fpath)  # Save file into savedir
-
             # Add Image to database
-            db.session.add(Image(name=basename, path=fpath,
+            db.session.add(Image(name=basename, path=image,
                                  extension=extension, dataset=dataset))
-
-            # Should I delete this??
-            # db.session.commit()
-            # Commit database outside of function
         else:
             raise UnsupportedExtensionError(extension=extension)
 
     except ValueError:
         # File has no extension (Common in Linux)
-        raise NoExtensionError(filename=filename)
+        raise NoExtensionError(filename=image)
 
 
 def load_data(files, savedir, dataset, img_model=None, host=False,
@@ -64,6 +70,10 @@ def load_data(files, savedir, dataset, img_model=None, host=False,
 
     Returns: Number of successfully loaded images.
     """
+    # First upload all files
+    if not host:
+        files = upload_data(files, savedir)
+
     loaded_imgs = 0
     for img in files:
         # Check existence of file in directory when loading from host
@@ -74,11 +84,9 @@ def load_data(files, savedir, dataset, img_model=None, host=False,
             img_model.dataset == dataset).first() \
             if host else None
 
-        upload = not host
-
         if not exists:
             try:
-                load_image(img, savedir, dataset, upload=upload)
+                load_image(img, dataset)
 
             except UnsupportedExtensionError:
                 current_app.logger.error(f'Error in uploading {img.filename}; '
