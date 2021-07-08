@@ -25,10 +25,10 @@ def upload_data(files, savedir):
         list of file paths
     """
     list_files = []
-    for file in files:
-        filename = secure_filename(file.filename)
+    for f in files:
+        filename = secure_filename(f.filename)
         fpath = os.path.join(savedir, filename)
-        file.save(fpath)
+        f.save(fpath)
         list_files.append(fpath)
     return list_files
 
@@ -40,9 +40,9 @@ def load_image(image, dataset):
         image   -- path to data file (HOST) of the image to load
         dataset -- dataset MODEL that the images pertain to
     """
-    file = image.rsplit('/', 1)[-1]
+    filename = image.rsplit('/', 1)[-1]
     try:
-        basename, extension = file.split('.', 1)
+        basename, extension = filename.split('.', 1)
         if extension.lower() in current_app.config['DSET_ALLOWED_EXTS']:
             # Add Image to database
             db.session.add(Image(name=basename, path=image,
@@ -55,16 +55,15 @@ def load_image(image, dataset):
         raise NoExtensionError(filename=image)
 
 
-def load_data(files, savedir, dataset, img_model=None, host=False,
-              quiet=False, new_dataset=True):
+def load_data(files, dataset, savedir=None, host=False, quiet=False,
+              new_dataset=True):
     """Load data of several images from CLIENT.
 
     Arguments:
         files       -- list of data files (CLIENT or HOST)
-        savedir     -- path (existing) where to save/link the images
-        host        -- boolean for loading images within host
         dataset     -- dataset MODEL that the images pertain to
-        img_model   -- image MODEL to check existance of data file
+        host        -- boolean for loading images within host
+        savedir     -- path (existing) where to save the images
         quiet       -- boolean to inhibit flash in browser
         new_dataset -- failsafe to avoid empty dataset in case of errors
 
@@ -79,10 +78,12 @@ def load_data(files, savedir, dataset, img_model=None, host=False,
         # Check existence of file in directory when loading from host
         # if uploading from client, assume non-existance
         # (as new dataset is created)
-        exists = img_model.query.filter(
-            img_model.name == img.rsplit('.', 1)[0],
-            img_model.dataset == dataset).first() \
-            if host else None
+        print(img.rsplit('.', 1)[0])
+        exists = Image.query.filter(
+            Image.name == img.rsplit('.', 1)[0],
+            Image.dataset == dataset
+        ).first()
+        print(exists)
 
         if not exists:
             try:

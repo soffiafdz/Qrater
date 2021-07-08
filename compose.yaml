@@ -1,4 +1,28 @@
+version: '3.5'
+
 services:
+  flask:
+    build: .
+    restart: always
+    secrets:
+      - db-password
+      - mail-password
+    volumes:
+      - ./datasets:/home/qrater/app/static/datasets/preloaded
+      # Extra volumes in compose.override.yaml
+    env_file:
+      - qrater.env
+    ports:
+      - 8080:5000
+    networks:
+      - dbnet
+      - redisnet
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
   db:
     image: mysql:8.0.25
     command: '--default-authentication-plugin=mysql_native_password'
@@ -13,7 +37,7 @@ services:
     volumes:
       - db-data:/var/lib/mysql
     networks:
-      - backnet
+      - dbnet
     environment:
       - MYSQL_DATABASE=qrater
       - MYSQL_ROOT_HOST=%
@@ -30,25 +54,30 @@ services:
     expose:
       - 6379
 
-  backend:
+  worker:
     build: .
+    entrypoint:
+      - env/bin/rq
+      - worker
+      - --url
+      - redis://redis:6379/0
+      - qrater-tasks
     restart: always
     secrets:
       - db-password
       - mail-password
-    volumes:
-      - ./datasets:/home/qrater/app/static/datasets
-      # Extra volumes in compose.override.yaml
+    volumes_from:
+      - flask
     env_file:
       - qrater.env
-    ports:
-      - 8080:5000
     networks:
-      - backnet
+      - dbnet
       - redisnet
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_started
 
 volumes:
   db-data:
@@ -60,5 +89,5 @@ secrets:
     file: mail-password.txt
 
 networks:
-  backnet:
-  redisnet:
+  dbnet: {}
+  redisnet: {}
