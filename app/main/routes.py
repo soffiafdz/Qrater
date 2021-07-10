@@ -85,6 +85,7 @@ def dashboard(all_raters_string=None):
 @login_required
 def rate(name_dataset):
     """Page to view images and rate them."""
+    # TODO Fix all this mess!!!
     # If dataset doesn't exist abort with 404
     dataset = Dataset.query.filter_by(name=name_dataset).first_or_404()
 
@@ -162,9 +163,14 @@ def rate(name_dataset):
             # Images with ratings from CURRENT_RATER (except pending)
             rated = imgs.join(Rating).filter(Rating.rater == current_user,
                                              Rating.rating > 0)
+            rated = db.session.query(Image.id).\
+                filter(Image.dataset == dataset).\
+                join(Rating).\
+                filter(Rating.rater == current_user, Rating.rating != 0).\
+                subquery()
 
             # All images, except Rated
-            imgs = imgs.except_(rated)
+            imgs = Image.query.filter(Image.id.not_in(rated))
 
         elif filters["rating"] < 4:
             # Images where rating BY CURR_RATER matches rating filter
