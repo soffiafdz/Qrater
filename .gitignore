@@ -136,6 +136,7 @@ test_images
 app/static/datasets/preloaded/*
 app/static/datasets/uploaded/*
 datasets/*
+uploaded_datasets/*
 
 # Text lists
 *.txt
