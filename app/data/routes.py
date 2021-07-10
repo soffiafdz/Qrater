@@ -293,7 +293,6 @@ def delete_dataset(dataset):
     data_dir = os.path.join(current_app.config['ABS_PATH'], 'static/datasets')
 
     ds_name = ds_model.name
-    ds_dir = os.path.join(data_dir, ds_name)
 
     # Loop to delete ratings > images > dataset from dataset
     for image in ds_model.images.all():
@@ -305,7 +304,9 @@ def delete_dataset(dataset):
     # Don't delete image data anymore, unless specified
     nuke = request.args.get('nuke', 0, type=int)
     if nuke:
-        rmtree(ds_dir)
+        dataset_dir = os.path.join(data_dir, 'uploaded', ds_name)
+        if os.path.isdir(dataset_dir):
+            rmtree(dataset_dir)
     db.session.commit()
 
     flash(f'Dataset: {ds_name} was successfully deleted!',
