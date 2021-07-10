@@ -99,8 +99,12 @@ def load_dataset(directory=None):
             if info['model'] else 0
         info['new_imgs'] = num_files - info['saved_imgs']
 
+    # Choices of directories to load in form
+    dir_choices = [d for d in os.listdir(data_dir)
+                   if os.path.isdir(os.path.join(data_dir, d))]
+
     form = LoadDatasetForm()
-    form.dir_name.choices = os.listdir(data_dir)
+    form.dir_name.choices = dir_choices
     if form.validate_on_submit():
         if info['model']:
             new_dataset = False
