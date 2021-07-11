@@ -1,0 +1,7 @@
+.git
+__pycache__/
+db-password.txt
+mail-password.txt
+datasets/*
+uploaded_datasets/*
+SQL.db
