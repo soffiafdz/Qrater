@@ -60,6 +60,25 @@ class EmptyLoadError(Exception):
         return f'{self.message}'
 
 
+class DuplicateImageError(Exception):
+    """Exception raised when trying to upload a duplicate image.
+
+    Attributes:
+        image   -- image name
+        message -- explanation of the error
+    """
+
+    def __init__(self, image, message="Image is already loaded"):
+        """Initialize exception."""
+        self.image = image
+        self.message = message
+        super().__init__(self.message)
+
+    def __str__(self):
+        """Express exception."""
+        return f'{self.image} -> {self.message}'
+
+
 class OrphanDatasetError(Exception):
     """Exception raised when a dataset is created but left without images.
 
