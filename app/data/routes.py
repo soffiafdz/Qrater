@@ -260,24 +260,31 @@ def edit_dataset(dataset=None):
         # Regex for image type, subject and/or session
         if form.sub_regex.data \
                 or form.sess_regex.data \
-                or form.type_regex.data:
+                or form.type_regex.data \
+                or form.cohort_regex.data:
             for img in ds_model.images.all():
                 img_change = False
                 if form.sub_regex.data:
                     pattern = form.sub_regex.data
-                    result = re.search(pattern, img.name)
+                    result = re.search(pattern, img.path)
                     if result:
                         img.subject = result.group()
                         img_change = True
                 if form.sess_regex.data:
                     pattern = form.sess_regex.data
-                    result = re.search(pattern, img.name)
+                    result = re.search(pattern, img.path)
                     if result:
                         img.session = result.group()
                         img_change = True
+                if form.cohort_regex.data:
+                    pattern = form.cohort_regex.data
+                    result = re.search(pattern, img.path)
+                    if result:
+                        img.cohort = result.group()
+                        img_change = True
                 if form.type_regex.data:
                     pattern = form.type_regex.data
-                    result = re.search(pattern, img.name)
+                    result = re.search(pattern, img.path)
                     if result:
                         img.imgtype = result.group()
                         img_change = True

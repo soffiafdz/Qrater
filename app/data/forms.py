@@ -39,6 +39,7 @@ class EditDatasetForm(FlaskForm):
     new_name = StringField("Dataset's name")
     sub_regex = StringField("Subjects' label (regex)")
     sess_regex = StringField("Sessions' label (regex)")
+    cohort_regex = StringField("Cohort label (regex)")
     type_regex = StringField("Image type label (regex)")
     imgs_to_upload = MultipleFileField('MRI files')
     submit = SubmitField('Upload')

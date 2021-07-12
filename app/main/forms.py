@@ -38,5 +38,6 @@ class ExportRatingsForm(FlaskForm):
     col_rater = BooleanField("Rater")
     col_sub = BooleanField("Subject")
     col_sess = BooleanField("Session")
+    col_cohort = BooleanField("Cohort")
     col_comment = BooleanField("Comments")
     col_timestamp = BooleanField("Timestamp")

@@ -146,6 +146,31 @@
         </div>
       </div>
       <div class="row mb-3 mx-0">
+        <label
+          class="col-sm-12 col-md-3 col-form-label"
+          for="reCohort">Cohort label</label>
+        <div class="col-sm-12 col-md-9">
+          <div class="input-group">
+            <span class="input-group-text">
+              <i class="bi bi-stack"></i>
+            </span>
+            <input
+              type="text"
+              class="form-control"
+              id="reCohort"
+              name="cohort_regex"
+              placeholder="Regular Expression (Optional)">
+            <button
+              class="btn btn-outline-secondary"
+              type="button"
+              id="regexBtn4"
+              {% if dataset is none %}disabled{% endif %}
+              ><i class="bi bi-search"></i></button>
+          </div>
+          <div id="reCohortResults" class="form-text d-none"></div>
+        </div>
+      </div>
+      <div class="row mb-3 mx-0">
         <label class="col-sm-12 col-md-3 col-form-label" for="uploadImgs">
           Add MRI
         </label>
@@ -255,6 +280,28 @@
           $("#reSessResults").html("No results with this REGEX");
         } else {
           $("#reSessResults").html(results.join(', '));
+        }
+      }
+    });
+    $("#regexBtn4").click(function() {
+      if ($("#reCohort").val() == "") {
+        $("#reCohortResults").addClass("d-none");
+      } else {
+        var results = [];
+        var dataset = $("#datasetSelect").val()
+        var imgs = imgsArray[dataset];
+        var regex = new RegExp($("#reCohort").val());
+        $("#reCohortResults").removeClass("d-none");
+        $("#reCohortResults").removeClass("text-danger");
+        imgs.forEach(function(img) {
+          var res = img.match(regex);
+          if (res) results.push(res[0]);
+        });
+        if (!results.length) {
+          $("#reCohortResults").addClass("text-danger");
+          $("#reCohortResults").html("No results with this REGEX");
+        } else {
+          $("#reCohortResults").html(results.join(', '));
         }
       }
     });

@@ -101,7 +101,8 @@ def rate(name_dataset):
         "rating": request.args.get('rating_filter', None, type=int),
         "type": request.args.get('type_filter', None, type=str),
         "subject": request.args.get('sub_filter', None, type=str),
-        "session": request.args.get('sess_filter', None, type=str)
+        "session": request.args.get('sess_filter', None, type=str),
+        "cohort": request.args.get('cohort_filter', None, type=str)
     }
 
     # INIT with all dataset's images
@@ -129,6 +130,9 @@ def rate(name_dataset):
 
     imgs = imgs.filter_by(session=filters["session"]) \
         if filters["session"] else imgs
+
+    imgs = imgs.filter_by(cohort=filters["cohort"]) \
+        if filter["cohort"] else imgs
 
     if filters["rating"] is None:
         # If no rating_filter, no need to do anything else
@@ -230,7 +234,7 @@ def export_ratings(dataset=None):
     form = ExportRatingsForm()
     form.dataset.choices = [ds.name for ds in Dataset.query.order_by('name')]
 
-    not_subs, not_sess, not_comms = False, False, False
+    not_subs, not_sess, not_cohorts, not_comms = False, False, False, False
     if dataset is not None:
         ds_model = Dataset.query.filter_by(name=dataset).first_or_404()
         file_name = f'{ds_model.name}'
@@ -239,6 +243,8 @@ def export_ratings(dataset=None):
         not_subs = (subs.count(None) == len(subs))
         sess = [i.session for i in ds_model.images.all()]
         not_sess = (sess.count(None) == len(sess))
+        cohorts = [i.cohort for i in ds_model.images.all()]
+        not_cohorts = (cohorts.count(None) == len(cohorts))
         comments = [i.comment for i in
                     ds_model.
                     images.
@@ -260,6 +266,9 @@ def export_ratings(dataset=None):
         if form.col_sess.data:
             query = query.add_columns(Image.session)
             keys.append('Session')
+        if form.col_cohort.data:
+            query = query.add_columns(Image.cohort)
+            keys.append('Cohort')
         if form.col_rater.data:
             query = query.join(Rater).add_columns(Rater.username)
             keys.append('Rater')
@@ -284,6 +293,8 @@ def export_ratings(dataset=None):
                 rating_dict['Subject'] = rating.subject
             if 'Session' in rating_dict:
                 rating_dict['Session'] = rating.session
+            if 'Cohort' in rating_dict:
+                rating_dict['Cohort'] = rating.cohort
             if 'Rater' in rating_dict:
                 rating_dict['Rater'] = rating.username
             if 'Comment' in rating_dict:
@@ -309,8 +320,8 @@ def export_ratings(dataset=None):
                 json.dump(ratings, json_file, indent=4)
         return send_file(file, as_attachment=True)
     return render_template('export_ratings.html', form=form, dataset=dataset,
-                           nsub=not_subs, nsess=not_sess, ncomms=not_comms,
-                           title='Downlad Ratings')
+                           nsub=not_subs, nsess=not_sess, ncohort=not_cohorts,
+                           ncomms=not_comms, title='Downlad Ratings')
 
 
 @bp.route('/notifications', methods=['GET', 'DELETE'])
