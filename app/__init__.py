@@ -41,7 +41,9 @@ def create_app(config_class=Config):
     moment.init_app(app)
 
     app.redis = Redis.from_url(app.config['REDIS_URL'])
-    app.task_queue = rq.Queue('qrater-tasks', connection=app.redis)
+    app.task_queue = rq.Queue('qrater-tasks',
+                              connection=app.redis,
+                              default_timeout=4200)
 
     from app.errors import bp as errors_bp
     app.register_blueprint(errors_bp)
