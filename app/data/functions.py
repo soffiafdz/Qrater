@@ -10,8 +10,10 @@ from werkzeug.utils import secure_filename
 from flask import current_app, flash
 from app import db
 from app.models import Image
-from app.data.exceptions import (NoExtensionError, OrphanDatasetError,
-                                 UnsupportedExtensionError)
+from app.data.exceptions import (NoExtensionError,
+                                 OrphanDatasetError,
+                                 UnsupportedExtensionError,
+                                 DuplicateImageError)
 
 
 def upload_data(files, savedir):
@@ -43,12 +45,18 @@ def load_image(image, dataset):
     filename = image.rsplit('/', 1)[-1]
     try:
         basename, extension = filename.split('.', 1)
-        if extension.lower() in current_app.config['DSET_ALLOWED_EXTS']:
-            # Add Image to database
-            db.session.add(Image(name=basename, path=image,
-                                 extension=extension, dataset=dataset))
-        else:
+        if extension.lower() not in current_app.config['DSET_ALLOWED_EXTS']:
             raise UnsupportedExtensionError(extension=extension)
+
+        if Image.query.filter(
+            Image.name == basename,
+            Image.dataset == dataset
+        ).first():
+            raise DuplicateImageError(basename)
+
+        # Add Image to database
+        db.session.add(Image(name=basename, path=image,
+                             extension=extension, dataset=dataset))
 
     except ValueError:
         # File has no extension (Common in Linux)
@@ -75,40 +83,28 @@ def load_data(files, dataset, savedir=None, host=False, quiet=False,
 
     loaded_imgs = 0
     for img in files:
-        # Check existence of file in directory when loading from host
-        # if uploading from client, assume non-existance
-        # (as new dataset is created)
-        print(img.rsplit('.', 1)[0])
-        exists = Image.query.filter(
-            Image.name == img.rsplit('.', 1)[0],
-            Image.dataset == dataset
-        ).first()
-        print(exists)
+        try:
+            load_image(img, dataset)
 
-        if not exists:
-            try:
-                load_image(img, dataset)
+        except UnsupportedExtensionError as error:
+            current_app.logger.error(error, exc_info=sys.exc_info())
+            if not quiet:
+                flash(error, 'danger')
 
-            except UnsupportedExtensionError:
-                current_app.logger.error(f'Error in uploading {img.filename}; '
-                                         'unsupported ext',
-                                         exc_info=sys.exc_info())
-                if not quiet:
-                    flash(f'{img.filename} is an unsupported filetype',
-                          'danger')
+        except NoExtensionError as error:
+            current_app.logger.error(error, exc_info=sys.exc_info())
+            if not quiet:
+                flash(error, 'danger')
 
-            except NoExtensionError:
-                current_app.logger.error(f'Error in uploading {img.filename}; '
-                                         'no extension',
-                                         exc_info=sys.exc_info())
-                if not quiet:
-                    flash(f'{img.filename} does not have an extension',
-                          'danger')
+        except DuplicateImageError as error:
+            current_app.logger.error(error, exc_info=sys.exc_info())
+            if not quiet:
+                flash(error, 'danger')
 
-            else:
-                loaded_imgs += 1
+        else:
+            loaded_imgs += 1
 
     if new_dataset and not loaded_imgs:
-        raise OrphanDatasetError
+        raise OrphanDatasetError(dataset.name)
 
     return loaded_imgs

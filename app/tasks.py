@@ -5,36 +5,39 @@ Module for the background jobs of the webapp
 """
 
 import sys
+import os
+from shutil import rmtree
+from time import time
 from rq import get_current_job
-from flask import flash
 from app import create_app, db
-from app.models import Task, Image, Dataset
+from app.models import Task, Dataset, Rater
 from app.data.functions import load_image
 from app.data.exceptions import (NoExtensionError,
                                  UnsupportedExtensionError,
-                                 OrphanDatasetError)
+                                 OrphanDatasetError,
+                                 DuplicateImageError)
 
 app = create_app()
 app.app_context().push()
 
 
-def _set_task_progress(progress):
+def _set_task_progress(progress, name='task_progress'):
     """Set the progress of a task."""
     job = get_current_job()
     if job:
         job.meta['progress'] = progress
         job.save_meta()
         task = Task.query.get(job.get_id())
-        # TODO: implement this somehow??
-        task.rater.add_notification('task_progress',
+        task.rater.add_notification(name,
                                     {'task_id': job.get_id(),
                                      'progress': progress})
+        print(time())
         if progress >= 100:
             task.complete = True
         db.session.commit()
 
 
-def load_data(files, dataset_name, new_dataset=False):
+def load_data(files, dataset_name, rater_id, new_dataset=False):
     """Start RQ task to upload dataset from client.
 
     Arguments:
@@ -44,51 +47,119 @@ def load_data(files, dataset_name, new_dataset=False):
     """
     try:
         # Init task and progress
-        _set_task_progress(0)
+        _set_task_progress(0, name=f'load_progress_{dataset_name}')
         total_imgs = len(files)
         i = loaded_imgs = 0
         dataset = Dataset.query.filter_by(name=dataset_name).first()
+        rater = Rater.query.get(rater_id)
 
         for img in files:
-            # Check existance of file
-            filename = img.rsplit('/', 1)[-1]
-            basename = filename.split('.', 1)[0]
-            exists = Image.query.filter(
-                Image.name == basename,
-                Image.dataset == dataset
-            ).first()
-
-            if not exists:
-                try:
-                    load_image(img, dataset)
-                except UnsupportedExtensionError:
-                    app.logger.error(f'Error in uploading {img};'
-                                     'unsupported ext',
-                                     exc_info=sys.exc_info())
-                except NoExtensionError:
-                    app.logger.error(f'Error in uploading {img};'
-                                     'no extension',
-                                     exc_info=sys.exc_info())
-                else:
-                    loaded_imgs += 1
-                    db.session.commit()
-
+            try:
+                load_image(img, dataset)
+            except UnsupportedExtensionError as error:
+                app.logger.error(error, exc_info=sys.exc_info())
+                print(time())
+                rater.add_notification('load_alert',
+                                       {'icon': '#exclamation-triangle-fill',
+                                        'color': 'danger',
+                                        'message': error})
+            except NoExtensionError as error:
+                app.logger.error(error, exc_info=sys.exc_info())
+                print(time())
+                rater.add_notification('load_alert',
+                                       {'icon': '#exclamation-triangle-fill',
+                                        'color': 'danger',
+                                        'message': error})
+            except DuplicateImageError as error:
+                app.logger.error(error, exc_info=sys.exc_info())
+                print(time())
+                rater.add_notification('load_alert',
+                                       {'icon': '#exclamation-triangle-fill',
+                                        'color': 'danger',
+                                        'message': error})
+            else:
+                loaded_imgs += 1
+                db.session.commit()
             i += 1
-            _set_task_progress(100 * i // total_imgs)
+            _set_task_progress(100 * i // total_imgs,
+                               name=f'load_progress_{dataset_name}')
 
         if new_dataset and not loaded_imgs:
-            raise OrphanDatasetError
+            raise OrphanDatasetError(dataset_name)
 
-    except OrphanDatasetError:
-        app.logger.error(f'Error in uploading {dataset.name}; '
-                         'orphaned; no images uploaded',
-                         exc_info=sys.exc_info())
+    except OrphanDatasetError as error:
+        app.logger.error(error, exc_info=sys.exc_info())
+        print(time())
+        rater.add_notification('load_alert',
+                               {'icon': '#exclamation-triangle-fill',
+                                'color': 'danger',
+                                'message': error})
         db.session.delete(dataset)
 
     except:
         app.logger.error('Unhandled exception', exc_info=sys.exc_info())
         db.session.rollback()
 
+    else:
+        print(time())
+        rater.add_notification('load_alert',
+                               {'icon': '#check-circle-fill',
+                                'color': 'success',
+                                'message':
+                                f'{loaded_imgs} file(s) successfully loaded!'})
+
     finally:
         db.session.commit()
-        _set_task_progress(100)
+        _set_task_progress(100, name=f'load_progress_{dataset_name}')
+
+
+def delete_data(dataset_name, data_dir, rater_id, remove_files=False):
+    """Start RQ task to delete a dataset.
+
+    Arguments:
+        dataset_name    -- dataset to delete
+        data_dir        -- directory where data is located
+        remove_files    -- delete files
+    """
+    try:
+        # Init task and progress
+        _set_task_progress(0, name=f'delete_progress_{dataset_name}')
+        print(time())
+        dataset = Dataset.query.filter_by(name=dataset_name).first()
+        rater = Rater.query.get(rater_id)
+        i = 0
+        end = len(dataset.images.all()) * 2 \
+            if remove_files else len(dataset.images.all())
+
+        for image in dataset.images.all():
+            for rating in image.ratings.all():
+                db.session.delete(rating)       # Delete ratings
+            db.session.delete(image)            # Remove image from database
+            i += 1
+            print(time())
+            _set_task_progress(100 * i // end,
+                               name=f'delete_progress_{dataset_name}')
+
+        if remove_files:
+            ds_dir = os.path.join(data_dir, 'uploaded', dataset_name)
+            if os.path.exists(ds_dir):
+                rmtree(ds_dir)
+
+        db.session.delete(dataset)
+
+    except:
+        app.logger.error('Unhandled exception', exc_info=sys.exc_info())
+        db.session.rollback()
+
+    else:
+        print(time())
+        rater.add_notification('delete_alert',
+                               {'icon': '#check-circle-fill',
+                                'color': 'success',
+                                'message':
+                                f'{dataset_name} successfully deleted!'})
+
+    finally:
+        db.session.commit()
+        print(time())
+        _set_task_progress(100, name=f'delete_progress_{dataset_name}')

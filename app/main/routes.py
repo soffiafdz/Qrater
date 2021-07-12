@@ -85,6 +85,7 @@ def dashboard(all_raters_string=None):
 @login_required
 def rate(name_dataset):
     """Page to view images and rate them."""
+    # TODO Fix all this mess!!!
     # If dataset doesn't exist abort with 404
     dataset = Dataset.query.filter_by(name=name_dataset).first_or_404()
 
@@ -162,9 +163,14 @@ def rate(name_dataset):
             # Images with ratings from CURRENT_RATER (except pending)
             rated = imgs.join(Rating).filter(Rating.rater == current_user,
                                              Rating.rating > 0)
+            rated = db.session.query(Image.id).\
+                filter(Image.dataset == dataset).\
+                join(Rating).\
+                filter(Rating.rater == current_user, Rating.rating != 0).\
+                subquery()
 
             # All images, except Rated
-            imgs = imgs.except_(rated)
+            imgs = Image.query.filter(Image.id.not_in(rated))
 
         elif filters["rating"] < 4:
             # Images where rating BY CURR_RATER matches rating filter
@@ -307,14 +313,28 @@ def export_ratings(dataset=None):
                            title='Downlad Ratings')
 
 
-@bp.route('/notifications')
+@bp.route('/notifications', methods=['GET', 'DELETE'])
 @login_required
 def notifications():
     """Notifications implementation."""
-    # TODO Fix/Implement this
     since = request.args.get('since', 0.0, type=float)
-    notifications = current_user.notifications.filter(
-        Notification.timestamp > since).order_by(Notification.timestamp.asc())
+    notifications = current_user.notifications.\
+        filter(Notification.timestamp > since).\
+        order_by(Notification.timestamp.asc())
+
+    # If DELETE method; delete a notification
+    # Useful for cleaning after showing in browser
+    if request.method == 'DELETE':
+        notification_name = request.args.get('name', None, type=str)
+        notification = current_user.notifications.\
+            filter(Notification.name == notification_name).first()
+
+        if notification:
+            db.session.delete(notification)
+            db.session.commit()
+        return '', 204
+
+    # If GET, return notifications by AJAX
     return jsonify([{
         'name': n.name,
         'data': n.get_data(),

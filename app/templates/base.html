@@ -178,8 +178,96 @@
 </nav>
 {% endblock %}
 
+{% block svg %}
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="check-circle-fill" fill="currentColor" viewBox="0 0 16 16">
+    <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
+  </symbol>
+  <symbol id="info-fill" fill="currentColor" viewBox="0 0 16 16">
+    <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
+  </symbol>
+  <symbol id="exclamation-triangle-fill" fill="currentColor" viewBox="0 0 16 16">
+    <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+  </symbol>
+  <symbol id="folder-symlink-fill" fill="currentColor" viewBox="0 0 16 16">
+    <path d="M13.81 3H9.828a2 2 0 0 1-1.414-.586l-.828-.828A2 2 0 0 0 6.172 1H2.5a2 2 0 0 0-2 2l.04.87a1.99 1.99 0 0 0-.342 1.311l.637 7A2 2 0 0 0 2.826 14h10.348a2 2 0 0 0 1.991-1.819l.637-7A2 2 0 0 0 13.81 3zM2.19 3c-.24 0-.47.042-.683.12L1.5 2.98a1 1 0 0 1 1-.98h3.672a1 1 0 0 1 .707.293L7.586 3H2.19zm9.608 5.271-3.182 1.97c-.27.166-.616-.036-.616-.372V9.1s-2.571-.3-4 2.4c.571-4.8 3.143-4.8 4-4.8v-.769c0-.336.346-.538.616-.371l3.182 1.969c.27.166.27.576 0 .742z"/>
+  </symbol>
+  <symbol id="cloud-upload-fill" fill="currentColor" viewBox="0 0 16 16">
+    <path fill-rule="evenodd" d="M8 0a5.53 5.53 0 0 0-3.594 1.342c-.766.66-1.321 1.52-1.464 2.383C1.266 4.095 0 5.555 0 7.318 0 9.366 1.708 11 3.781 11H7.5V5.707L5.354 7.854a.5.5 0 1 1-.708-.708l3-3a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 5.707V11h4.188C14.502 11 16 9.57 16 7.773c0-1.636-1.242-2.969-2.834-3.194C12.923 1.999 10.69 0 8 0zm-.5 14.5V11h1v3.5a.5.5 0 0 1-1 0z"/>
+  </symbol>
+  <symbol id="trash-fill" fill="currentColor" viewBox="0 0 16 16">
+    <path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1H2.5zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5zM8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5zm3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0z"/>
+  </symbol>
+</svg>
+{% endblock %}
+
+
 {% block content %}
 <br>
+{% with messages = get_flashed_messages(with_categories=True) %}
+  <div class="container flashed-messages">
+    <div class="row">
+      <div id="flashedMessages" class="col-md-12">
+        {% if messages -%}
+        {% for cat, msg in messages %}
+        <div
+          class="alert alert-{{ cat.lower() }} alert-dismissible fade show"
+          role="alert"
+          >
+          {% if cat.lower() == 'info' %}
+          <svg
+            class="bi flex-shrink-0 me-2"
+            width="24"
+            height="24"
+            role="img"
+            aria-label="Info:"
+            >
+            <use xlink:href="#info-fill"/>
+          </svg>
+          {% elif cat.lower() == 'danger' %}
+          <svg
+            class="bi flex-shrink-0 me-2"
+            width="24"
+            height="24"
+            role="img"
+            aria-label="Danger:"
+            >
+            <use xlink:href="#exclamation-triangle-fill"/>
+          </svg>
+          {% elif cat.lower() == 'warning' %}
+          <svg
+            class="bi flex-shrink-0 me-2"
+            width="24"
+            height="24"
+            role="img"
+            aria-label="Warning:"
+            >
+            <use xlink:href="#exclamation-triangle-fill"/>
+          </svg>
+          {% elif cat.lower() == 'success' %}
+          <svg
+            class="bi flex-shrink-0 me-2"
+            width="24"
+            height="24"
+            role="img"
+            aria-label="Success:"
+            >
+            <use xlink:href="#check-circle-fill"/>
+          </svg>
+          {% endif -%}
+            {{ msg }}
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="alert"
+            aria-label="Close"></button>
+        </div>
+        {%- endfor -%}
+        {% endif -%}
+      </div>
+    </div>
+  </div>
+{% endwith -%}
 {% if current_user.is_authenticated %}
 {% with tasks = current_user.get_tasks_in_progress() %}
 {% if tasks -%}
@@ -187,10 +275,71 @@
     <div class="row">
       <div class="col-md-12">
         {% for task in tasks %}
-          <div class="alert alert-dark" role="alert">
-            {{ task.description }}
-            <span id="{{ task.id }}-progress">{{ task.get_progress() }}</span>%
+        <div
+          id="{{ task.id }}Alert"
+          class="alert {% if task.alert_color %}
+                  alert-{{ task.alert_color }}
+                  {% else %}
+                  alert-dark
+                  {% endif %}
+                  alert-dismissible fade show"
+          role="alert"
+          >
+          {% if task.icon == 'load' %}
+          <svg
+            class="bi flex-shrink-0 me-2"
+            width="24"
+            height="24"
+            role="img"
+            aria-label="Loading:"
+            >
+            <use xlink:href="#folder-symlink-fill"/>
+          </svg>
+          {% elif task.icon == 'upload' %}
+          <svg
+            class="bi flex-shrink-0 me-2"
+            width="24"
+            height="24"
+            role="img"
+            aria-label="Uploading:"
+            >
+            <use xlink:href="#cloud-upload-fill"/>
+          </svg>
+          {% elif task.icon == 'delete' %}
+          <svg
+            class="bi flex-shrink-0 me-2"
+            width="24"
+            height="24"
+            role="img"
+            aria-label="Deleting:"
+            >
+            <use xlink:href="#trash-fill"/>
+          </svg>
+          {% endif -%}
+          {{ task.description }}
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="alert"
+            aria-label="Close"></button>
+          <hr>
+          <div class="progress">
+            <div
+              id="{{ task.id }}ProgressBar"
+              class="progress-bar {% if task.alert_color -%}
+                  bg-{{ task.alert_color }}
+                  {%- else -%}
+                  bg-dark
+                  {%- endif -%}"
+              role="progressbar"
+              style="width: {{ task.get_progress() }}%"
+              aria-valuenow="{{ task.get_progress() }}"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              ><span id="{{ task.id }}Progress">{{ task.get_progress() }}%</span>
+            </div>
           </div>
+        </div>
         {%- endfor -%}
       </div>
     </div>
@@ -198,21 +347,6 @@
 {% endif -%}
 {% endwith %}
 {% endif %}
-{% with messages = get_flashed_messages(with_categories=True) %}
-{% if messages -%}
-  <div class="container flashed-messages">
-    <div class="row">
-      <div class="col-md-12">
-        {% for cat, msg in messages %}
-          <div class="alert alert-{{ cat.lower() }}" role="alert">
-            {{ msg }}
-          </div>
-        {%- endfor -%}
-      </div>
-    </div>
-  </div>
-{% endif -%}
-{% endwith -%}
 
 <div class="container">
 {# application content needs to be provided in the app_content block #}
@@ -232,6 +366,9 @@
   crossorigin="anonymous"></script>
 {{ moment.include_moment() }}
 <script src="{{ url_for('static', filename=('js/mousetrap.min.js')) }}" ></script>
+{% if current_user.is_authenticated %}
+<script src="{{ url_for('static', filename=('js/task_updates.js')) }}" ></script>
+{% endif %}
 {% endblock %}
 </body>
 </html>

@@ -6,16 +6,16 @@ Module with blueprint specific routes
 
 import os
 import re
-from shutil import rmtree
+from time import time
 from flask import (render_template, flash, redirect, url_for, request,
                    current_app)
 from flask_login import login_required, current_user
 from app import db
 from app.data import bp
-from app.models import Dataset, Image
+from app.models import Dataset
 from app.data.functions import load_data, upload_data
 from app.data.forms import LoadDatasetForm, UploadDatasetForm, EditDatasetForm
-from app.data.exceptions import OrphanDatasetError, EmptyLoadError
+from app.data.exceptions import (OrphanDatasetError, EmptyLoadError)
 
 
 @bp.route('/upload-dataset', methods=['GET', 'POST'])
@@ -46,6 +46,8 @@ def upload_dataset():
             current_user.launch_task('load_data',
                                      f'Uploading {len(files)} new images '
                                      f'to {dataset.name} dataset...',
+                                     icon='upload',
+                                     alert_color='primary',
                                      files=files_uploaded,
                                      dataset_name=dataset.name,
                                      new_dataset=True)
@@ -99,8 +101,12 @@ def load_dataset(directory=None):
             if info['model'] else 0
         info['new_imgs'] = num_files - info['saved_imgs']
 
+    # Choices of directories to load in form
+    dir_choices = [d for d in os.listdir(data_dir)
+                   if os.path.isdir(os.path.join(data_dir, d))]
+
     form = LoadDatasetForm()
-    form.dir_name.choices = os.listdir(data_dir)
+    form.dir_name.choices = dir_choices
     if form.validate_on_submit():
         if info['model']:
             new_dataset = False
@@ -123,7 +129,9 @@ def load_dataset(directory=None):
             if len(files) > 10:
                 current_user.launch_task('load_data',
                                          f"Loading {len(files)} new images "
-                                         f" to {info['model'].name} dataset",
+                                         f"to {info['model'].name} dataset...",
+                                         icon='load',
+                                         alert_color='primary',
                                          files=files,
                                          dataset_name=info['model'].name,
                                          new_dataset=new_dataset)
@@ -225,8 +233,10 @@ def edit_dataset(dataset=None):
                 current_user.launch_task('load_data',
                                          f'Uploading {len(files)} new images '
                                          f'to {ds_model.name} dataset...',
+                                         icon='upload',
+                                         alert_color='primary',
                                          files=files_uploaded,
-                                         dataset_name=ds_mode.name)
+                                         dataset_name=ds_model.name)
                 db.session.commit()
                 changes = True
             else:
@@ -236,8 +246,10 @@ def edit_dataset(dataset=None):
                                             dataset=ds_model,
                                             new_dataset=False)
                     # TODO Check if this is implemented
-                except EmptyLoadError:
-                    pass
+                except EmptyLoadError as e:
+                    flash(e, 'warning')
+                # except DuplicateImageError as e:
+                    # flash(e, 'danger')
                 else:
                     if loaded_imgs != 0:
                         flash(f'{loaded_imgs} file(s) successfully uploaded!',
@@ -289,25 +301,18 @@ def delete_dataset(dataset):
     """Page to delete a dataset of MRI ratings."""
     # If dataset does not exit, throw 404
     ds_model = Dataset.query.filter_by(name=dataset).first_or_404()
-
     data_dir = os.path.join(current_app.config['ABS_PATH'], 'static/datasets')
+    remove_files = request.args.get('nuke', 0, type=int)
 
-    ds_name = ds_model.name
-    ds_dir = os.path.join(data_dir, ds_name)
+    current_user.launch_task('delete_data',
+                             'Deleting ratings and images from '
+                             f'{dataset} dataset...',
+                             icon='delete',
+                             alert_color='danger',
+                             dataset_name=ds_model.name,
+                             data_dir=data_dir,
+                             remove_files=remove_files)
 
-    # Loop to delete ratings > images > dataset from dataset
-    for image in ds_model.images.all():
-        for rating in image.ratings.all():
-            db.session.delete(rating)
-        db.session.delete(image)
-    db.session.delete(ds_model)
-
-    # Don't delete image data anymore, unless specified
-    nuke = request.args.get('nuke', 0, type=int)
-    if nuke:
-        rmtree(ds_dir)
     db.session.commit()
 
-    flash(f'Dataset: {ds_name} was successfully deleted!',
-          'success')
     return redirect(url_for('main.dashboard'))

@@ -8,6 +8,7 @@ services:
       - db-password
       - mail-password
     volumes:
+      - ./uploaded_datasets:/home/qrater/app/static/datasets/uploaded
       - ./datasets:/home/qrater/app/static/datasets/preloaded
       # Extra volumes in compose.override.yaml
     env_file:
