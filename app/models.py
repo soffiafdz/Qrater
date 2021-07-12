@@ -60,17 +60,23 @@ class Rater(UserMixin, db.Model):
 
     def add_notification(self, name, data):
         """Add a notification for this rater to the database."""
-        self.notifications.filter_by(name=name).delete()
+        self.delete_notification(name)
         n = Notification(name=name, payload_json=json.dumps(data), user=self)
         db.session.add(n)
         return n
 
-    def launch_task(self, name, description, *args, **kwargs):
+    def delete_notification(self, name):
+        """Delete a notification from this rater."""
+        self.notifications.filter_by(name=name).delete()
+
+    def launch_task(self, name, description, icon=None, alert_color=None,
+                    *args, **kwargs):
         """Launch a task to the redis queue."""
         rq_job = current_app.task_queue.enqueue('app.tasks.' + name,
+                                                rater_id=self.id,
                                                 *args, **kwargs)
         task = Task(id=rq_job.get_id(), name=name, description=description,
-                    rater=self)
+                    icon=icon, alert_color=alert_color, rater=self)
         db.session.add(task)
         return task
 
@@ -175,6 +181,7 @@ class Rating(db.Model):
 
 
 class Notification(db.Model):
+    """SQLAlchemy Model for notifications."""
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(128), index=True)
     rater_id = db.Column(db.Integer, db.ForeignKey('rater.id'))
@@ -182,6 +189,7 @@ class Notification(db.Model):
     payload_json = db.Column(db.Text)
 
     def get_data(self):
+        """Return json from notification."""
         return json.loads(str(self.payload_json))
 
 
@@ -191,6 +199,8 @@ class Task(db.Model):
     id = db.Column(db.String(36), primary_key=True)
     name = db.Column(db.String(128), index=True)
     description = db.Column(db.String(128))
+    icon = db.Column(db.String(18))
+    alert_color = db.Column(db.String(18))
     rater_id = db.Column(db.Integer, db.ForeignKey('rater.id'))
     complete = db.Column(db.Boolean, default=False)
 

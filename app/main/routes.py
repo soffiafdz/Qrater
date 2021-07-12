@@ -313,14 +313,28 @@ def export_ratings(dataset=None):
                            title='Downlad Ratings')
 
 
-@bp.route('/notifications')
+@bp.route('/notifications', methods=['GET', 'DELETE'])
 @login_required
 def notifications():
     """Notifications implementation."""
-    # TODO Fix/Implement this
     since = request.args.get('since', 0.0, type=float)
-    notifications = current_user.notifications.filter(
-        Notification.timestamp > since).order_by(Notification.timestamp.asc())
+    notifications = current_user.notifications.\
+        filter(Notification.timestamp > since).\
+        order_by(Notification.timestamp.asc())
+
+    # If DELETE method; delete a notification
+    # Useful for cleaning after showing in browser
+    if request.method == 'DELETE':
+        notification_name = request.args.get('name', None, type=str)
+        notification = current_user.notifications.\
+            filter(Notification.name == notification_name).first()
+
+        if notification:
+            db.session.delete(notification)
+            db.session.commit()
+        return '', 204
+
+    # If GET, return notifications by AJAX
     return jsonify([{
         'name': n.name,
         'data': n.get_data(),
