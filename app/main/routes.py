@@ -132,7 +132,7 @@ def rate(name_dataset):
         if filters["session"] else imgs
 
     imgs = imgs.filter_by(cohort=filters["cohort"]) \
-        if filter["cohort"] else imgs
+        if filters["cohort"] else imgs
 
     if filters["rating"] is None:
         # If no rating_filter, no need to do anything else
