@@ -19,7 +19,7 @@ def datatable(dataset):
     all_raters = request.args.get('all_raters', 0, type=int)
     only_ratings = request.args.get('only_ratings', 0, type=int)
 
-    col_names = ['Type', 'Sub', 'Sess', 'Rating']
+    col_names = ['Type', 'Sub', 'Sess', 'Cohort', 'Rating']
     columns = {**dict.fromkeys(col_names, None)}
 
     types = [i.imgtype for i in ds_model.images.all()]
@@ -31,18 +31,22 @@ def datatable(dataset):
     sess = [i.session for i in ds_model.images.all()]
     columns['Sess'] = (sess.count(None) != len(sess))
 
+    cohorts = [i.cohort for i in ds_model.images.all()]
+    columns['Cohort'] = (cohorts.count(None) != len(cohorts))
+
     ratings_lists = [i.ratings.all() for i in ds_model.images.all()]
     columns['Rating'] = (ratings_lists.count([]) != len(ratings_lists))
 
     return render_template("dt/datatable.html", DS=ds_model,
                            types=columns['Type'], subs=columns['Sub'],
-                           sess=columns['Sess'], ratings=columns['Rating'],
-                           all_raters=all_raters, only_ratings=only_ratings)
+                           sess=columns['Sess'], cohorts=columns['Cohort'],
+                           ratings=columns['Rating'], all_raters=all_raters,
+                           only_ratings=only_ratings)
 
 
 @bp.route('/data/<int:dset_id>/<int:type>/<int:subject>/' +
-          '<int:session>/<int:ratings>/<int:only_ratings>')
-def data(dset_id, type, subject, session, ratings, only_ratings=0):
+          '<int:session>/<int:cohort>/<int:ratings>/<int:only_ratings>')
+def data(dset_id, type, subject, session, cohort, ratings, only_ratings=0):
     """Return server side data for datatable."""
     all_raters = request.args.get('all_raters', 0, type=int)
 
@@ -55,6 +59,10 @@ def data(dset_id, type, subject, session, ratings, only_ratings=0):
     if ratings:
         columns.insert(2, ColumnDT(Rater.username))
         columns.insert(3, ColumnDT(Rating.timestamp))
+
+    # Check if there are cohort labels
+    if cohort:
+        columns.insert(1, ColumnDT(Image.cohort))
 
     # Check if there are sess labels
     if session:

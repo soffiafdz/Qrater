@@ -44,6 +44,7 @@
           {% if types %}<th class="type">Type</th>{% endif %}
           {% if subs %}<th class="subject">Subject</th>{% endif %}
           {% if sess %}<th class="session">Session</th>{% endif %}
+          {% if cohorts %}<th class="cohort">Cohort</th>{% endif %}
           <th class="rating">Rating</th>
           {% if ratings %}<th class="rater">Rater</th>{% endif %}
           {% if ratings %}<th class="datetime">Rated on</th>{% endif %}
@@ -98,7 +99,8 @@
       "serverSide": true,
       "ajax": "{{ url_for('dt.data', dset_id=DS.id,
                   all_raters=all_raters, only_ratings=only_ratings,
-                  type=types, subject=subs, session=sess, ratings=ratings) }}",
+                  type=types, subject=subs, session=sess, cohort=cohorts,
+                  ratings=ratings) }}",
       "lengthChange": false,
       "lengthMenu": [
           [ 10, 25, 50, 100 ],
@@ -178,6 +180,20 @@
             if ( type === 'display' ) {
                 return data ? "<a href='/rate/{{ DS.name }}" +
                   "?sub_filter=" + data +
+                  "&all_raters={{ all_raters }}" +
+                  "' class='link-dark text-decoration-none fw-light'>" +
+                  data + "</a>":
+                      '<span class="text-muted fw-light"> NA</span>';
+            }
+            return data;
+          }
+        },
+        {
+          targets: "cohort",
+          render: function ( data, type, row ) {
+            if ( type === 'display' ) {
+                return data ? "<a href='/rate/{{ DS.name }}" +
+                  "?cohort_filter=" + data +
                   "&all_raters={{ all_raters }}" +
                   "' class='link-dark text-decoration-none fw-light'>" +
                   data + "</a>":

@@ -158,6 +158,18 @@
             <input
               class="form-check-input"
               type="checkbox"
+              id="cohortSwitch"
+              name="col_cohort"
+              {% if ncohort %}
+              disabled
+              {% endif %}
+              >
+            <label class="form-check-label" for="cohortSwitch">Cohort</label>
+          </div>
+          <div class="form-check form-switch">
+            <input
+              class="form-check-input"
+              type="checkbox"
               id="raterSwitch"
               name="col_rater"
               >
