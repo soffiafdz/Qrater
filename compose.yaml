@@ -55,7 +55,32 @@ services:
     expose:
       - 6379
 
-  worker:
+  worker1:
+    build: .
+    entrypoint:
+      - env/bin/rq
+      - worker
+      - --url
+      - redis://redis:6379/0
+      - qrater-tasks
+    restart: always
+    secrets:
+      - db-password
+      - mail-password
+    volumes_from:
+      - flask
+    env_file:
+      - qrater.env
+    networks:
+      - dbnet
+      - redisnet
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  worker2:
     build: .
     entrypoint:
       - env/bin/rq
