@@ -57,26 +57,23 @@ def load_data(files, dataset_name, rater_id, new_dataset=False):
             try:
                 load_image(img, dataset)
             except UnsupportedExtensionError as error:
-                app.logger.error(error, exc_info=sys.exc_info())
                 print(time())
                 rater.add_notification('load_alert',
                                        {'icon': '#exclamation-triangle-fill',
                                         'color': 'danger',
-                                        'message': error})
+                                        'message': str(error)})
             except NoExtensionError as error:
-                app.logger.error(error, exc_info=sys.exc_info())
                 print(time())
                 rater.add_notification('load_alert',
                                        {'icon': '#exclamation-triangle-fill',
                                         'color': 'danger',
-                                        'message': error})
+                                        'message': str(error)})
             except DuplicateImageError as error:
-                app.logger.error(error, exc_info=sys.exc_info())
                 print(time())
                 rater.add_notification('load_alert',
                                        {'icon': '#exclamation-triangle-fill',
                                         'color': 'danger',
-                                        'message': error})
+                                        'message': str(error)})
             else:
                 loaded_imgs += 1
                 db.session.commit()
@@ -88,12 +85,11 @@ def load_data(files, dataset_name, rater_id, new_dataset=False):
             raise OrphanDatasetError(dataset_name)
 
     except OrphanDatasetError as error:
-        app.logger.error(error, exc_info=sys.exc_info())
         print(time())
         rater.add_notification('load_alert',
                                {'icon': '#exclamation-triangle-fill',
                                 'color': 'danger',
-                                'message': error})
+                                'message': str(error)})
         db.session.delete(dataset)
 
     except:

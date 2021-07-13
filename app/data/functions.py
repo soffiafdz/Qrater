@@ -87,24 +87,33 @@ def load_data(files, dataset, savedir=None, host=False, quiet=False,
             load_image(img, dataset)
 
         except UnsupportedExtensionError as error:
-            current_app.logger.error(error, exc_info=sys.exc_info())
+            # current_app.logger.error(error, exc_info=sys.exc_info())
             if not quiet:
-                flash(error, 'danger')
+                flash(str(error), 'danger')
+            else:
+                pass
 
         except NoExtensionError as error:
-            current_app.logger.error(error, exc_info=sys.exc_info())
+            # current_app.logger.error(error, exc_info=sys.exc_info())
             if not quiet:
-                flash(error, 'danger')
+                flash(str(error), 'danger')
+            else:
+                pass
 
         except DuplicateImageError as error:
-            current_app.logger.error(error, exc_info=sys.exc_info())
+            # current_app.logger.error(error, exc_info=sys.exc_info())
             if not quiet:
-                flash(error, 'danger')
+                flash(str(error), 'danger')
+            else:
+                pass
 
         else:
             loaded_imgs += 1
 
-    if new_dataset and not loaded_imgs:
-        raise OrphanDatasetError(dataset.name)
+    if not loaded_imgs:
+        if new_dataset:
+            raise OrphanDatasetError(dataset.name)
+        else:
+            raise EmptyLoadError
 
     return loaded_imgs

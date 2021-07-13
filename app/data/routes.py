@@ -143,7 +143,10 @@ def load_dataset(directory=None):
                                             host=True, new_dataset=new_dataset)
                 except OrphanDatasetError:
                     # If orphaned dataset, delete it
-                    db.session.delete(info['model'])
+                    # TODO this somehow throws an error; look into this
+                    # db.session.delete(info['model'])
+                    flash('No new files were successfully loaded '
+                          'leaving the dataset empty', 'danger')
 
                 else:
                     if not new_dataset and loaded_imgs == 0:
@@ -245,17 +248,18 @@ def edit_dataset(dataset=None):
                     loaded_imgs = load_data(files, savedir=savedir,
                                             dataset=ds_model,
                                             new_dataset=False)
-                    # TODO Check if this is implemented
-                except EmptyLoadError as e:
-                    flash(e, 'warning')
-                # except DuplicateImageError as e:
-                    # flash(e, 'danger')
+
+                except EmptyLoadError as error:
+                    flash(str(error), 'warning')
+
+                except OrphanDatasetError as error:
+                    flash(str(error), 'warning')
+
                 else:
-                    if loaded_imgs != 0:
-                        flash(f'{loaded_imgs} file(s) successfully uploaded!',
-                              'success')
-                        db.session.commit()
-                        changes = True
+                    flash(f'{loaded_imgs} file(s) successfully uploaded!',
+                          'success')
+                    db.session.commit()
+                    changes = True
 
         # Regex for image type, subject and/or session
         if form.sub_regex.data \
