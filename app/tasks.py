@@ -31,19 +31,20 @@ def _set_task_progress(progress, name='task_progress'):
         task.rater.add_notification(name,
                                     {'task_id': job.get_id(),
                                      'progress': progress})
-        print(time())
         if progress >= 100:
             task.complete = True
         db.session.commit()
 
 
-def load_data(files, dataset_name, rater_id, new_dataset=False):
+def load_data(files, dataset_name, rater_id,
+              new_dataset=False, ignore_existing=False):
     """Start RQ task to upload dataset from client.
 
     Arguments:
         files           -- list of data files (HOST)
         dataset_name    -- dataset to which the images pertain to
         new_dataset     -- fail-safe to avoid empty dataset in case of errors
+        ignore_existing -- Don't throw error when parsing existing files
     """
     try:
         # Init task and progress
@@ -56,27 +57,32 @@ def load_data(files, dataset_name, rater_id, new_dataset=False):
         for img in files:
             try:
                 load_image(img, dataset)
+
             except UnsupportedExtensionError as error:
-                print(time())
                 rater.add_notification('load_alert',
                                        {'icon': '#exclamation-triangle-fill',
                                         'color': 'danger',
                                         'message': str(error)})
+                continue
+
             except NoExtensionError as error:
-                print(time())
                 rater.add_notification('load_alert',
                                        {'icon': '#exclamation-triangle-fill',
                                         'color': 'danger',
                                         'message': str(error)})
+                continue
+
             except DuplicateImageError as error:
-                print(time())
-                rater.add_notification('load_alert',
-                                       {'icon': '#exclamation-triangle-fill',
-                                        'color': 'danger',
-                                        'message': str(error)})
+                if not ignore_existing:
+                    rater.add_notification('load_alert', {
+                        'icon': '#exclamation-triangle-fill',
+                        'color': 'danger',
+                        'message': str(error)})
+                continue
+
             else:
                 loaded_imgs += 1
-                db.session.commit()
+
             i += 1
             _set_task_progress(100 * i // total_imgs,
                                name=f'load_progress_{dataset_name}')
@@ -85,19 +91,16 @@ def load_data(files, dataset_name, rater_id, new_dataset=False):
             raise OrphanDatasetError(dataset_name)
 
     except OrphanDatasetError as error:
-        print(time())
         rater.add_notification('load_alert',
                                {'icon': '#exclamation-triangle-fill',
-                                'color': 'danger',
+                                'color': 'warning',
                                 'message': str(error)})
-        db.session.delete(dataset)
 
     except:
         app.logger.error('Unhandled exception', exc_info=sys.exc_info())
         db.session.rollback()
 
     else:
-        print(time())
         rater.add_notification('load_alert',
                                {'icon': '#check-circle-fill',
                                 'color': 'success',
@@ -120,7 +123,6 @@ def delete_data(dataset_name, data_dir, rater_id, remove_files=False):
     try:
         # Init task and progress
         _set_task_progress(0, name=f'delete_progress_{dataset_name}')
-        print(time())
         dataset = Dataset.query.filter_by(name=dataset_name).first()
         rater = Rater.query.get(rater_id)
         i = 0
@@ -132,7 +134,6 @@ def delete_data(dataset_name, data_dir, rater_id, remove_files=False):
                 db.session.delete(rating)       # Delete ratings
             db.session.delete(image)            # Remove image from database
             i += 1
-            print(time())
             _set_task_progress(100 * i // end,
                                name=f'delete_progress_{dataset_name}')
 
@@ -148,7 +149,6 @@ def delete_data(dataset_name, data_dir, rater_id, remove_files=False):
         db.session.rollback()
 
     else:
-        print(time())
         rater.add_notification('delete_alert',
                                {'icon': '#check-circle-fill',
                                 'color': 'success',
@@ -157,5 +157,4 @@ def delete_data(dataset_name, data_dir, rater_id, remove_files=False):
 
     finally:
         db.session.commit()
-        print(time())
         _set_task_progress(100, name=f'delete_progress_{dataset_name}')

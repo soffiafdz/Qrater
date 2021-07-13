@@ -82,28 +82,25 @@ def load_dataset(directory=None):
     data_dir = os.path.join(current_app.config['ABS_PATH'],
                             'static/datasets/preloaded')
 
+    # Choices of directories to load in form
+    dir_choices = [d for d in os.listdir(data_dir)
+                   if os.path.isdir(os.path.join(data_dir, d))]
+
     info = {'directory': directory, 'new_imgs': 0}
     if directory is not None:
         # Count the files in the directory
-        num_files = 0
-        for _, _, files in os.walk(os.path.join(data_dir, directory)):
-            files[:] = [f for f in files
-                        if not f.startswith('.')  # Omit dotfiles
-                        and '.' in f]             # Omit files w/o extension
-
-            # Count files of implemented filetypes
-            num_files += len([f for f in files if f.split('.', 1)[1].lower()
-                              in current_app.config['DSET_ALLOWED_EXTS']])
+        all_files= []
+        for root, _, files in os.walk(os.path.join(data_dir, directory)):
+            all_files.extend([f for f in files if not f.startswith('.')])
+            # files[:] = [f for f in files
+                        # if not f.startswith('.')  # Omit dotfiles
+                        # and '.' in f]             # Omit files w/o extension
 
         # Save useful info for jinja template
         info['model'] = Dataset.query.filter_by(name=directory).first()
         info['saved_imgs'] = info['model'].images.count() \
             if info['model'] else 0
-        info['new_imgs'] = num_files - info['saved_imgs']
-
-    # Choices of directories to load in form
-    dir_choices = [d for d in os.listdir(data_dir)
-                   if os.path.isdir(os.path.join(data_dir, d))]
+        info['new_imgs'] = len(all_files) - info['saved_imgs']
 
     form = LoadDatasetForm()
     form.dir_name.choices = dir_choices
@@ -116,47 +113,39 @@ def load_dataset(directory=None):
             db.session.add(info['model'])
             new_dataset = True
 
-        # Loop through files
-        # os.walk(path, followlinks=True) :: This would follow symlink location
-        # TODO Test walk with links on BIC
-        for root, _, files in \
-                os.walk(os.path.join(data_dir, form.dir_name.data)):
+        if len(all_files) > 10:
+            current_user.launch_task('load_data',
+                                     f"Loading {info['new_imgs']} new images "
+                                     f"to {info['model'].name} dataset...",
+                                     icon='load',
+                                     alert_color='primary',
+                                     files=all_files,
+                                     dataset_name=info['model'].name,
+                                     new_dataset=new_dataset,
+                                     ignore_existing=True)
+            db.session.commit()
+        else:
+            try:
+                # Function returns number of uploaded images
+                loaded_imgs = load_data(all_files, dataset=info['model'],
+                                        host=True, new_dataset=new_dataset)
 
-            files[:] = [os.path.join(root, f) for f in files
-                        if not f.startswith('.')  # Omit dotfiles
-                        and '.' in f]             # Omit files w/o extension
+            except OrphanDatasetError:
+                # If orphaned dataset, delete it
+                # TODO this somehow throws an error; look into this
+                # db.session.delete(info['model'])
+                flash('No new files were successfully loaded '
+                      'leaving the dataset empty', 'danger')
 
-            if len(files) > 10:
-                current_user.launch_task('load_data',
-                                         f"Loading {len(files)} new images "
-                                         f"to {info['model'].name} dataset...",
-                                         icon='load',
-                                         alert_color='primary',
-                                         files=files,
-                                         dataset_name=info['model'].name,
-                                         new_dataset=new_dataset)
-                db.session.commit()
             else:
-                try:
-                    # Function returns number of uploaded images
-                    loaded_imgs = load_data(files, dataset=info['model'],
-                                            host=True, new_dataset=new_dataset)
-                except OrphanDatasetError:
-                    # If orphaned dataset, delete it
-                    # TODO this somehow throws an error; look into this
-                    # db.session.delete(info['model'])
-                    flash('No new files were successfully loaded '
-                          'leaving the dataset empty', 'danger')
-
+                if not new_dataset and loaded_imgs == 0:
+                    flash('No new files were successfully loaded', 'info')
                 else:
-                    if not new_dataset and loaded_imgs == 0:
-                        flash('No new files were successfully loaded', 'info')
-                    else:
-                        flash(f'{loaded_imgs} file(s) successfully loaded!',
-                              'success')
-                finally:
-                    # Commit changes in database
-                    db.session.commit()
+                    flash(f'{loaded_imgs} file(s) successfully loaded!',
+                          'success')
+            finally:
+                # Commit changes in database
+                db.session.commit()
 
         return redirect(url_for('main.dashboard'))
 
