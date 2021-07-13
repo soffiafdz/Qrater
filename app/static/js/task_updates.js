@@ -5,34 +5,16 @@ function setTaskProgress(task_id, progress) {
   $('#' + task_id + 'ProgressBar').attr("aria-valuenow", progress);
 }
 
-// Read task progress from notifications
-function updateProgress() {
-  $.ajax('/notifications').done(
-    function(notifications) {
-      let task_progress = 100;
-      for (let i = 0; i < notifications.length; i++) {
-        if (notifications[i].name.includes('_progress')) {
-          task_progress = notifications[i].data.progress;
-          setTaskProgress(notifications[i].data.task_id, task_progress);
-          readTaskAlerts();
-        }
-      }
-      if (task_progress != 100){
-        setTimeout(updateProgress, 1000);
-      }
-    }
-  );
+// Update task progress from a notification
+function updateProgress(notification) {
+  let taskProgress = notification.data.progress;
+  setTaskProgress(notification.data.task_id, taskProgress);
 }
 
-// Read task notifications and send them to HTTP
-function readTaskAlerts() {
-  $.ajax('/notifications').done(
-    function(notifications) {
-      for (let i = 0; i < notifications.length; i++) {
-        if (notifications[i].name.includes('_alert')) {
-          let flashMessage = `
-<div
-  class="alert alert-${notifications[i].data.color} alert-dismissible fade show"
+// Write alert into HTTP from notification
+function setAlert(icon, color, message) {
+  let flashMessage = `<div
+  class="alert alert-${color} alert-dismissible fade show"
   role="alert"
   >
   <svg
@@ -41,8 +23,8 @@ function readTaskAlerts() {
     height="24"
     role="img"
     >
-    <use xlink:href="${notifications[i].data.icon}"/>
-  </svg>${notifications[i].data.message}
+    <use xlink:href="${icon}"/>
+  </svg>${message}
   <button
     type="button"
     class="btn-close"
@@ -50,19 +32,47 @@ function readTaskAlerts() {
     aria-label="Close"
     ></button>
 </div>`;
-          console.log('Loaded flash message');
-          $('#flashedMessages').prepend(flashMessage);
-          $.ajax(
-            '/notifications?name=' + notifications[i].name,
-            {type: 'DELETE'}
+
+  // Show alert
+  $('#flashedMessages').prepend(flashMessage);
+
+}
+
+// Delete from database
+function deleteAlert(name) {
+  $.ajax('/notifications?name=' + name, {type: 'DELETE'});
+}
+
+// Parse notifications
+function readNotifications(since) {
+  $.ajax('/notifications?since=' + since).done(
+    function(notifications) {
+      for (let i = 0; i < notifications.length; i++) {
+        since = notifications[i].timestamp;
+        if (notifications[i].name.includes('_progress'))
+          updateProgress(notifications[i]);
+
+        if (notifications[i].name.includes('_alert')) {
+          setAlert(
+            notifications[i].data.icon,
+            notifications[i].data.color,
+            notifications[i].data.message
           );
+          deleteAlert(notifications[i].name);
         }
       }
+        //If there are notifications update quicker (1s or 10s)
+        if (notifications.length > 0) {
+          setTimeout(readNotifications, 1000, since)
+        } else {
+          setTimeout(readNotifications, 10000, since)
+        }
     }
   );
 }
 
 // Runc at the start
 $(function() {
-  setTimeout(updateProgress, 1000);
+  // Wait one second before first run, so notifications load in server
+  setTimeout(readNotifications, 1000, 0);
 });
