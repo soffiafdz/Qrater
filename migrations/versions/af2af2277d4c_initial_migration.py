@@ -1,8 +1,8 @@
-"""init
+"""Initial migration
 
-Revision ID: 9b1b0a7008fe
+Revision ID: af2af2277d4c
 Revises: 
-Create Date: 2021-07-06 10:55:21.987762
+Create Date: 2021-07-13 14:06:50.153740
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '9b1b0a7008fe'
+revision = 'af2af2277d4c'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -52,7 +52,7 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=128), nullable=True),
     sa.Column('rater_id', sa.Integer(), nullable=True),
-    sa.Column('timestamp', sa.Float(), nullable=True),
+    sa.Column('timestamp', sa.Float(precision=32), nullable=True),
     sa.Column('payload_json', sa.Text(), nullable=True),
     sa.ForeignKeyConstraint(['rater_id'], ['rater.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -63,6 +63,8 @@ def upgrade():
     sa.Column('id', sa.String(length=36), nullable=False),
     sa.Column('name', sa.String(length=128), nullable=True),
     sa.Column('description', sa.String(length=128), nullable=True),
+    sa.Column('icon', sa.String(length=18), nullable=True),
+    sa.Column('alert_color', sa.String(length=18), nullable=True),
     sa.Column('rater_id', sa.Integer(), nullable=True),
     sa.Column('complete', sa.Boolean(), nullable=True),
     sa.ForeignKeyConstraint(['rater_id'], ['rater.id'], ),
