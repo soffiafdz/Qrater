@@ -135,7 +135,7 @@ def load_dataset(directory=None):
                 # TODO this somehow throws an error; look into this
                 # db.session.delete(info['model'])
                 flash('No new files were successfully loaded '
-                      'leaving the dataset empty', 'danger')
+                      'leaving the dataset empty', 'warning')
 
             else:
                 if not new_dataset and loaded_imgs == 0:
@@ -169,6 +169,8 @@ def edit_dataset(dataset=None):
 
     form = EditDatasetForm()
     form.dataset.choices = [ds.name for ds in Dataset.query.order_by('name')]
+    form.viewers.choices = [(r.id, r.name)
+                            for r in Rater.query.order_by('name')]
 
     # Test image names for regex helper
     test_names = {}
@@ -249,6 +251,14 @@ def edit_dataset(dataset=None):
                           'success')
                     db.session.commit()
                     changes = True
+
+        # Change privacy of dataset
+        if ds_model.private != form.privacy.data:
+            ds_model.private = form.privacy.data
+            changes = True
+
+        # Add viewers (for private datasets)
+        # TODO
 
         # Regex for image type, subject and/or session
         if form.sub_regex.data \

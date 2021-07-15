@@ -16,6 +16,18 @@ import redis
 import rq
 
 
+@login.user_loader
+def load_user(id):
+    """Load rater."""
+    return Rater.query.get(int(id))
+
+
+data_access = db.Table(
+    'data_access',
+    db.Column('rater_id', db.Integer, db.ForeignKey('rater.id')),
+    db.Column('dataset_id', db.Integer, db.ForeignKey('dataset.id')),
+)
+
 class Rater(UserMixin, db.Model):
     """SQLALCHEMY Model of Raters (Users)."""
 
@@ -23,8 +35,11 @@ class Rater(UserMixin, db.Model):
     username = db.Column(db.String(64), index=True, unique=True)
     email = db.Column(db.String(120), index=True, unique=True)
     password_hash = db.Column(db.String(128))
-    ratings = db.relationship("Rating", backref="rater", lazy="dynamic")
     last_seen = db.Column(db.DateTime, default=datetime.utcnow)
+    ratings = db.relationship("Rating", backref="rater", lazy="dynamic")
+    datasets = db.relationship('Dataset', backref='creator', lazy='dynamic')
+    viewing_access = db.relationship("Dataset", secondary=data_access,
+                                     backref='viewer', lazy='dynamic')
     notifications = db.relationship('Notification', backref='user',
                                     lazy='dynamic')
     tasks = db.relationship('Task', backref='rater', lazy='dynamic')
@@ -90,19 +105,16 @@ class Rater(UserMixin, db.Model):
                                     complete=False).first()
 
 
-@login.user_loader
-def load_user(id):
-    """Load rater."""
-    return Rater.query.get(int(id))
-
-
 class Dataset(db.Model):
     """SQLAlchemy Model for Datasets (Set of Images)."""
 
     __searchable__ = ['name']
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), index=True, unique=True)
+    creator = db.Column(db.Integer, db.ForeignKey('rater.id'))
+    private = db.Column(db.Boolean, default=False)
     images = db.relationship('Image', backref='dataset', lazy='dynamic')
+
 
     def __repr__(self):
         """Object representation."""
