@@ -1,8 +1,8 @@
-"""Add cohort to image
+"""cohort column
 
-Revision ID: d25e829b8d16
-Revises: eea6ea3c80eb
-Create Date: 2021-07-12 10:43:40.372000
+Revision ID: 742d48d1acb8
+Revises: af2af2277d4c
+Create Date: 2021-07-13 17:07:19.618951
 
 """
 from alembic import op
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'd25e829b8d16'
-down_revision = 'eea6ea3c80eb'
+revision = '742d48d1acb8'
+down_revision = 'af2af2277d4c'
 branch_labels = None
 depends_on = None
 
