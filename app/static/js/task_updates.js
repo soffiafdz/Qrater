@@ -61,12 +61,13 @@ function readNotifications(since) {
           deleteAlert(notifications[i].name);
         }
       }
-        //If there are notifications update quicker (1s or 10s)
+        //If there are not new notifications increment wait time; else reset it
         if (notifications.length > 0) {
-          setTimeout(readNotifications, 1000, since)
+          waitTime = 1000
         } else {
-          setTimeout(readNotifications, 10000, since)
+          waitTime += 1000
         }
+        setTimeout(readNotifications, waitTime, since)
     }
   );
 }
@@ -74,5 +75,6 @@ function readNotifications(since) {
 // Runc at the start
 $(function() {
   // Wait one second before first run, so notifications load in server
-  setTimeout(readNotifications, 1000, 0);
+  let waitTime = 1000
+  setTimeout(readNotifications, waitTime, 0);
 });
