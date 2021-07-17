@@ -215,6 +215,7 @@ def rate(name_dataset):
     if form.validate_on_submit():
         img.set_rating(user=current_user, rating=form.rating.data)
         img.set_comment(user=current_user, comment=form.comment.data)
+        db.session.commit()
         return redirect(request.url)
 
     return render_template('rate.html', DS=dataset, form=form, imgs=imgs,
