@@ -71,6 +71,53 @@
         </div>
       </div>
       <div class="row mb-3 mx-0">
+        <label class="col-sm-12 col-md-3 col-form-label" for="privacyBool">
+          Privacy
+        </label>
+        <div class="col-sm-12 col-md-9">
+          <div class="input-group">
+            <input
+              type="radio"
+              class="btn-check"
+              name="privacy"
+              id="openBtn"
+              autocomplete="off"
+              checked
+              >
+            <label
+              class="btn btn-outline-dark"
+              for="openBtn"
+              >
+                <i class="bi bi-unlock"></i>
+            </label>
+            <input
+              type="radio"
+              class="btn-check"
+              name="privacy"
+              id="privateBtn"
+              autocomplete="off"
+              >
+            <label
+              class="btn btn-outline-dark"
+              for="privateBtn"
+              >
+              <i class="bi bi-lock-fill"></i>
+            </label>
+            <select
+              class="form-select"
+              id="viewersSelector"
+              name="viewers"
+              multiple
+              >
+              <option value="">Raters who can access this dataset...</option>
+              {% for opt in form.viewers.choices -%}
+              <option value={{ opt[0] }}>{{ opt[1] }}</option>
+              {%- endfor %}
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="row mb-3 mx-0">
         <label
           class="col-sm-12 col-md-3 col-form-label"
           for="reType">Image type label</label>

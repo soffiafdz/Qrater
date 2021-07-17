@@ -39,7 +39,7 @@
             <option value="">Select a directory to load</option>
             {%- for dir in form.dir_name.choices -%}
             <option
-              {% if dir == dict['directory'] %}selected{% endif %}
+              {% if dir == dictionary['directory'] %}selected{% endif %}
               >{{ dir }}</option>
             {%- endfor -%}
           </select>
@@ -48,22 +48,26 @@
           id="dirInfo"
           class="form-text px-3 fs-6"
           >
-          {% if dict['directory'] is none %}
-          {% elif dict['model'] is none %}
+          {% if dictionary['directory'] is none %}
+          {% elif not dictionary['access'] %}
           <span
             class="text-danger"
-            >Dataset Not Loaded: {{ dict['new_imgs'] }} unloaded files</span>
-          {% elif dict['new_imgs'] == 0 %}
+            >Private Dataset: You don't have access to this dataset</span>
+          {% elif dictionary['model'] is none %}
+          <span
+            class="text-primary"
+            >Dataset Not Loaded: {{ dictionary['new_imgs'] }} unloaded files</span>
+          {% elif dictionary['new_imgs'] == 0 %}
           <span
             class="text-success"
-            >Loaded Dataset: {{ dict['saved_imgs'] }} images</span>
-          {% elif dict['new_imgs'] > 0 %}
+            >Loaded Dataset: {{ dictionary['saved_imgs'] }} images</span>
+          {% elif dictionary['new_imgs'] > 0 %}
           <span
             class="text-success"
-            >Loaded Dataset: {{ dict['saved_imgs'] }} images;</span>
+            >Loaded Dataset: {{ dictionary['saved_imgs'] }} images;</span>
           <span
-            class="text-danger"
-            > {{ dict['new_imgs'] }} unloaded files</span>
+            class="text-primary"
+            > {{ dictionary['new_imgs'] }} unloaded files</span>
           {% endif %}
         </div>
       </div>
@@ -74,7 +78,9 @@
       type="submit"
       form="datasetForm"
       value="Load"
-      {% if dict['directory'] is none or dict['new_imgs'] == 0 -%}
+      {% if dictionary['directory'] is none
+            or dictionary['new_imgs'] == 0
+            or not dictionary['access'] -%}
       disabled
       {%- endif %}
       >Load Data</button>

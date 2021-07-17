@@ -38,11 +38,9 @@ class Rater(UserMixin, db.Model):
     last_seen = db.Column(db.DateTime, default=datetime.utcnow)
     ratings = db.relationship("Rating", backref="rater", lazy="dynamic")
     datasets = db.relationship('Dataset', backref='creator', lazy='dynamic')
-    viewing_access = db.relationship("Dataset", secondary=data_access,
-                                     backref='viewer', lazy='dynamic')
+    tasks = db.relationship('Task', backref='rater', lazy='dynamic')
     notifications = db.relationship('Notification', backref='user',
                                     lazy='dynamic')
-    tasks = db.relationship('Task', backref='rater', lazy='dynamic')
 
     def __repr__(self):
         """Object representation."""
@@ -72,6 +70,10 @@ class Rater(UserMixin, db.Model):
         except Exception:
             return
         return Rater.query.get(id)
+
+    def has_access(self, dataset):
+        """Query access permission to a dataset."""
+        return dataset in self.access.all()
 
     def add_notification(self, name, data):
         """Add a notification for this rater to the database."""
@@ -108,13 +110,32 @@ class Rater(UserMixin, db.Model):
 class Dataset(db.Model):
     """SQLAlchemy Model for Datasets (Set of Images)."""
 
-    __searchable__ = ['name']
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), index=True, unique=True)
-    creator = db.Column(db.Integer, db.ForeignKey('rater.id'))
+    rater_id = db.Column(db.Integer, db.ForeignKey('rater.id'))
     private = db.Column(db.Boolean, default=False)
     images = db.relationship('Image', backref='dataset', lazy='dynamic')
+    viewers = db.relationship('Rater', secondary=data_access,
+                              backref='access', lazy='dynamic')
 
+    def change_privacy(self, privacy):
+        """Change the privacy status of the dataset."""
+        if privacy != self.private:
+            self.private = privacy
+
+    def has_access(self, rater):
+        """Query viewing access."""
+        return rater in self.viewers.all()
+
+    def grant_access(self, rater):
+        """Grant viewing access to a non-creator rater."""
+        if not self.has_access(rater):
+            self.viewers.append(rater)
+
+    def deny_access(self, rater):
+        """Remove viewing access to a non-creator rater."""
+        if rater != self.creator and self.has_access(rater):
+            self.viewers.remove(rater)
 
     def __repr__(self):
         """Object representation."""
@@ -146,11 +167,9 @@ class Image(db.Model):
         if rating_mod is None:
             rating_mod = Rating(rater=user, image=self, rating=rating)
             db.session.add(rating_mod)
-            db.session.commit()
         else:
             rating_mod.rating = rating
             rating_mod.timestamp = datetime.utcnow()
-            db.session.commit()
 
     def set_comment(self, user, comment):
         """Append a comment to the rating of current MRI."""
@@ -158,10 +177,8 @@ class Image(db.Model):
         if rating_mod is None:
             rating_mod = Rating(rater=user, image=self, comment=comment)
             db.session.add(rating_mod)
-            db.session.commit()
         else:
             rating_mod.comment = comment
-            db.session.commit()
 
     def rating_by_user(self, user):
         """Return rating of the image by specific user."""

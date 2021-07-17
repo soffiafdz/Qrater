@@ -50,7 +50,7 @@
         <label class="col-sm-2 col-form-label" for="uploadImgs">
           MRI files
         </label>
-        <div class="col-sm-10">
+        <div class="col-sm-10" id=uploadImgs>
           <input
             type="file"
             class="form-control"
@@ -58,6 +58,42 @@
             name="dataset"
             required
             multiple>
+        </div>
+      </div>
+      <div class="row mb-3 mx-0">
+        <label class="col-sm-2 col-form-label" for="privacyBool">
+          Privacy
+        </label>
+        <div class="col-sm-10" id="privacyBool">
+          <div class="form-check form-check-inline ps-0">
+            <div class="btn-group" role="group">
+              <input
+                type="radio"
+                class="btn-check"
+                name="privacy"
+                id="openBtn"
+                value="false"
+                autocomplete="off"
+                checked
+                >
+              <label
+                class="btn btn-outline-dark"
+                for="openBtn"
+                >Open Dataset</label>
+              <input
+                type="radio"
+                class="btn-check"
+                name="privacy"
+                id="privateBtn"
+                value="true"
+                autocomplete="off"
+                >
+              <label
+                class="btn btn-outline-dark"
+                for="privateBtn"
+                >Private Dataset</label>
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -12,7 +12,7 @@ from flask import (render_template, flash, redirect, url_for, request,
 from flask_login import login_required, current_user
 from app import db
 from app.data import bp
-from app.models import Dataset
+from app.models import Dataset, Rater
 from app.data.functions import load_data, upload_data
 from app.data.forms import LoadDatasetForm, UploadDatasetForm, EditDatasetForm
 from app.data.exceptions import (OrphanDatasetError, EmptyLoadError)
@@ -36,8 +36,14 @@ def upload_dataset():
 
         # Form checks that dataset does not exist already
         # so there is no need to check here; just create it
-        dataset = Dataset(name=form.dataset_name.data)
+        dataset = Dataset(name=form.dataset_name.data,
+                          creator=current_user,
+                          private=form.privacy.data)
+        dataset.grant_access(current_user)
         db.session.add(dataset)
+
+        privacy = 'a PRIVATE' if dataset.private else 'an OPEN'
+        flash(f"{dataset.name} was created as {privacy} dataset", 'info')
 
         if len(files) > 10:
             # Redis can't handle FileStorage
@@ -88,30 +94,39 @@ def load_dataset(directory=None):
 
     info = {'directory': directory, 'new_imgs': 0}
     if directory is not None:
-        # Count the files in the directory
-        all_files= []
-        for root, _, files in os.walk(os.path.join(data_dir, directory)):
-            all_files.extend([f for f in files if not f.startswith('.')])
-            # files[:] = [f for f in files
-                        # if not f.startswith('.')  # Omit dotfiles
-                        # and '.' in f]             # Omit files w/o extension
-
         # Save useful info for jinja template
         info['model'] = Dataset.query.filter_by(name=directory).first()
-        info['saved_imgs'] = info['model'].images.count() \
-            if info['model'] else 0
-        info['new_imgs'] = len(all_files) - info['saved_imgs']
+        # Check access before loading files
+        if info['model']:
+            info['access'] = current_user.has_access(info['model'])
+            info['saved_imgs'] = info['model'].images.count()
+        else:
+            info['access'] = True
+            info['saved_images'] = 0
+
+        if info['access']:
+            # Count the files in the directory
+            all_files= []
+            for root, _, files in os.walk(os.path.join(data_dir, directory)):
+                all_files.extend([f for f in files if not f.startswith('.')])
+            info['new_imgs'] = len(all_files) - info['saved_imgs']
 
     form = LoadDatasetForm()
     form.dir_name.choices = dir_choices
+
+    # Form submission must be restricted by access in template
     if form.validate_on_submit():
         if info['model']:
             new_dataset = False
         else:
             # If dataset is not a Dataset Model (does not exist), create it
-            info['model'] = Dataset(name=form.dir_name.data)
+            info['model'] = Dataset(name=form.dir_name.data,
+                                    creator=current_user)
+            info['model'].grant_access(current_user)
             db.session.add(info['model'])
             new_dataset = True
+            flash(f"{info['model'].name} was created as an OPEN dataset",
+                  'info')
 
         if len(all_files) > 10:
             current_user.launch_task('load_data',
@@ -124,6 +139,7 @@ def load_dataset(directory=None):
                                      new_dataset=new_dataset,
                                      ignore_existing=True)
             db.session.commit()
+
         else:
             try:
                 # Function returns number of uploaded images
@@ -139,7 +155,7 @@ def load_dataset(directory=None):
 
             else:
                 if not new_dataset and loaded_imgs == 0:
-                    flash('No new files were successfully loaded', 'info')
+                    flash('No new files were successfully loaded', 'warning')
                 else:
                     flash(f'{loaded_imgs} file(s) successfully loaded!',
                           'success')
@@ -154,7 +170,7 @@ def load_dataset(directory=None):
         flash(error[0], 'danger')
 
     return render_template('data/load_dataset.html', form=form,
-                           title="Load Dataset", dict=info)
+                           title="Load Dataset", dictionary=info)
 
 
 @bp.route('/edit-dataset', methods=['GET', 'POST'])
@@ -168,9 +184,11 @@ def edit_dataset(dataset=None):
     data_dir = os.path.join(current_app.config['ABS_PATH'], 'static/datasets')
 
     form = EditDatasetForm()
-    form.dataset.choices = [ds.name for ds in Dataset.query.order_by('name')]
-    form.viewers.choices = [(r.id, r.name)
-                            for r in Rater.query.order_by('name')]
+    form.dataset.choices = [ds.name for ds in current_user.access]
+    form.viewers.choices = [(r.id, r.username)
+                            for r in Rater.query.order_by('username')]
+    # Check if already viewer in template
+    print(form.viewers.choices)
 
     # Test image names for regex helper
     test_names = {}
@@ -213,52 +231,13 @@ def edit_dataset(dataset=None):
             db.session.commit()
             changes = True
 
-        files = request.files.getlist(form.imgs_to_upload.name)
-
-        # Check that files is not an empty list??
-        # Maybe to trigger upload
-        if files[0].filename != "":
-            savedir = os.path.join(data_dir, 'uploaded', ds_model.name)
-
-            if len(files) > 10:
-                # Redis can't handle FileStorage
-                # First upload all files
-                files_uploaded = upload_data(files, savedir)
-                current_user.launch_task('load_data',
-                                         f'Uploading {len(files)} new images '
-                                         f'to {ds_model.name} dataset...',
-                                         icon='upload',
-                                         alert_color='primary',
-                                         files=files_uploaded,
-                                         dataset_name=ds_model.name)
-                db.session.commit()
-                changes = True
-            else:
-                try:
-                    # Function returns number of uploaded images
-                    loaded_imgs = load_data(files, savedir=savedir,
-                                            dataset=ds_model,
-                                            new_dataset=False)
-
-                except EmptyLoadError as error:
-                    flash(str(error), 'warning')
-
-                except OrphanDatasetError as error:
-                    flash(str(error), 'warning')
-
-                else:
-                    flash(f'{loaded_imgs} file(s) successfully uploaded!',
-                          'success')
-                    db.session.commit()
-                    changes = True
-
         # Change privacy of dataset
-        if ds_model.private != form.privacy.data:
-            ds_model.private = form.privacy.data
-            changes = True
+        privacy = form.privacy.data
+        change = ds_model.private == privacy
+        ds_model.change_privacy(privacy)
 
         # Add viewers (for private datasets)
-        # TODO
+        print(form.viewers.data)
 
         # Regex for image type, subject and/or session
         if form.sub_regex.data \
@@ -295,6 +274,44 @@ def edit_dataset(dataset=None):
                     db.session.add(img)
                     db.session.commit()
             changes = True
+
+        files = request.files.getlist(form.imgs_to_upload.name)
+        # Check that files is not an empty list??
+        # Maybe to trigger upload
+        if files[0].filename != "":
+            savedir = os.path.join(data_dir, 'uploaded', ds_model.name)
+
+            if len(files) > 10:
+                # Redis can't handle FileStorage
+                # First upload all files
+                files_uploaded = upload_data(files, savedir)
+                current_user.launch_task('load_data',
+                                         f'Uploading {len(files)} new images '
+                                         f'to {ds_model.name} dataset...',
+                                         icon='upload',
+                                         alert_color='primary',
+                                         files=files_uploaded,
+                                         dataset_name=ds_model.name)
+                db.session.commit()
+                changes = True
+            else:
+                try:
+                    # Function returns number of uploaded images
+                    loaded_imgs = load_data(files, savedir=savedir,
+                                            dataset=ds_model,
+                                            new_dataset=False)
+
+                except EmptyLoadError as error:
+                    flash(str(error), 'warning')
+
+                except OrphanDatasetError as error:
+                    flash(str(error), 'warning')
+
+                else:
+                    flash(f'{loaded_imgs} file(s) successfully uploaded!',
+                          'success')
+                    db.session.commit()
+                    changes = True
 
         if changes:
             flash(f'{ds_model.name} successfully edited!', 'success')
