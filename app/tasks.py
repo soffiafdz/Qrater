@@ -118,10 +118,10 @@ def edit_info(dataset_name, rater_id, sub_regex=None, sess_regex=None,
 
     Arguments:
         dataset_name    -- dataset to edit
-        sub_regex       --
-        sess_regex      --
-        cohort_regex    --
-        type_regex      --
+        sub_regex       -- regular expression from edit-form
+        sess_regex      -- regular expression from edit-form
+        cohort_regex    -- regular expression from edit-form
+        type_regex      -- regular expression from edit-form
     """
     try:
         _set_task_progress(0, name=f'edit_progress_{dataset_name}')
@@ -174,16 +174,16 @@ def edit_info(dataset_name, rater_id, sub_regex=None, sess_regex=None,
                                    {'icon': '#check-circle-fill',
                                     'color': 'success',
                                     'message':
-                                    f'Information of {changed_imgs} images'
-                                    f'from {dataset_name} was successfully'
+                                    f'Information of {changed_imgs} images '
+                                    f'from {dataset_name} was successfully '
                                     'added!'})
         else:
             rater.add_notification('edit_alert',
                                    {'icon': '#exclamation-triangle-fill',
                                     'color': 'warning',
                                     'message':
-                                    'No new information was added to the'
-                                    'images of {dataset_name}...'})
+                                    'No new information was added to the '
+                                    f'images of {dataset_name}...'})
 
     finally:
         db.session.commit()

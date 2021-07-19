@@ -9,7 +9,6 @@ import csv
 import json
 from collections import defaultdict
 from datetime import datetime
-from sqlalchemy import or_
 from flask import (render_template, flash, abort, redirect, url_for, request,
                    current_app, send_file, jsonify)
 from flask_login import current_user, login_required
@@ -45,11 +44,10 @@ def dashboard(all_raters_string=None):
                                rater=current_user)
 
     # Show all public datasets / accesible datasets for the current user
-    datasets = Dataset.query.filter_by(private=False) \
-        if current_user.is_anonymous \
-        else Dataset.query.\
-        filter(or_(Dataset.viewers.contains(current_user),
-                   Dataset.private.is_(False)))
+    public_ds = Dataset.query.filter_by(private=False)
+    private_ds = Dataset.query.filter(Dataset.viewers.contains(current_user))
+    datasets = public_ds if current_user.is_anonymous \
+        else public_ds.union(private_ds)
 
     n_imgs = defaultdict(list)
     for dataset in datasets:
@@ -186,7 +184,7 @@ def rate(name_dataset):
                 subquery()
 
             # All images, except Rated
-            imgs = Image.query.filter(Image.id.not_in(rated))
+            imgs = imgs.filter(Image.id.not_in(rated))
 
         elif filters["rating"] < 4:
             # Images where rating BY CURR_RATER matches rating filter
@@ -245,11 +243,9 @@ def rate(name_dataset):
 def export_ratings(dataset=None):
     """Page to configure and download a report of ratings."""
     form = ExportRatingsForm()
-    form.dataset.choices = [ds.name for ds in
-                            Dataset.query.
-                            filter(or_(Dataset.viewers.contains(current_user),
-                                       Dataset.private.is_(False))).
-                            order_by('name')]
+    public_ds = Dataset.query.filter_by(private=False)
+    private_ds = Dataset.query.filter(Dataset.viewers.contains(current_user))
+    form.dataset.choices = [ds.name for ds in public_ds.union(private_ds)]
 
     not_subs, not_sess, not_cohorts, not_comms = False, False, False, False
     if dataset is not None:

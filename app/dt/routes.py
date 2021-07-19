@@ -21,7 +21,7 @@ def datatable(dataset):
     only_ratings = request.args.get('only_ratings', 0, type=int)
 
     # Double check rater's access
-    if not current_user.has_access(dataset):
+    if not current_user.has_access(ds_model):
         flash(f"You don't have access to {dataset.name}", 'danger')
         all_raters_string = "all_raters" if all_raters else None
         return redirect(url_for('main.dashboard',
