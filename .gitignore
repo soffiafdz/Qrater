@@ -137,5 +137,7 @@ test_images
 # Text lists
 *.txt
 
+logs/
+
 # compose.yaml changes
 compose.override.yaml
