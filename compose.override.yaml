@@ -1,7 +1,0 @@
-# This files overrides/extends the default compose.yaml
-services:
-  flask:
-    # Add extra volumes to override the symlink cross-device error in Docker
-    # Useful to avoid redundant existing datasets in a cluster
-    volumes:
-    # - path/to/dir:/home/qrater/app/static/datasets/<DatasetName>
