@@ -6,7 +6,6 @@ Module with blueprint specific routes
 
 import os
 import re
-from time import time
 from sqlalchemy import or_
 from flask import (render_template, flash, redirect, url_for, request,
                    current_app)
@@ -107,7 +106,7 @@ def load_dataset(directory=None):
 
         if info['access']:
             # Count the files in the directory
-            all_files= []
+            all_files = []
             for root, _, files in os.walk(os.path.join(data_dir, directory)):
                 all_files.extend([f for f in files if not f.startswith('.')])
             info['new_imgs'] = len(all_files) - info['saved_imgs']
@@ -225,6 +224,7 @@ def edit_dataset(dataset=None):
                     os.rename(old_dir, new_dir)
 
             # Change dataset name in images database
+            # TODO: move to tasks
             for img in ds_model.images.all():
                 # TODO Think about what to do if preloaded directory can't
                 # change
@@ -237,38 +237,23 @@ def edit_dataset(dataset=None):
             changes = True
 
         # Regex for image type, cohort, subject and/or session
+        # TODO: move to TASKS
         if form.sub_regex.data \
                 or form.sess_regex.data \
                 or form.type_regex.data \
                 or form.cohort_regex.data:
-            for img in ds_model.images.all():
-                img_change = False
-                if form.sub_regex.data:
-                    pattern = form.sub_regex.data
-                    result = re.search(pattern, img.path)
-                    if result:
-                        img.subject = result.group()
-                        img_change = True
-                if form.sess_regex.data:
-                    pattern = form.sess_regex.data
-                    result = re.search(pattern, img.path)
-                    if result:
-                        img.session = result.group()
-                        img_change = True
-                if form.cohort_regex.data:
-                    pattern = form.cohort_regex.data
-                    result = re.search(pattern, img.path)
-                    if result:
-                        img.cohort = result.group()
-                        img_change = True
-                if form.type_regex.data:
-                    pattern = form.type_regex.data
-                    result = re.search(pattern, img.path)
-                    if result:
-                        img.imgtype = result.group()
-                        img_change = True
-                if img_change:
-                    db.session.add(img)
+
+            current_user.launch_task('edit_info',
+                                     'Editing the info of'
+                                     f"{ds_model.images.count()} images"
+                                     f"from {ds_model.name} dataset",
+                                     icon='', alert_color='primary',
+                                     dataset_name=ds_model.name,
+                                     sub_regex=form.sub_regex.data,
+                                     sess_regex=form.sess_regex.data,
+                                     cohort_regex=form.cohort_regex.data,
+                                     type_regex=form.type_regex.data)
+            db.session.commit()
             changes = True
 
         # Change privacy of dataset
