@@ -6,7 +6,6 @@ Module with blueprint specific routes
 
 import os
 import re
-from sqlalchemy import or_
 from flask import (render_template, flash, redirect, url_for, request,
                    current_app)
 from flask_login import login_required, current_user
@@ -102,7 +101,7 @@ def load_dataset(directory=None):
             info['saved_imgs'] = info['model'].images.count()
         else:
             info['access'] = True
-            info['saved_images'] = 0
+            info['saved_imgs'] = 0
 
         if info['access']:
             # Count the files in the directory
@@ -186,12 +185,11 @@ def edit_dataset(dataset=None):
 
     privacy = ds_model.private if ds_model else None
 
+    public_ds = Dataset.query.filter_by(private=False)
+    private_ds = Dataset.query.filter(Dataset.viewers.contains(current_user))
     form = EditDatasetForm()
     form.dataset.choices = [ds.name for ds in
-                            Dataset.query.
-                            filter(or_(Dataset.viewers.contains(current_user),
-                                       Dataset.private.is_(False))).
-                            order_by('name')]
+                            public_ds.union(private_ds).order_by('name')]
     form.viewers.choices = [(r.id, r.username, r in ds_model.viewers)
                             for r in Rater.query.order_by('username')
                             if r not in [current_user, ds_model.creator]] \
@@ -247,7 +245,7 @@ def edit_dataset(dataset=None):
                                      'Editing the info of'
                                      f"{ds_model.images.count()} images"
                                      f"from {ds_model.name} dataset",
-                                     icon='', alert_color='primary',
+                                     icon='edit', alert_color='primary',
                                      dataset_name=ds_model.name,
                                      sub_regex=form.sub_regex.data,
                                      sess_regex=form.sess_regex.data,
