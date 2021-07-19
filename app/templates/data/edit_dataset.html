@@ -6,6 +6,14 @@
 {% endif %}
 {% endblock %}
 
+{% block styles %}
+{{ super()  }}
+<link
+  rel="stylesheet"
+  type="text/css"
+  href="{{ url_for('static', filename=('css/bootstrap-multiselect.css')) }}">
+{% endblock %}
+
 {% block breadcrumb %}
 <ol class="breadcrumb m-0">
   <li class="breadcrumb-item">
@@ -53,9 +61,10 @@
         </div>
       </div>
       <div class="row mb-3 mx-0">
-        <label class="col-sm-12 col-md-3 col-form-label" for="newName">
-          New name
-        </label>
+        <label
+          class="col-sm-12 col-md-3 col-form-label"
+          for="newName"
+          >New name</label>
         <div class="col-sm-12 col-md-9">
           <div class="input-group">
             <span class="input-group-text">
@@ -67,53 +76,6 @@
               id="newName"
               name="new_name"
               placeholder="Change the Dataset's Name (Optional)">
-          </div>
-        </div>
-      </div>
-      <div class="row mb-3 mx-0">
-        <label class="col-sm-12 col-md-3 col-form-label" for="privacyBool">
-          Privacy
-        </label>
-        <div class="col-sm-12 col-md-9">
-          <div class="input-group">
-            <input
-              type="radio"
-              class="btn-check"
-              name="privacy"
-              id="openBtn"
-              autocomplete="off"
-              checked
-              >
-            <label
-              class="btn btn-outline-dark"
-              for="openBtn"
-              >
-                <i class="bi bi-unlock"></i>
-            </label>
-            <input
-              type="radio"
-              class="btn-check"
-              name="privacy"
-              id="privateBtn"
-              autocomplete="off"
-              >
-            <label
-              class="btn btn-outline-dark"
-              for="privateBtn"
-              >
-              <i class="bi bi-lock-fill"></i>
-            </label>
-            <select
-              class="form-select"
-              id="viewersSelector"
-              name="viewers"
-              multiple
-              >
-              <option value="">Raters who can access this dataset...</option>
-              {% for opt in form.viewers.choices -%}
-              <option value={{ opt[0] }}>{{ opt[1] }}</option>
-              {%- endfor %}
-            </select>
           </div>
         </div>
       </div>
@@ -218,9 +180,52 @@
         </div>
       </div>
       <div class="row mb-3 mx-0">
-        <label class="col-sm-12 col-md-3 col-form-label" for="uploadImgs">
-          Add MRI
-        </label>
+        <label
+          class="col-sm-12 col-md-3 col-form-label"
+          for="privacyBool"
+          >Privacy</label>
+        <div class="col-sm-12 col-md-9">
+          <div class="input-group">
+            {% if privacy %}
+            <button
+              type="button"
+              id="togglePrivacy"
+              name="privatebtn"
+              class="btn btn-dark"
+              ><i class="bi bi-lock-fill"></i>
+            </button>
+            <input type="hidden" id="privacyVal" name="privacy" value="true">
+            {% else %}
+            <button
+              type="button"
+              id="togglePrivacy"
+              name="openbtn"
+              class="btn btn-secondary"
+              {% if dataset is none %}disabled{% endif %}
+              ><i class="bi bi-unlock-fill"></i>
+            </button>
+            <input type="hidden" id="privacyVal" name="privacy" value="false">
+            {% endif %}
+            <select
+              class="form-select"
+              id="viewersSelector"
+              name="viewers"
+              multiple="multiple"
+              >
+              {% for opt in form.viewers.choices -%}
+              <option
+                value={{ opt[0] }}
+                {% if opt[2] -%}selected{%- endif %}
+                >{{ opt[1] }}</option>
+              {%- endfor %}
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="row mb-3 mx-0">
+        <label
+          class="col-sm-12 col-md-3 col-form-label"
+          for="uploadImgs">Add MRI</label>
         <div class="col-sm-12 col-md-9">
           <input
             type="file"
@@ -252,6 +257,9 @@
 
 {% block scripts %}
 {{ super() }}
+<script
+  src="{{ url_for('static', filename=('js/bootstrap-multiselect.js')) }}">
+</script>
 <script>
   $(document).ready(function () {
     var imgsArray = {{ names|tojson|safe }};
@@ -263,6 +271,65 @@
         window.location.href = "{{ url_for('data.edit_dataset') }}/" +
           $(this).val();
       }
+    });
+    $("#viewersSelector").multiselect({
+      maxHeight: 200,
+      buttonTextAlignment: "left",
+      buttonContainer: '<div class="btn-group w-100" />',
+      selectedClass: '',
+      buttonText: function (selectedOptions, select) {
+        if (select.prop('disabled')) {
+            return "All raters can access";
+        } else if (selectedOptions.length === 0) {
+            return "Only the creator can access";
+        } else {
+            var selected = '';
+            var delimiter = this.delimiterText;
+            selectedOptions.each(function () {
+                var label = (
+                    $(this).attr('label') !== undefined
+                  ) ? $(this).attr('label') : $(this).text();
+                selected += label + delimiter;
+            });
+            return 'Allowed access: ' +
+              selected.substr(0, selected.length - this.delimiterText.length);
+        }
+      },
+      templates: {
+        popupContainer: '<div class="multiselect-container dropdown-menu w-100"></div>'
+      }
+    });
+    if ($("#privacyVal").val() === "false") {
+      $("#viewersSelector").multiselect('disable')
+    } else {
+      $("#viewersSelector").multiselect('enable')
+    }
+    let originalPrivacy = "{{ privacy }}";
+    $("#togglePrivacy").click(function() {
+        if (originalPrivacy === "True") {
+            // Change button
+            console.log('True -> False')
+            $("#togglePrivacy").removeClass("btn-dark");
+            $("#togglePrivacy").addClass("btn-secondary");
+            $("#togglePrivacy").html('<i class="bi bi-unlock-fill"></i>');
+            // Set privacy to false
+            $("#privacyVal").val("false");
+            // Select
+            $('#viewersSelector').multiselect('disable')
+            // Change privacy for toggle-ing
+            originalPrivacy = "False";
+          } else if (originalPrivacy === "False") {
+            console.log('False->True')
+            $("#togglePrivacy").removeClass("btn-secondary");
+            $("#togglePrivacy").addClass("btn-dark");
+            $("#togglePrivacy").html('<i class="bi bi-lock-fill"></i>');
+            // Set privacy to true
+            $("#privacyVal").val("true")
+            // Select
+            $('#viewersSelector').multiselect('enable')
+            // Change privacy for toggle-ing
+            originalPrivacy = "True";
+          }
     });
     $("#regexBtn1").click(function() {
       if ($("#reType").val() == "") {

@@ -178,17 +178,17 @@ def load_dataset(directory=None):
 @login_required
 def edit_dataset(dataset=None):
     """Page to edit an existing dataset of MRI."""
-    if dataset is not None:
-        ds_model = Dataset.query.filter_by(name=dataset).first_or_404()
-
     data_dir = os.path.join(current_app.config['ABS_PATH'], 'static/datasets')
+    ds_model = Dataset.query.filter_by(name=dataset).first_or_404() \
+        if dataset else None
+    privacy = ds_model.private if ds_model else None
 
     form = EditDatasetForm()
     form.dataset.choices = [ds.name for ds in current_user.access]
-    form.viewers.choices = [(r.id, r.username)
-                            for r in Rater.query.order_by('username')]
-    # Check if already viewer in template
-    print(form.viewers.choices)
+    form.viewers.choices = [(r.id, r.username, r in ds_model.viewers)
+                            for r in Rater.query.order_by('username')
+                            if r not in [current_user, ds_model.creator]] \
+        if dataset else []
 
     # Test image names for regex helper
     test_names = {}
@@ -226,20 +226,9 @@ def edit_dataset(dataset=None):
             # Change dataset name in dataset database
             ds_model.name = form.new_name.data
             db.session.add(ds_model)
-
-            # Save database changes
-            db.session.commit()
             changes = True
 
-        # Change privacy of dataset
-        privacy = form.privacy.data
-        change = ds_model.private == privacy
-        ds_model.change_privacy(privacy)
-
-        # Add viewers (for private datasets)
-        print(form.viewers.data)
-
-        # Regex for image type, subject and/or session
+        # Regex for image type, cohort, subject and/or session
         if form.sub_regex.data \
                 or form.sess_regex.data \
                 or form.type_regex.data \
@@ -272,8 +261,26 @@ def edit_dataset(dataset=None):
                         img_change = True
                 if img_change:
                     db.session.add(img)
-                    db.session.commit()
             changes = True
+
+        # Change privacy of dataset
+        if ds_model.change_privacy(form.privacy.data):
+            db.session.commit()
+            changes = True
+
+        if form.privacy.data:
+            orig_viewers = {rater.id for rater in ds_model.viewers}
+            form_viewers = {r_id for r_id in form.viewers.data}
+
+            for rater in [Rater.query.get(id)
+                          for id in form_viewers - orig_viewers]:
+                if ds_model.grant_access(rater):
+                    changes = True
+
+            for rater in [Rater.query.get(id)
+                          for id in orig_viewers - form_viewers]:
+                if ds_model.deny_access(rater):
+                    changes = True
 
         files = request.files.getlist(form.imgs_to_upload.name)
         # Check that files is not an empty list??
@@ -310,16 +317,16 @@ def edit_dataset(dataset=None):
                 else:
                     flash(f'{loaded_imgs} file(s) successfully uploaded!',
                           'success')
-                    db.session.commit()
                     changes = True
 
         if changes:
             flash(f'{ds_model.name} successfully edited!', 'success')
+            db.session.commit()
             return redirect(url_for('main.dashboard'))
 
     return render_template('data/edit_dataset.html', form=form,
-                           dataset=dataset, names=test_names,
-                           title='Edit Dataset')
+                           dataset=dataset, privacy=privacy,
+                           names=test_names, title='Edit Dataset')
 
 
 @bp.route('/delete-dataset/<dataset>')

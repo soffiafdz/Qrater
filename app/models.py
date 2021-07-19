@@ -28,6 +28,7 @@ data_access = db.Table(
     db.Column('dataset_id', db.Integer, db.ForeignKey('dataset.id')),
 )
 
+
 class Rater(UserMixin, db.Model):
     """SQLALCHEMY Model of Raters (Users)."""
 
@@ -122,6 +123,8 @@ class Dataset(db.Model):
         """Change the privacy status of the dataset."""
         if privacy != self.private:
             self.private = privacy
+            return True
+        return False
 
     def has_access(self, rater):
         """Query viewing access."""
@@ -131,11 +134,15 @@ class Dataset(db.Model):
         """Grant viewing access to a non-creator rater."""
         if not self.has_access(rater):
             self.viewers.append(rater)
+            return True
+        return False
 
     def deny_access(self, rater):
         """Remove viewing access to a non-creator rater."""
         if rater != self.creator and self.has_access(rater):
             self.viewers.remove(rater)
+            return True
+        return False
 
     def __repr__(self):
         """Object representation."""
