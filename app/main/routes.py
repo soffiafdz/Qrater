@@ -184,7 +184,7 @@ def rate(name_dataset):
                 subquery()
 
             # All images, except Rated
-            imgs = Image.query.filter(Image.id.not_in(rated))
+            imgs = imgs.filter(Image.id.not_in(rated))
 
         elif filters["rating"] < 4:
             # Images where rating BY CURR_RATER matches rating filter
