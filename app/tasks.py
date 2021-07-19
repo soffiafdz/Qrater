@@ -174,15 +174,15 @@ def edit_info(dataset_name, rater_id, sub_regex=None, sess_regex=None,
                                    {'icon': '#check-circle-fill',
                                     'color': 'success',
                                     'message':
-                                    f'Information of {changed_imgs} images'
-                                    f'from {dataset_name} was successfully'
+                                    f'Information of {changed_imgs} images '
+                                    f'from {dataset_name} was successfully '
                                     'added!'})
         else:
             rater.add_notification('edit_alert',
                                    {'icon': '#exclamation-triangle-fill',
                                     'color': 'warning',
                                     'message':
-                                    'No new information was added to the'
+                                    'No new information was added to the '
                                     'images of {dataset_name}...'})
 
     finally:

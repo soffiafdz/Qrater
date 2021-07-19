@@ -197,7 +197,7 @@ def edit_dataset(dataset=None):
     # Test image names for regex helper
     test_names = {}
     for set in Dataset.query.all():
-        test_names[set.name] = [img.name for img in set.images.limit(5).all()]
+        test_names[set.name] = [img.path for img in set.images.limit(5).all()]
 
     changes = False
     if form.validate_on_submit():
@@ -241,8 +241,8 @@ def edit_dataset(dataset=None):
                 or form.cohort_regex.data:
 
             current_user.launch_task('edit_info',
-                                     'Editing the info of'
-                                     f"{ds_model.images.count()} images"
+                                     'Editing the info of '
+                                     f"{ds_model.images.count()} images "
                                      f"from {ds_model.name} dataset",
                                      icon='edit', alert_color='primary',
                                      dataset_name=ds_model.name,
