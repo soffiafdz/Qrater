@@ -245,8 +245,7 @@ def export_ratings(dataset=None):
     form = ExportRatingsForm()
     public_ds = Dataset.query.filter_by(private=False)
     private_ds = Dataset.query.filter(Dataset.viewers.contains(current_user))
-    form.dataset.choices = [ds.name for ds in
-                            public_ds.union(private_ds).order_by('name')]
+    form.dataset.choices = [ds.name for ds in public_ds.union(private_ds)]
 
     not_subs, not_sess, not_cohorts, not_comms = False, False, False, False
     if dataset is not None:

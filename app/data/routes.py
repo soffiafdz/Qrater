@@ -188,8 +188,7 @@ def edit_dataset(dataset=None):
     public_ds = Dataset.query.filter_by(private=False)
     private_ds = Dataset.query.filter(Dataset.viewers.contains(current_user))
     form = EditDatasetForm()
-    form.dataset.choices = [ds.name for ds in
-                            public_ds.union(private_ds).order_by('name')]
+    form.dataset.choices = [ds.name for ds in public_ds.union(private_ds)]
     form.viewers.choices = [(r.id, r.username, r in ds_model.viewers)
                             for r in Rater.query.order_by('username')
                             if r not in [current_user, ds_model.creator]] \
