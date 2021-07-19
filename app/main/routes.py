@@ -260,7 +260,10 @@ def export_ratings(dataset=None):
             filter(Image.dataset_id == ds_model.id).\
             order_by(Image.id.asc()).\
             add_columns(Image.name, Rating.rating)
-        keys = ['Image']
+        # keys = ['Image']
+        keys = []
+        if form.col_image.data:
+            keys.append('Image')
         if form.col_sub.data:
             query = query.add_columns(Image.subject)
             keys.append('Subject')
@@ -283,19 +286,23 @@ def export_ratings(dataset=None):
         if int(form.rater_filter.data):
             query = query.filter(Rating.rater_id == current_user.id)
             file_name = f'{file_name}_{current_user.username}'
+        else:
+            file_name = f'{file_name}_all-raters'
 
         ratings = []
         rating_codes = {0: 'Pending', 1: 'Pass', 2: 'Warning', 3: 'Fail'}
         for rating in query.all():
             rating_dict = {**dict.fromkeys(keys, None)}
-            rating_dict['Image'] = rating.name
-            rating_dict['Rating'] = rating_codes[rating.rating]
+            # rating_dict['Image'] = rating.name
+            if 'Image' in rating_dict:
+                rating_dict['Image'] = rating.name
+            if 'Cohort' in rating_dict:
+                rating_dict['Cohort'] = rating.cohort
             if 'Subject' in rating_dict:
                 rating_dict['Subject'] = rating.subject
             if 'Session' in rating_dict:
                 rating_dict['Session'] = rating.session
-            if 'Cohort' in rating_dict:
-                rating_dict['Cohort'] = rating.cohort
+            rating_dict['Rating'] = rating_codes[rating.rating]
             if 'Rater' in rating_dict:
                 rating_dict['Rater'] = rating.username
             if 'Comment' in rating_dict:

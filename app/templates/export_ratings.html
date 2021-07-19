@@ -114,15 +114,17 @@
         </div>
       </div>
       <div class="row mb-3 mx-0">
-        <label class="col-sm-12 col-md-3 p-md-2 col-form-label" for="ratingsColumns">
-          Fields to include
-        </label>
+        <label
+          class="col-sm-12 col-md-3 p-md-2 col-form-label"
+          for="ratingsColumns"
+          >Fields to include</label>
         <div class="col-sm-12 col-md-9 p-md-2 ps-md-5" id="ratingsColumns">
           <div class="form-check form-switch">
             <input
               class="form-check-input"
               type="checkbox"
               id="nameSwitch"
+              name="col_image"
               checked
               {% if nsub or nsess %}
               disabled

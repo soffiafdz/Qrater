@@ -35,6 +35,7 @@ class ExportRatingsForm(FlaskForm):
                                                    (1, 'User')],
                               validators=[DataRequired()])
     # choices=[(0, current_user.username), (1, "All")])
+    col_image = BooleanField("Image name")
     col_rater = BooleanField("Rater")
     col_sub = BooleanField("Subject")
     col_sess = BooleanField("Session")
