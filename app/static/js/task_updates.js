@@ -44,7 +44,7 @@ function deleteAlert(name) {
 }
 
 // Parse notifications
-function readNotifications(since) {
+function readNotifications(since, timer) {
   $.ajax('/notifications?since=' + since).done(
     function(notifications) {
       for (let i = 0; i < notifications.length; i++) {
@@ -62,12 +62,13 @@ function readNotifications(since) {
         }
       }
         //If there are not new notifications increment wait time; else reset it
+        let newTimer
         if (notifications.length > 0) {
-          waitTime = 1000
+          newTimer = 1000
         } else {
-          waitTime += 1000
+          newTimer = timer + 1000
         }
-        setTimeout(readNotifications, waitTime, since)
+        setTimeout(readNotifications, newTimer, since, newTimer)
     }
   );
 }
@@ -75,6 +76,5 @@ function readNotifications(since) {
 // Runc at the start
 $(function() {
   // Wait one second before first run, so notifications load in server
-  let waitTime = 1000
-  setTimeout(readNotifications, waitTime, 0);
+  setTimeout(readNotifications, 1000, 0, 1000);
 });
