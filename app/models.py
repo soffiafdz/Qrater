@@ -74,7 +74,7 @@ class Rater(UserMixin, db.Model):
 
     def has_access(self, dataset):
         """Query access permission to a dataset."""
-        return dataset in self.access.all()
+        return not dataset.private or dataset in self.access
 
     def add_notification(self, name, data):
         """Add a notification for this rater to the database."""
@@ -128,7 +128,7 @@ class Dataset(db.Model):
 
     def has_access(self, rater):
         """Query viewing access."""
-        return rater in self.viewers.all()
+        return rater in self.viewers or not self.private
 
     def grant_access(self, rater):
         """Grant viewing access to a non-creator rater."""

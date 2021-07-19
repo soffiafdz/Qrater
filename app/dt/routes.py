@@ -4,20 +4,28 @@ Qrater DataTables.
 Module with blueprint specific routes
 """
 
-from flask import jsonify, request, render_template
-from flask_login import current_user
+from flask import jsonify, request, render_template, flash, redirect, url_for
+from flask_login import current_user, login_required
 from datatables import ColumnDT, DataTables
 from app.models import db, Dataset, Image, Rating, Rater
 from app.dt import bp
 
 
 @bp.route('/datatable/<dataset>')
+@login_required
 def datatable(dataset):
     """List a table with the images and their ratings."""
     # Figure out how to send Dataset
     ds_model = Dataset.query.filter_by(name=dataset).first_or_404()
     all_raters = request.args.get('all_raters', 0, type=int)
     only_ratings = request.args.get('only_ratings', 0, type=int)
+
+    # Double check rater's access
+    if not current_user.has_access(dataset):
+        flash(f"You don't have access to {dataset.name}", 'danger')
+        all_raters_string = "all_raters" if all_raters else None
+        return redirect(url_for('main.dashboard',
+                                all_raters_string=all_raters_string))
 
     col_names = ['Type', 'Sub', 'Sess', 'Cohort', 'Rating']
     columns = {**dict.fromkeys(col_names, None)}

@@ -7,6 +7,7 @@ Module with blueprint specific routes
 import os
 import re
 from time import time
+from sqlalchemy import or_
 from flask import (render_template, flash, redirect, url_for, request,
                    current_app)
 from flask_login import login_required, current_user
@@ -179,12 +180,19 @@ def load_dataset(directory=None):
 def edit_dataset(dataset=None):
     """Page to edit an existing dataset of MRI."""
     data_dir = os.path.join(current_app.config['ABS_PATH'], 'static/datasets')
-    ds_model = Dataset.query.filter_by(name=dataset).first_or_404() \
+    ds_model = Dataset.query.\
+        filter_by(name=dataset).\
+        first_or_404() \
         if dataset else None
+
     privacy = ds_model.private if ds_model else None
 
     form = EditDatasetForm()
-    form.dataset.choices = [ds.name for ds in current_user.access]
+    form.dataset.choices = [ds.name for ds in
+                            Dataset.query.
+                            filter(or_(Dataset.viewers.contains(current_user),
+                                       Dataset.private.is_(False))).
+                            order_by('name')]
     form.viewers.choices = [(r.id, r.username, r in ds_model.viewers)
                             for r in Rater.query.order_by('username')
                             if r not in [current_user, ds_model.creator]] \

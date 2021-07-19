@@ -20,8 +20,11 @@
       </div>
     </div>
     <div class="card-body">
-      <h3 class="card-title text-center mb-2">
-        {{ DS.name }}
+      <h3
+        class="card-title text-center mb-2"
+        >{{ DS.name }} {% if DS.private -%}
+        <i class="bi bi-eye-slash"></i>
+        {%- endif -%}
       </h3>
       <div class="d-flex justify-content-around my-3">
         <a

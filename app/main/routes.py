@@ -9,6 +9,7 @@ import csv
 import json
 from collections import defaultdict
 from datetime import datetime
+from sqlalchemy import or_
 from flask import (render_template, flash, abort, redirect, url_for, request,
                    current_app, send_file, jsonify)
 from flask_login import current_user, login_required
@@ -40,11 +41,18 @@ def dashboard(all_raters_string=None):
 
     # Reroute to 'Welcome' landing page if there are no Datasets
     if Dataset.query.first() is None:
-        return render_template('no_datasets.html', title='Dashboard',
+        return render_template('no_datasets.html', title='Welcome',
                                rater=current_user)
 
+    # Show all public datasets / accesible datasets for the current user
+    datasets = Dataset.query.filter_by(private=False) \
+        if current_user.is_anonymous \
+        else Dataset.query.\
+        filter(or_(Dataset.viewers.contains(current_user),
+                   Dataset.private.is_(False)))
+
     n_imgs = defaultdict(list)
-    for dataset in Dataset.query.all():
+    for dataset in datasets:
         imgs = dataset.images
         ntot = imgs.count()
         if all_raters or current_user.is_anonymous:
@@ -76,8 +84,7 @@ def dashboard(all_raters_string=None):
         n_imgs['warning100'].append(round(n2_100))
         n_imgs['fail100'].append(round(n3_100))
     return render_template('dashboard.html', title='Dashboard',
-                           Image=Image, Rating=Rating,
-                           datasets=Dataset.query.all(),
+                           Image=Image, Rating=Rating, datasets=datasets,
                            all_raters=all_raters, n_imgs=n_imgs)
 
 
@@ -85,15 +92,21 @@ def dashboard(all_raters_string=None):
 @login_required
 def rate(name_dataset):
     """Page to view images and rate them."""
-    # TODO Fix all this mess!!!
     # If dataset doesn't exist abort with 404
     dataset = Dataset.query.filter_by(name=name_dataset).first_or_404()
 
-    # Static directory
-    statics_dir = os.path.join(current_app.config['ABS_PATH'], 'static')
-
     # All raters
     all_raters = request.args.get('all_raters', 0, type=int)
+
+    # Double check rater's access
+    if not current_user.has_access(dataset):
+        flash(f"You don't have access to {dataset.name}", 'danger')
+        all_raters_string = "all_raters" if all_raters else None
+        return redirect(url_for('main.dashboard',
+                                all_raters_string=all_raters_string))
+
+    # Static directory
+    statics_dir = os.path.join(current_app.config['ABS_PATH'], 'static')
 
     # Dictionary with all possible filters
     filters = {
@@ -111,6 +124,7 @@ def rate(name_dataset):
     # Paging
     pagination, page = True, request.args.get('page', 1, type=int)
 
+    # TODO apply subqueries to this mess...
     if filters["image"]:
         # If there is an image filtering, just show the image
         # There is nothing else to do (filter, query, etc...)
@@ -150,15 +164,13 @@ def rate(name_dataset):
             imgs = pending.union(unrated).distinct()
 
         # For ANY other rating; just filter by rating...
-        # TODO: BUG more pages than images
         elif filters["rating"] < 4:
             imgs = imgs.join(Rating).\
                 filter_by(rating=filters["rating"]).\
                 distinct()
 
         else:   # If 'rating' is >=4, there's an ERROR, so abort w/404
-            flash('Invalid filtering; Showing all images...',
-                  'danger')
+            flash('Invalid filtering; Showing all images...', 'danger')
             return redirect(url_for('main.rate', all_raters=all_raters,
                                     name_dataset=name_dataset))
     else:
@@ -233,7 +245,11 @@ def rate(name_dataset):
 def export_ratings(dataset=None):
     """Page to configure and download a report of ratings."""
     form = ExportRatingsForm()
-    form.dataset.choices = [ds.name for ds in Dataset.query.order_by('name')]
+    form.dataset.choices = [ds.name for ds in
+                            Dataset.query.
+                            filter(or_(Dataset.viewers.contains(current_user),
+                                       Dataset.private.is_(False))).
+                            order_by('name')]
 
     not_subs, not_sess, not_cohorts, not_comms = False, False, False, False
     if dataset is not None:
