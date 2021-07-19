@@ -48,7 +48,7 @@ def dashboard(all_raters_string=None):
     datasets = public_ds if current_user.is_anonymous \
         else Dataset.query.\
         filter(Dataset.viewers.contains(current_user)).\
-        union(private_ds)
+        union(public_ds)
 
     n_imgs = defaultdict(list)
     for dataset in datasets:

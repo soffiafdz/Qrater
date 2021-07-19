@@ -5,3 +5,6 @@ services:
     # Useful to avoid redundant existing datasets in a cluster
     volumes:
     # - path/to/dir:/home/qrater/app/static/datasets/<DatasetName>
+      - /ipl/uk-biobank/qc:/home/qrater/app/static/datasets/preloaded/ukbb
+      - /ipl/scratch15/vfonov/ADNI/redskull:/home/qrater/app/static/datasets/preloaded/redskull
+      - /ipl/scratch15/vfonov/ADNI/bison:/home/qrater/app/static/datasets/preloaded/bison
