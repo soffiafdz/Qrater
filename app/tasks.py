@@ -183,7 +183,7 @@ def edit_info(dataset_name, rater_id, sub_regex=None, sess_regex=None,
                                     'color': 'warning',
                                     'message':
                                     'No new information was added to the '
-                                    'images of {dataset_name}...'})
+                                    f'images of {dataset_name}...'})
 
     finally:
         db.session.commit()

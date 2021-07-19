@@ -107,7 +107,8 @@ def load_dataset(directory=None):
             # Count the files in the directory
             all_files = []
             for root, _, files in os.walk(os.path.join(data_dir, directory)):
-                all_files.extend([f for f in files if not f.startswith('.')])
+                all_files.extend([os.path.join(root, f)
+                                  for f in files if not f.startswith('.')])
             info['new_imgs'] = len(all_files) - info['saved_imgs']
 
     form = LoadDatasetForm()
