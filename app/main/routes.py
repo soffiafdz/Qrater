@@ -45,9 +45,10 @@ def dashboard(all_raters_string=None):
 
     # Show all public datasets / accesible datasets for the current user
     public_ds = Dataset.query.filter_by(private=False)
-    private_ds = Dataset.query.filter(Dataset.viewers.contains(current_user))
     datasets = public_ds if current_user.is_anonymous \
-        else public_ds.union(private_ds)
+        else Dataset.query.\
+        filter(Dataset.viewers.contains(current_user)).\
+        union(private_ds)
 
     n_imgs = defaultdict(list)
     for dataset in datasets:
