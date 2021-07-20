@@ -34,8 +34,9 @@ try:
 except FileNotFoundError:
     mail_password = None
 else:
-    mail_password = secret.read().splitlines()[0] \
-        if secret.read() != "" else None
+    mail_password = secret.read()
+    mail_password = mail_password.splitlines()[0] \
+        if mail_password != "" else None
 finally:
     secret.close()
 
