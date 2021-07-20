@@ -1,6 +1,7 @@
 # Qrater
 
-Qrater (_Quality Rater_) is a containerized [Flask](https://flask.palletsprojects.com/en/2.0.x/) web-application that allows the rating of quality control (QC) images in the browser. It is built in a way that allows to QC a large quantity of images in a quick an easy way. 
+Qrater (_Quality Rater_) is a containerized [Flask](https://flask.palletsprojects.com/en/2.0.x/) web-application that allows the rating of quality control (QC) images in the browser.
+It is built in a way that allows to QC a large quantity of images in a quick an easy way. 
 Qrater has a built-in WSGI HTTP server that allow the simultaneous rating by multiple users; while its integrated [MySQL database]() and [Redis backserver](https://redis.io/) make it possible to load and store datasets of tens of thousands of images and breeze through them in the process of QC.
 
 ## Installation
@@ -15,37 +16,36 @@ Most Windows and Mac user have it already, as it is installed together with Dock
 For Linux users, its [separate installation](https://docs.docker.com/compose/install/) is required.
 
 #### E-mail
-For some Qrater functionalities it is necessary to set up an e-mail account that will be used by the application to send information/forms to its users (e.g. password restoration) and its administrator (logs and traceback when an error occurs). 
+For some Qrater functionalities it is necessary to set up an e-mail account that will be used by the application to send information/forms to its users (e.g. password restoration) and its administrator (logs and traceback when an error occurs).
 
-An e-mail from any service (e.g. gmail, outlook, yahoo, protonmail, etc.) can be used setting the appropriate information in the Qrater's environmental variables ([see below](#add-environment-variables)). 
+You can use your own personal e-mail account or, if you feel uncomfortable inputting your own password, create a new one just for this purpose. 
 
+An e-mail from any service can be used for this by setting the appropriate information (i.e. Server address, Port, TLP, etc.) in the Qrater's environmental variables in `qrater.env`. The settings for a gmail account are pre-set up by default; if your account is from gmail you only need to input that account's username; [see below](#add-environment-variables)).
 
 ### Local installation
 
 The most basic use of Qrater is to install it on a personal computer and do the rating (by a single rater or by several at different times) locally.
 
 #### Clone the Repo
-Clone this repository to the PC and change to the installed directory: 
+Clone this repository and enter the installed directory: 
 ```
 git clone https://github.com/soffiafdz/Qrater.git; cd Qrater
 ```
 
 #### Create password files
 
-Within, two files need to be created: the database and mail passwords. For security reasons, these files are not included and should be unique for each installation.
-
-For the databaset password, create a text file named `db-password.txt` with your password inside:
+Within the cloned repo, two files need to be created: the database and mail password text files.
+For security reasons, these files are not included and should be unique for each installation. 
+Both of these are normal `.txt` files with specific names (`db-password.txt` and `mail-password.txt`).
+The first one will contain the password used by the MySQL database and the second the password of the e-mail Qrater will use to send e-mails ([see above](#e-mail)):
 ```
+# Create the db-password file with the desired password as its only first and only line:
 echo AVerySecretPassword > db-password.txt
-```
 
-The second file is named `mail-password.txt` and it contains the password for the e-mail account from which Qrater sends e-mails to its users.
-```
-echo eMailPassword > mail-password.txt
-```
+# Do the same with Qrater's e-mail password:
+echo eMailAccountPassword > mail-password.txt
 
-While these e-mail functions are optional, this file must exist. If no e-mail account is being set-up, create the file and leave it empty:
-```
+# OR, if you are not setting up an e-mail, create the file but leave it empty:
 touch mail-password.txt
 ```
 
