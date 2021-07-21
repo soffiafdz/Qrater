@@ -25,7 +25,6 @@ if not DATABASE_URL:
     else:
         db_password = secret.read().splitlines()[0]
         DATABASE_URL = f"mysql+pymysql://root:{db_password}@db/qrater"
-    finally:
         secret.close()
 
 # Mail
@@ -37,7 +36,6 @@ else:
     mail_password = secret.read()
     mail_password = mail_password.splitlines()[0] \
         if mail_password != "" else None
-finally:
     secret.close()
 
 
