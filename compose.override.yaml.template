@@ -4,4 +4,5 @@ services:
     # Add extra volumes to override the symlink cross-device error in Docker
     # Useful to avoid redundant existing datasets in a cluster
     volumes:
-    # - path/to/dir:/home/qrater/app/static/datasets/<DatasetName>
+    # - path/to/dir:/home/qrater/app/static/datasets/preloaded/<DatasetName>
+    - /vault/prevad_qc:/home/qrater/app/static/datasets/preloaded/MyPreloadedDataset
