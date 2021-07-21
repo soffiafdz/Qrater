@@ -10,10 +10,9 @@ from werkzeug.utils import secure_filename
 from flask import current_app, flash
 from app import db
 from app.models import Image
-from app.data.exceptions import (NoExtensionError,
-                                 OrphanDatasetError,
+from app.data.exceptions import (NoExtensionError, OrphanDatasetError,
                                  UnsupportedExtensionError,
-                                 DuplicateImageError)
+                                 DuplicateImageError, EmptyLoadError)
 
 
 def upload_data(files, savedir):
