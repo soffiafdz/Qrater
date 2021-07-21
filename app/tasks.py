@@ -190,12 +190,14 @@ def edit_info(dataset_name, rater_id, sub_regex=None, sess_regex=None,
         _set_task_progress(100, name=f'edit_progress_{dataset_name}')
 
 
-def delete_data(dataset_name, data_dir, rater_id, remove_files=False):
+def delete_data(dataset_name, data_dir, rater_id,
+                keep_imgs=False, remove_files=False):
     """Start RQ task to delete a dataset.
 
     Arguments:
         dataset_name    -- dataset to delete
         data_dir        -- directory where data is located
+        keep_imgs       -- delete ratings, but keep images and dataset
         remove_files    -- delete files
     """
     try:
@@ -210,7 +212,8 @@ def delete_data(dataset_name, data_dir, rater_id, remove_files=False):
         for image in dataset.images.all():
             for rating in image.ratings.all():
                 db.session.delete(rating)       # Delete ratings
-            db.session.delete(image)            # Remove image from database
+            if not keep_imgs:
+                db.session.delete(image)        # Remove image from database
             i += 1
             _set_task_progress(100 * i // end,
                                name=f'delete_progress_{dataset_name}')
@@ -220,7 +223,8 @@ def delete_data(dataset_name, data_dir, rater_id, remove_files=False):
             if os.path.exists(ds_dir):
                 rmtree(ds_dir)
 
-        db.session.delete(dataset)
+        if not keep_imgs:
+            db.session.delete(dataset)
 
     except:
         app.logger.error('Unhandled exception', exc_info=sys.exc_info())

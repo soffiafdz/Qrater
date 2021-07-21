@@ -5,7 +5,7 @@
   aria-labelledby="deleteConfirmModalLabel"
   aria-hidden="true"
   >
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
       <div class="modal-header bg-danger">
         <h3 class="modal-title text-white" id="deleteConfirmModalLabel">
@@ -20,9 +20,9 @@
       </div>
       <div class="modal-body">
         <p>You are about to delete <span class="fw-bolder">{{ dataset }}</span>
-          dataset with all of its ratings, from all of the Raters.</p>
+          dataset. This will affect all Raters.</p>
         <p>The ratings won't be able to be recovered, so only do this if you
-          are <span class="lead text-uppercase">absolutely sure</span>.</p>
+        are<br><span class="lead text-uppercase">absolutely sure</span>.</p>
         <p>A lot of people could get mad with you...</p>
       </div>
       <div class="modal-footer">
@@ -31,16 +31,37 @@
           class="btn btn-secondary"
           data-bs-dismiss="modal"
           >Cancel</button>
-        <a
-          class="btn btn-danger"
-          role="button"
-          href="{{ url_for('data.delete_dataset', dataset=dataset) }}"
-          >Delete Ratings</a>
-        <a
-          class="btn btn-danger"
-          role="button"
-          href="{{ url_for('data.delete_dataset', dataset=dataset, nuke=1) }}"
-          >Delete ALL (ratings &amp; data)</a>
+        <div class="btn-group">
+          <a
+            class="btn btn-danger"
+            role="button"
+            href="{{ url_for('data.delete_dataset', dataset=dataset) }}"
+            >Delete Dataset</a>
+          <button
+            type="button"
+            class="btn btn-danger dropdown-toggle dropdown-toggle-split"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+            ><span class="visually-hidden">Toggle Dropdown</span>
+          </button>
+          <ul class="dropdown-menu">
+            <li>
+              <a class="dropdown-item"
+                 href="{{ url_for('data.delete_dataset', dataset=dataset, keep_imgs=1) }}"
+                 >Delete ratings (keep images)</a>
+            </li>
+            <li>
+              <a class="dropdown-item"
+                 href="{{ url_for('data.delete_dataset', dataset=dataset) }}"
+                 >Delete dataset (ratings &amp; images)</a>
+            </li>
+            <li>
+              <a class="dropdown-item"
+                 href="{{ url_for('data.delete_dataset', dataset=dataset, nuke=1) }}"
+                 >Delete ALL (ratings &amp; images &amp; FILES)</a>
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
   </div>

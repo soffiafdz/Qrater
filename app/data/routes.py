@@ -122,7 +122,6 @@ def load_dataset(directory=None):
             # If dataset is not a Dataset Model (does not exist), create it
             info['model'] = Dataset(name=form.dir_name.data,
                                     creator=current_user)
-            info['model'].grant_access(current_user)
             db.session.add(info['model'])
             new_dataset = True
             flash(f"{info['model'].name} was created as an OPEN dataset",
@@ -256,6 +255,9 @@ def edit_dataset(dataset=None):
 
         # Change privacy of dataset
         if ds_model.change_privacy(form.privacy.data):
+            # Make sure current_user AND creator do not get kicked out
+            ds_model.grant_access(ds_model.creator)
+            ds_model.grant_access(current_user)
             db.session.commit()
             changes = True
 
@@ -327,16 +329,15 @@ def delete_dataset(dataset):
     # If dataset does not exit, throw 404
     ds_model = Dataset.query.filter_by(name=dataset).first_or_404()
     data_dir = os.path.join(current_app.config['ABS_PATH'], 'static/datasets')
+    keep_imgs = request.args.get('keep_imgs', 0, type=int)
     remove_files = request.args.get('nuke', 0, type=int)
 
     current_user.launch_task('delete_data',
                              'Deleting ratings and images from '
                              f'{dataset} dataset...',
-                             icon='delete',
-                             alert_color='danger',
-                             dataset_name=ds_model.name,
-                             data_dir=data_dir,
-                             remove_files=remove_files)
+                             icon='delete', alert_color='danger',
+                             dataset_name=ds_model.name, data_dir=data_dir,
+                             keep_imgs=keep_imgs, remove_files=remove_files)
 
     db.session.commit()
 
