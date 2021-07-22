@@ -7,6 +7,7 @@ Qrater has a built-in WSGI HTTP server that allow the simultaneous rating by mul
 while its integrated [MySQL database](https://dev.mysql.com/doc/) and [Redis backserver](https://redis.io/)
 make it possible to load and store datasets of tens of thousands of images and breeze through them in the process of QC.
 
+![RatingExample](../assets/rate_zoom_cropped.png)
 ## Installation
 
 Qrater can be installed on a personal computer for the local use of a single rater,
@@ -149,3 +150,5 @@ or remotely accessing the graphical desktop directly with
 [X2GO](https://wiki.x2go.org/doku.php/doc:newtox2go).
 
 After the tunnel has been established, you can now access Qrater with `localhost:8080` in the browser.
+
+![LandingPage](../assets/welcome_cropped.png?raw=true)
