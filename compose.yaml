@@ -11,6 +11,9 @@ services:
       - ./uploaded_datasets:/home/qrater/app/static/datasets/uploaded
       - ./datasets:/home/qrater/app/static/datasets/preloaded
       # Extra volumes in compose.override.yaml
+    environment:
+      - FLASK_APP=qrater.py
+      - REDIS_URL=redis://redis:6379/0
     env_file:
       - qrater.env
     ports:
@@ -69,6 +72,9 @@ services:
       - mail-password
     volumes_from:
       - flask
+    environment:
+      - FLASK_APP=qrater.py
+      - REDIS_URL=redis://redis:6379/0
     env_file:
       - qrater.env
     networks:
@@ -94,6 +100,9 @@ services:
       - mail-password
     volumes_from:
       - flask
+    environment:
+      - FLASK_APP=qrater.py
+      - REDIS_URL=redis://redis:6379/0
     env_file:
       - qrater.env
     networks:
