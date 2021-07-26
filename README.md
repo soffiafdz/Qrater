@@ -101,8 +101,6 @@ After this, Qrater will be running on port `8080` and ready to be accessed.
 To access the application from the same computer that is running,
 open your browser and put `localhost:8080` in the address bar.
 
-[screencap]
-
 ### Remote access
 
 Qrater is most useful when it is running on a centralized server or computer cluster that can be accessed by different
@@ -142,7 +140,7 @@ ssh -L 8080:127.0.0.1:8080 user@host
 
 ###### SSH client or remote desktop
 
-If you can or don't want to use the integrated OpenSSH client,
+If you cannot or do not want to use the integrated OpenSSH client,
 you can also also create the tunnel with
 [PuTTY](https://www.putty.org/) or
 [MobaXterm](https://mobaxterm.mobatek.net/),
