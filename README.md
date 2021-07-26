@@ -7,7 +7,7 @@ Qrater has a built-in WSGI HTTP server that allow the simultaneous rating by mul
 while its integrated [MySQL database](https://dev.mysql.com/doc/) and [Redis backserver](https://redis.io/)
 make it possible to load and store datasets of tens of thousands of images and breeze through them in the process of QC.
 
-![RatingExample](../assets/rate_zoom_cropped.png)
+![RatingExample](../assets/ImprovedDemo.png?raw=true)
 ## Installation
 
 Qrater can be installed on a personal computer for the local use of a single rater,
