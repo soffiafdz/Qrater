@@ -151,4 +151,4 @@ or remotely accessing the graphical desktop directly with
 
 After the tunnel has been established, you can now access Qrater with `localhost:8080` in the browser.
 
-![LandingPage](../assets/welcome_cropped.png?raw=true)
+![LandingPage](../assets/ImprovedDemo.png?raw=true)
