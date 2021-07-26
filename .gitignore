@@ -138,10 +138,11 @@ app/static/datasets/uploaded/*
 datasets/
 uploaded_datasets/
 
-# Text lists
-*.txt
-
+# Logs
 logs/
+
+# secrets
+*-password.txt
 
 # compose.yaml changes
 compose.override.yaml
