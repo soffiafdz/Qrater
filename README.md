@@ -2,7 +2,7 @@
 
 Qrater (_Quality Rater_) is a containerized [Flask](https://flask.palletsprojects.com/en/2.0.x/)
 web-application that allows the rating of quality control (QC) images in the browser.
-It is built in a way that allows to QC a large quantity of images in a quick an easy way.
+It is built in a way that allows to QC a large quantity of images in a quick and easy way.
 Qrater has a built-in WSGI HTTP server that allow the simultaneous rating by multiple users;
 while its integrated [MySQL database](https://dev.mysql.com/doc/) and [Redis backserver](https://redis.io/)
 make it possible to load and store datasets of tens of thousands of images and breeze through them in the process of QC.
