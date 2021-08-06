@@ -168,7 +168,8 @@
             href="{{ url_for('main.rate', name_dataset=DS.name,
               image=filters["image"], rating_filter=filters["rating"],
               type_filter=filters["type"], sub_filter=filters["subject"],
-              sess_filter=filters["session"], all_raters=all_raters,
+              sess_filter=filters["session"], cohort_filter=filters["cohort"],
+              all_raters=all_raters,
               page=imgs.prev_num) if imgs.has_prev else '#' }}"
             ><i class="bi-arrow-left"></i></a>
         </li>
@@ -181,8 +182,8 @@
             href="{{ url_for('main.rate', name_dataset=DS.name,
               image=filters["image"], rating_filter=filters["rating"],
               type_filter=filters["type"], sub_filter=filters["subject"],
-              sess_filter=filters["session"], all_raters=all_raters,
-              page=page) }}"
+              sess_filter=filters["session"], cohort_filter=filters["cohort"],
+              all_raters=all_raters, page=page) }}"
             >{{ page }}</a>
         </li>
         {% else %}
@@ -210,7 +211,8 @@
               href="{{ url_for('main.rate', name_dataset=DS.name,
                 image=filters["image"], rating_filter=filters["rating"],
                 type_filter=filters["type"], sub_filter=filters["subject"],
-                sess_filter=filters["session"], all_raters=all_raters,
+                sess_filter=filters["session"], cohort_filter=filters["cohort"],
+                all_raters=all_raters,
                 page=imgs.next_num) if imgs.has_next else '#' }}"
               ><i class="bi-arrow-right"></i></a>
           </li>
