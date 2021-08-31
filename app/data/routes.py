@@ -90,6 +90,7 @@ def load_dataset(directory=None):
     # Choices of directories to load in form
     dir_choices = [d for d in os.listdir(data_dir)
                    if os.path.isdir(os.path.join(data_dir, d))]
+    dir_choices.sort()
 
     info = {'directory': directory, 'new_imgs': 0}
     if directory is not None:
