@@ -13,7 +13,7 @@ from flask import (render_template, flash, abort, redirect, url_for, request,
                    current_app, send_file, jsonify)
 from flask_login import current_user, login_required
 from app import db
-from app.main.forms import RatingForm, ExportRatingsForm
+from app.main.forms import RatingForm, ExportRatingsForm, ImportRatingsForm
 from app.models import Dataset, Image, Rating, Rater, Notification
 from app.main import bp
 
@@ -38,17 +38,17 @@ def dashboard(all_raters_string=None):
     # Convert URL to all_raters Boolean
     all_raters = 1 if all_raters_string else 0
 
-    # Reroute to 'Welcome' landing page if there are no Datasets
-    if Dataset.query.first() is None:
-        return render_template('no_datasets.html', title='Welcome',
-                               rater=current_user)
-
     # Show all public datasets / accesible datasets for the current user
     public_ds = Dataset.query.filter_by(private=False)
     datasets = public_ds if current_user.is_anonymous \
         else Dataset.query.\
         filter(Dataset.viewers.contains(current_user)).\
         union(public_ds)
+
+    # Reroute to 'Welcome' landing page if there are no ACCESSIBLE Datasets
+    if datasets.first() is None:
+        return render_template('no_datasets.html', title='Welcome',
+                               rater=current_user)
 
     n_imgs = defaultdict(list)
     for dataset in datasets:
@@ -124,6 +124,7 @@ def rate(name_dataset):
     pagination, page = True, request.args.get('page', 1, type=int)
 
     # TODO apply subqueries to this mess...
+    # TODO add an example to remember what I meant with 'subqueries'
     if filters["image"]:
         # If there is an image filtering, just show the image
         # There is nothing else to do (filter, query, etc...)
@@ -197,7 +198,7 @@ def rate(name_dataset):
             return redirect(url_for('main.rate', all_raters=all_raters,
                                     name_dataset=name_dataset))
 
-    imgs = imgs.order_by(Image.id.asc()).paginate(page, 1, False) \
+    imgs = imgs.order_by(Image.name.asc()).paginate(page, 1, False) \
         if pagination else None
 
     # If after filtering the query ends empty, return all of them (fuck it...)
@@ -343,6 +344,35 @@ def export_ratings(dataset=None):
     return render_template('export_ratings.html', form=form, dataset=dataset,
                            nsub=not_subs, nsess=not_sess, ncohort=not_cohorts,
                            ncomms=not_comms, title='Downlad Ratings')
+
+
+@bp.route('/import-ratings', methods=['GET', 'POST'])
+@bp.route('/import-ratings/<dataset>', methods=['GET', 'POST'])
+@login_required
+def import_ratings(dataset=None):
+    """Page to upload a report of ratings."""
+    form = ImportRatingsForm()
+    public_ds = Dataset.query.filter_by(private=False)
+    private_ds = Dataset.query.filter(Dataset.viewers.contains(current_user))
+    form.dataset.choices = [ds.name for ds in public_ds.union(private_ds)]
+
+    if form.validate_on_submit():
+        keys = []
+        if form.col_image.data:
+            keys.append('Image')
+        if form.col_sub.data:
+            keys.append('Subject')
+        if form.col_sess.data:
+            keys.append('Session')
+        if form.col_cohort.data:
+            keys.append('Cohort')
+        if form.col_rater.data:
+            keys.append('Rater')
+        keys.append('Rating')
+        if form.col_comment.data:
+            keys.append('Comment')
+        if form.col_timestamp.data:
+            keys.append('Date')
 
 
 @bp.route('/notifications', methods=['GET', 'DELETE'])
