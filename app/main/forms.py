@@ -42,3 +42,17 @@ class ExportRatingsForm(FlaskForm):
     col_cohort = BooleanField("Cohort")
     col_comment = BooleanField("Comments")
     col_timestamp = BooleanField("Timestamp")
+
+class ImportRatingsForm(FlaskForm):
+    """Form for importing ratings."""
+
+    file_type = RadioField("Format", choices=['CSV', 'JSON'],
+                           validators=[DataRequired()])
+    dataset = SelectField("Dataset", validators=[DataRequired()])
+    col_image = BooleanField("Image name")
+    col_rater = BooleanField("Rater")
+    col_sub = BooleanField("Subject")
+    col_sess = BooleanField("Session")
+    col_cohort = BooleanField("Cohort")
+    col_comment = BooleanField("Comments")
+    col_timestamp = BooleanField("Timestamp")
