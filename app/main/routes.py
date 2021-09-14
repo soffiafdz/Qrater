@@ -249,6 +249,9 @@ def export_ratings(dataset=None):
     private_ds = Dataset.query.filter(Dataset.viewers.contains(current_user))
     form.dataset.choices = [ds.name for ds in public_ds.union(private_ds)]
 
+    # All raters
+    all_raters = request.args.get('all_raters', 0, type=int)
+
     not_subs, not_sess, not_cohorts, not_comms = False, False, False, False
     if dataset is not None:
         ds_model = Dataset.query.filter_by(name=dataset).first_or_404()
@@ -343,7 +346,8 @@ def export_ratings(dataset=None):
         return send_file(file, as_attachment=True)
     return render_template('export_ratings.html', form=form, dataset=dataset,
                            nsub=not_subs, nsess=not_sess, ncohort=not_cohorts,
-                           ncomms=not_comms, title='Downlad Ratings')
+                           ncomms=not_comms, all_raters=all_raters,
+                           title='Downlad Ratings')
 
 
 @bp.route('/import-ratings', methods=['GET', 'POST'])
@@ -355,6 +359,9 @@ def import_ratings(dataset=None):
     public_ds = Dataset.query.filter_by(private=False)
     private_ds = Dataset.query.filter(Dataset.viewers.contains(current_user))
     form.dataset.choices = [ds.name for ds in public_ds.union(private_ds)]
+
+    # All raters
+    all_raters = request.args.get('all_raters', 0, type=int)
 
     if form.validate_on_submit():
         keys = []
@@ -373,6 +380,8 @@ def import_ratings(dataset=None):
             keys.append('Comment')
         if form.col_timestamp.data:
             keys.append('Date')
+
+    # TODO: COMLETE
 
 
 @bp.route('/notifications', methods=['GET', 'DELETE'])

@@ -71,19 +71,19 @@
             <li>
               <a
                 class="dropdown-item"
-                href="{{ url_for('data.upload_dataset') }}"
+                href="{{ url_for('data.upload_dataset', all_raters=all_raters) }}"
                 >Upload Dataset</a>
             </li>
             <li>
               <a
                 class="dropdown-item"
-                href="{{ url_for('data.load_dataset') }}"
+                href="{{ url_for('data.load_dataset', all_raters=all_raters) }}"
                 >Load Dataset</a>
             </li>
             <li>
               <a
                 class="dropdown-item"
-                href="{{ url_for('data.edit_dataset') }}"
+                href="{{ url_for('data.edit_dataset', all_raters=all_raters) }}"
                 >Edit Dataset</a>
             </li>
           </ul>
@@ -106,7 +106,7 @@
             <li>
               <a
                 class="dropdown-item"
-                href="{{ url_for('main.export_ratings') }}"
+                href="{{ url_for('main.export_ratings', all_raters=all_raters) }}"
                 >Export</a>
             </li>
             <li>
