@@ -6,6 +6,7 @@ Module with blueprint specific routes
 
 from flask import jsonify, request, render_template, flash, redirect, url_for
 from flask_login import current_user, login_required
+from sqlalchemy import or_
 from datatables import ColumnDT, DataTables
 from app.models import db, Dataset, Image, Rating, Rater
 from app.dt import bp
@@ -65,8 +66,9 @@ def data(dset_id, type, subject, session, cohort, ratings, only_ratings=0):
 
     # If there are ratings insert rating info
     if ratings:
-        columns.insert(2, ColumnDT(Rater.username))
-        columns.insert(3, ColumnDT(Rating.timestamp))
+        columns.insert(2, ColumnDT(Rating.timestamp))
+        if all_raters:
+            columns.insert(2, ColumnDT(Rater.username))
 
     # Check if there are cohort labels
     if cohort:
@@ -85,27 +87,35 @@ def data(dset_id, type, subject, session, cohort, ratings, only_ratings=0):
         columns.insert(1, ColumnDT(Image.imgtype))
 
     # Ratings query for single user (only ratings)
-    if not only_ratings:
+    if all_raters or current_user.is_anonymous:
         query = db.session.query().\
+            select_from(Image).\
+            filter(Image.dataset_id == dset_id,
+                   Rating.rating > 0).\
+            join(Rating).\
+            join(Rater) if only_ratings \
+            else db.session.query().\
             select_from(Image).\
             filter(Image.dataset_id == dset_id).\
             join(Rating, isouter=True).\
             join(Rater, isouter=True)
-    elif all_raters or current_user.is_anonymous:
-        query = db.session.query().\
-            select_from(Image).\
-            filter(Image.dataset_id == dset_id,
-                   Rating.rating > 0).\
-            join(Rating).\
-            join(Rater)
     else:
-        query = db.session.query().\
-            select_from(Image).\
-            filter(Image.dataset_id == dset_id,
-                   Rating.rater == current_user,
-                   Rating.rating > 0).\
-            join(Rating).\
-            join(Rater)
+        if only_ratings:
+            query = db.session.query().\
+                select_from(Image).\
+                filter(Image.dataset_id == dset_id,
+                       Rating.rater == current_user,
+                       Rating.rating > 0).\
+                join(Rating).\
+                join(Rater)
+        else:
+            query = db.session.query().\
+                select_from(Image).\
+                filter(Image.dataset_id == dset_id,
+                       or_(Rating.rater == current_user,
+                           Rating.rater == None)).\
+                join(Rating, isouter=True).\
+                join(Rater, isouter=True)
 
     params = request.args.to_dict()
 

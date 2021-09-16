@@ -46,8 +46,10 @@
           {% if sess %}<th class="session">Session</th>{% endif %}
           {% if cohorts %}<th class="cohort">Cohort</th>{% endif %}
           <th class="rating">Rating</th>
-          {% if ratings %}<th class="rater">Rater</th>{% endif %}
-          {% if ratings %}<th class="datetime">Rated on</th>{% endif %}
+          {% if ratings -%}
+          {% if all_raters %}<th class="rater">Rater</th>{% endif %}
+          <th class="datetime">Rated on</th>
+          {%- endif %}
         </tr>
       </thead>
       <tbody></tbody>
