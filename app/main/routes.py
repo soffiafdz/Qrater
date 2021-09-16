@@ -219,8 +219,12 @@ def rate(name_dataset):
     path = img.path.replace(f'{statics_dir}/', "")
 
     # Filtering boolean for HTML purposes
-    filtering = bool(filters["image"] or filters["rating"] or filters["type"]
-                     or filters["subject"] or filters["session"])
+    filtering = bool(filters["image"]
+                     or filters["rating"]
+                     or filters["rating"] == 0
+                     or filters["type"]
+                     or filters["subject"]
+                     or filters["session"])
 
     # Rating form
     form = RatingForm()
