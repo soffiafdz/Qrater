@@ -137,9 +137,9 @@ class Dataset(db.Model):
             return True
         return False
 
-    def deny_access(self, rater):
+    def deny_access(self, rater, force=False):
         """Remove viewing access to a non-creator rater."""
-        if rater != self.creator and self.has_access(rater):
+        if (rater != self.creator or force) and self.has_access(rater):
             self.viewers.remove(rater)
             return True
         return False
