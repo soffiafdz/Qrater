@@ -19,12 +19,6 @@
   <li class="breadcrumb-item">
     <a
       class="text-decoration-none text-light"
-      href="{{ url_for('main.dashboard') }}"
-      >Dashboard</a>
-  </li>
-  <li class="breadcrumb-item">
-    <a
-      class="text-decoration-none text-light"
       href="#"
       >Edit Dataset</a>
   </li>
@@ -50,6 +44,7 @@
             id="datasetSelect"
             name="dataset"
             aria-label="Select a dataset"
+            {% if ro %}disabled{% endif %}
             >
             <option value="">Select a Dataset</option>
             {%- for name in form.dataset.choices -%}

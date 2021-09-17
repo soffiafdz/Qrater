@@ -24,6 +24,9 @@ def upload_dataset():
     data_dir = os.path.join(current_app.config['ABS_PATH'],
                             'static/datasets/uploaded')
 
+    # All raters
+    all_raters = request.args.get('all_raters', 0, type=int)
+
     form = UploadDatasetForm()
     if form.validate_on_submit():
         files = request.files.getlist(form.dataset.name)
@@ -76,7 +79,7 @@ def upload_dataset():
     for _, error in form.errors.items():
         flash(error[0], 'danger')
     return render_template('data/upload_dataset.html', form=form,
-                           title='Upload Dataset')
+                           all_raters=all_raters, title='Upload Dataset')
 
 
 @bp.route('/load-dataset', methods=['GET', 'POST'])
@@ -86,6 +89,9 @@ def load_dataset(directory=None):
     """Page to load new datasets from within HOST."""
     data_dir = os.path.join(current_app.config['ABS_PATH'],
                             'static/datasets/preloaded')
+
+    # All raters
+    all_raters = request.args.get('all_raters', 0, type=int)
 
     # Choices of directories to load in form
     dir_choices = [d for d in os.listdir(data_dir)
@@ -170,7 +176,8 @@ def load_dataset(directory=None):
         flash(error[0], 'danger')
 
     return render_template('data/load_dataset.html', form=form,
-                           title="Load Dataset", dictionary=info)
+                           title="Load Dataset", dictionary=info,
+                           all_raters=all_raters)
 
 
 @bp.route('/edit-dataset', methods=['GET', 'POST'])
@@ -179,16 +186,25 @@ def load_dataset(directory=None):
 def edit_dataset(dataset=None):
     """Page to edit an existing dataset of MRI."""
     data_dir = os.path.join(current_app.config['ABS_PATH'], 'static/datasets')
+
+    # All raters
+    all_raters = request.args.get('all_raters', 0, type=int)
+
+    # Read-only; Disable dataset loader when accessing through link
+    ro = request.args.get('ro', 0, type=int)
+
     ds_model = Dataset.query.\
         filter_by(name=dataset).\
         first_or_404() \
         if dataset else None
 
-    privacy = ds_model.private if ds_model else None
+    form = EditDatasetForm()
+    if ro:
+        form.dataset.data = dataset
 
+    privacy = ds_model.private if ds_model else None
     public_ds = Dataset.query.filter_by(private=False)
     private_ds = Dataset.query.filter(Dataset.viewers.contains(current_user))
-    form = EditDatasetForm()
     form.dataset.choices = [ds.name for ds in public_ds.union(private_ds)]
     form.viewers.choices = [(r.id, r.username, r in ds_model.viewers)
                             for r in Rater.query.order_by('username')
@@ -316,11 +332,12 @@ def edit_dataset(dataset=None):
         if changes:
             flash(f'{ds_model.name} successfully edited!', 'success')
             db.session.commit()
-            return redirect(url_for('main.dashboard'))
+            return redirect(url_for('main.dashboard', all_raters=all_raters))
 
     return render_template('data/edit_dataset.html', form=form,
-                           dataset=dataset, privacy=privacy,
-                           names=test_names, title='Edit Dataset')
+                           dataset=dataset, privacy=privacy, ro=ro,
+                           names=test_names, all_raters=all_raters,
+                           title='Edit Dataset')
 
 
 @bp.route('/delete-dataset/<dataset>')
@@ -332,6 +349,7 @@ def delete_dataset(dataset):
     data_dir = os.path.join(current_app.config['ABS_PATH'], 'static/datasets')
     keep_imgs = request.args.get('keep_imgs', 0, type=int)
     remove_files = request.args.get('nuke', 0, type=int)
+    all_raters = request.args.get('all_raters', 0, type=int)
 
     current_user.launch_task('delete_data',
                              'Deleting ratings and images from '
@@ -342,4 +360,4 @@ def delete_dataset(dataset):
 
     db.session.commit()
 
-    return redirect(url_for('main.dashboard'))
+    return redirect(url_for('main.dashboard', all_raters=all_raters))
