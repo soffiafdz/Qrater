@@ -146,3 +146,6 @@ logs/
 
 # compose.yaml changes
 compose.override.yaml
+
+# UKBB lists
+ukbb_list*
