@@ -46,70 +46,70 @@
         </div>
       </div>
       <div class="row mb-3 mx-0">
-        <label class="col-sm-12 col-md-3 p-md-2 col-form-label" for="fileType">
+        <label class="col-sm-2 col-form-label" for="fileType">
           Filetype
         </label>
-        <div class="col-sm-12 col-md-9 p-md-2 ps-md-5" id="fileType">
-          <div class="form-check form-check-inline">
-            <input
-              type="radio"
-              class="form-check-input"
-              id="fileTypeCSV"
-              name="file_type"
-              value="CSV"
-              checked
-              >
-            <label
-              class="form-check-label"
-              for="fileTypeCSV"
-              >CSV</label>
-          </div>
-          <div class="form-check form-check-inline">
-            <input
-              type="radio"
-              class="form-check-input"
-              id="fileTypeJSON"
-              name="file_type"
-              value="JSON"
-              >
-            <label
-              class="form-check-label"
-              for="fileTypeJSON"
-              >JSON</label>
+        <div class="col-sm-10" id="fileType">
+          <div class="form-check form-check-inline ps-0">
+            <div class="btn-group" role="group">
+              <input
+                type="radio"
+                class="btn-check"
+                id="fileTypeCSV"
+                name="file_type"
+                value="CSV"
+                checked
+                >
+              <label
+                class="btn btn-outline-primary"
+                for="fileTypeCSV"
+                >CSV</label>
+              <input
+                type="radio"
+                class="btn-check"
+                id="fileTypeJSON"
+                name="file_type"
+                value="JSON"
+                >
+              <label
+                class="btn btn-outline-primary"
+                for="fileTypeJSON"
+                >JSON</label>
+            </div>
           </div>
         </div>
       </div>
       <div class="row mb-3 mx-0">
-        <label class="col-sm-12 col-md-3 p-md-2 col-form-label" for="raterFilter">
+        <label class="col-sm-2 col-form-label" for="raterFilter">
           Rater(s)
         </label>
-        <div class="col-sm-12 col-md-9 p-md-2 ps-md-5" id="raterFilter">
-          <div class="form-check form-check-inline">
-            <input
-              type="radio"
-              class="form-check-input"
-              id="raterFilter1"
-              name="rater_filter"
-              value="1"
-              checked
-              >
-            <label
-              class="form-check-label"
-              for="raterFilter1"
-              >{{ current_user.username }}</label>
-          </div>
-          <div class="form-check form-check-inline">
-            <input
-              type="radio"
-              class="form-check-input"
-              id="raterFilter0"
-              name="rater_filter"
-              value="0"
-              >
-            <label
-              class="form-check-label"
-              for="raterFilter0"
-              >All Raters</label>
+        <div class="col-sm-10" id="fileType">
+          <div class="form-check form-check-inline ps-0">
+            <div class="btn-group" role="group">
+              <input
+                type="radio"
+                class="btn-check"
+                id="raterFilter1"
+                name="rater_filter"
+                value="1"
+                checked
+                >
+              <label
+                class="btn btn-outline-primary"
+                for="raterFilter1"
+                >{{ current_user.username }}</label>
+              <input
+                type="radio"
+                class="btn-check"
+                id="raterFilter0"
+                name="rater_filter"
+                value="0"
+                >
+              <label
+                class="btn btn-outline-dark"
+                for="raterFilter0"
+                >All Raters</label>
+            </div>
           </div>
         </div>
       </div>
