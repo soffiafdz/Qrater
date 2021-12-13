@@ -5,9 +5,10 @@ Python module containing the 'forms' classes for the Main Blueprint.
 """
 
 from flask_wtf import FlaskForm
-from wtforms import (SubmitField, RadioField, SelectField, TextAreaField,
-                     BooleanField)
-from wtforms.validators import DataRequired, ValidationError
+from flask_wtf.file import FileField, FileRequired, FileAllowed
+from wtforms import (SubmitField, RadioField, SelectField, SelectMultipleField,
+                     TextAreaField, StringField)
+from wtforms.validators import DataRequired
 
 
 class EmptyForm(FlaskForm):
@@ -35,13 +36,10 @@ class ExportRatingsForm(FlaskForm):
                                                    (1, 'User')],
                               validators=[DataRequired()])
     # choices=[(0, current_user.username), (1, "All")])
-    col_image = BooleanField("Image name")
-    col_rater = BooleanField("Rater")
-    col_sub = BooleanField("Subject")
-    col_sess = BooleanField("Session")
-    col_cohort = BooleanField("Cohort")
-    col_comment = BooleanField("Comments")
-    col_timestamp = BooleanField("Timestamp")
+    # Choices for this are stored in the route
+    columns = SelectMultipleField("Columns", coerce=int)
+    order = StringField("Order", validators=[DataRequired()])
+
 
 class ImportRatingsForm(FlaskForm):
     """Form for importing ratings."""
@@ -49,10 +47,7 @@ class ImportRatingsForm(FlaskForm):
     file_type = RadioField("Format", choices=['CSV', 'JSON'],
                            validators=[DataRequired()])
     dataset = SelectField("Dataset", validators=[DataRequired()])
-    col_image = BooleanField("Image name")
-    col_rater = BooleanField("Rater")
-    col_sub = BooleanField("Subject")
-    col_sess = BooleanField("Session")
-    col_cohort = BooleanField("Cohort")
-    col_comment = BooleanField("Comments")
-    col_timestamp = BooleanField("Timestamp")
+    file = FileField("Ratings file",
+                     validators=[FileRequired(), FileAllowed(['csv', 'json'])])
+    # Choices for this are stored in the route
+    columns = SelectMultipleField("Columns", coerce=int)

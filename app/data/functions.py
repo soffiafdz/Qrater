@@ -34,6 +34,34 @@ def upload_data(files, savedir):
     return list_files
 
 
+def upload_file(file, savedir,
+                valid_extensions=current_app.config['DSET_ALLOWED_EXTS']):
+    """Upload single file to be sorted later.
+
+    Arguments:
+        file                -- FileStorage object to be uploaded
+        savedir             -- path (existing) where to save file
+        valid_extensions    -- list with valid extensions (optional)
+
+    Returns:
+        String with path to saved file
+    """
+    filename = secure_filename(file)
+    fpath = os.path.join(savedir, filename)
+    file.save(fpath)
+
+    try:
+        basename, extension = filename.split('.', 1)
+        if extension.lower() not in valid_extensions:
+            raise UnsupportedExtensionError(extension=extension)
+
+    except ValueError:
+        # File has no extension (Common in Linux)
+        raise NoExtensionError(filename=filename)
+
+    return(fpath)
+
+
 def load_image(image, dataset):
     """Load data of an image to an EXISTING dataset.
 

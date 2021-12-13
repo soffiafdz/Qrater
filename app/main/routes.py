@@ -7,13 +7,17 @@ Module with different HTML routes for the webapp.
 import os
 import csv
 import json
-from collections import defaultdict
+import pandas as pd
+from pandas.errors import ParserError
+from collections import defaultdict, OrderedDict
 from datetime import datetime
 from flask import (render_template, flash, abort, redirect, url_for, request,
                    current_app, send_file, jsonify)
 from flask_login import current_user, login_required
 from app import db
 from app.main.forms import RatingForm, ExportRatingsForm, ImportRatingsForm
+from app.data.exceptions import NoExtensionError, UnsupportedExtensionError
+from app.data.functions import upload_file
 from app.models import Dataset, Image, Rating, Rater, Notification
 from app.main import bp
 
@@ -248,10 +252,17 @@ def rate(name_dataset):
 @login_required
 def export_ratings(dataset=None):
     """Page to configure and download a report of ratings."""
+    columns = [["Image", 1, 0], ["Subject", 0, 0], ["Session", 0, 0],
+               ["Cohort", 0, 0], ["Rater", 0, 0], ["Rating", 1, 0],
+               ["Comments", 0, 0], ["Timestamp", 0, 0]]
+
     form = ExportRatingsForm()
     public_ds = Dataset.query.filter_by(private=False)
     private_ds = Dataset.query.filter(Dataset.viewers.contains(current_user))
     form.dataset.choices = [ds.name for ds in public_ds.union(private_ds)]
+    # id, name, activated, read-only
+    form.columns.choices = [[i, column[0], column[1], column[2]]
+                            for i, column in enumerate(columns)]
 
     # All raters
     all_raters = request.args.get('all_raters', 0, type=int)
@@ -263,17 +274,25 @@ def export_ratings(dataset=None):
 
         subs = [i.subject for i in ds_model.images.all()]
         not_subs = (subs.count(None) == len(subs))
+        form.columns.choices[1][3] = 1 if not_subs else 0
+
         sess = [i.session for i in ds_model.images.all()]
         not_sess = (sess.count(None) == len(sess))
+        form.columns.choices[2][3] = 1 if not_sess else 0
+
         cohorts = [i.cohort for i in ds_model.images.all()]
         not_cohorts = (cohorts.count(None) == len(cohorts))
+        form.columns.choices[3][3] = 1 if not_cohorts else 0
+
         comments = [i.comment for i in
                     ds_model.
                     images.
                     join(Rating).
                     add_columns(Rating.comment).
-                    all()]
+                    all()
+                    if len(i.comment) != 0]
         not_comms = (comments.count("") == len(comments))
+        form.columns.choices[6][3] = 1 if not_comms else 0
 
     if form.validate_on_submit():
         query = Rating.query.\
@@ -281,29 +300,31 @@ def export_ratings(dataset=None):
             filter(Image.dataset_id == ds_model.id).\
             order_by(Image.id.asc()).\
             add_columns(Image.name, Rating.rating)
-        # keys = ['Image']
-        keys = []
-        if form.col_image.data:
-            keys.append('Image')
-        if form.col_sub.data:
+
+        rating_dict = OrderedDict()
+        col_order = [int(order) for order in form.order.data]
+        for col_name in [[val[1] for val in form.columns.choices][order]
+                         for order in col_order]:
+            rating_dict[col_name] = None
+
+        if "Subject" in rating_dict.keys():
             query = query.add_columns(Image.subject)
-            keys.append('Subject')
-        if form.col_sess.data:
+
+        if "Session" in rating_dict.keys():
             query = query.add_columns(Image.session)
-            keys.append('Session')
-        if form.col_cohort.data:
+
+        if "Cohort" in rating_dict.keys():
             query = query.add_columns(Image.cohort)
-            keys.append('Cohort')
-        if form.col_rater.data:
+
+        if "Rater" in rating_dict.keys():
             query = query.join(Rater).add_columns(Rater.username)
-            keys.append('Rater')
-        keys.append('Rating')
-        if form.col_comment.data:
+
+        if "Comments" in rating_dict.keys():
             query = query.add_columns(Rating.comment)
-            keys.append('Comment')
-        if form.col_timestamp.data:
+
+        if "Timestamp" in rating_dict.keys():
             query = query.add_columns(Rating.timestamp)
-            keys.append('Date')
+
         if int(form.rater_filter.data):
             query = query.filter(Rating.rater_id == current_user.id)
             file_name = f'{file_name}_{current_user.username}'
@@ -313,24 +334,31 @@ def export_ratings(dataset=None):
         ratings = []
         rating_codes = {0: 'Pending', 1: 'Pass', 2: 'Warning', 3: 'Fail'}
         for rating in query.all():
-            rating_dict = {**dict.fromkeys(keys, None)}
-            # rating_dict['Image'] = rating.name
-            if 'Image' in rating_dict:
+            if "Image" in rating_dict.keys():
                 rating_dict['Image'] = rating.name
-            if 'Cohort' in rating_dict:
-                rating_dict['Cohort'] = rating.cohort
-            if 'Subject' in rating_dict:
+
+            if "Subject" in rating_dict.keys():
                 rating_dict['Subject'] = rating.subject
-            if 'Session' in rating_dict:
+
+            if "Session" in rating_dict.keys():
                 rating_dict['Session'] = rating.session
-            rating_dict['Rating'] = rating_codes[rating.rating]
-            if 'Rater' in rating_dict:
+
+            if "Cohort" in rating_dict.keys():
+                rating_dict['Cohort'] = rating.cohort
+
+            if "Rating" in rating_dict.keys():
+                rating_dict['Rating'] = rating_codes[rating.rating]
+
+            if "Rater" in rating_dict.keys():
                 rating_dict['Rater'] = rating.username
-            if 'Comment' in rating_dict:
-                rating_dict['Comment'] = rating.comment
-            if 'Date' in rating_dict:
-                rating_dict['Date'] = rating.timestamp.isoformat() + 'Z'
-            ratings.append(rating_dict)
+
+            if "Comments" in rating_dict.keys():
+                rating_dict['Comments'] = rating.comment
+
+            if "Timestamp" in rating_dict.keys():
+                rating_dict['Timestamp'] = rating.timestamp.isoformat() + 'Z'
+
+            ratings.append({k: v for k, v in rating_dict.items()})
 
         path = os.path.join(current_app.config['ABS_PATH'], 'static/reports')
         if not os.path.isdir(path):
@@ -340,7 +368,7 @@ def export_ratings(dataset=None):
             file = ('static/reports/'
                     f'{file_name}_{datetime.now().date().isoformat()}.csv')
             with open(f'app/{file}', 'w', newline='') as csv_file:
-                writer = csv.DictWriter(csv_file, fieldnames=keys)
+                writer = csv.DictWriter(csv_file, rating_dict.keys())
                 writer.writerows(ratings)
         else:
             file = ('static/reports/'
@@ -360,9 +388,186 @@ def export_ratings(dataset=None):
 def import_ratings(dataset=None):
     """Page to upload a report of ratings."""
     form = ImportRatingsForm()
+    all_raters = request.args.get('all_raters', 0, type=int)
     public_ds = Dataset.query.filter_by(private=False)
     private_ds = Dataset.query.filter(Dataset.viewers.contains(current_user))
     form.dataset.choices = [ds.name for ds in public_ds.union(private_ds)]
+    column_choices = ["Image", "Subject", "Session", "Cohort", "Rater",
+                      "Rating", "Comments", "Timestamp"]
+    form.columns.choices = [(i, name) for i, name in enumerate(column_choices)]
+
+    if dataset is not None:
+        ds_model = Dataset.query.filter_by(name=dataset).first_or_404()
+
+    path = os.path.join(current_app.config['ABS_PATH'], 'static/reports')
+    if not os.path.isdir(path):
+        os.makedirs(path)
+
+    if form.validate_on_submit():
+        filetype = form.file_type.data.lower()
+        # Read file
+        try:
+            fpath = upload_file(form.file.data, path, [filetype])
+
+        except NoExtensionError as error:
+            flash(str(error), 'danger')
+            return redirect(url_for('main.import_ratings', dataset=dataset,
+                                    all_raters=all_raters))
+
+        except UnsupportedExtensionError as error:
+            flash(str(error), 'danger')
+            return redirect(url_for('main.import_ratings', dataset=dataset,
+                                    all_raters=all_raters))
+
+        try:
+            ratings = pd.read_json(fpath) if filetype == 'json' \
+                else pd.read_csv(fpath, header=None)
+
+        except ParserError as error:
+            flash(f"Uploading error: {str(error)}", 'danger')
+            return redirect(url_for('main.import_ratings', dataset=dataset,
+                                    all_raters=all_raters))
+
+        # Check number of columns matches options selected
+        column_order = [int(order) for order in form.order.data]
+        column_names = [[val[1] for val in form.columns.choices][order]
+                        for order in column_order]
+
+        column_names_upper = [n.upper() for n in column_names]
+
+        selected = None
+
+        # TODO: maybe add option for header in CSV?
+        if filetype == 'json':
+            # Check that all columns are capitalized
+            if not all(name.istitle() for name in ratings.columns):
+                ratings.columns = ratings.columns.str.title()
+
+            set_file = set(ratings.columns)
+            set_select = set(column_names_upper)
+            not_in_file = list(set_select - set_file)
+            not_in_select = list(set_file - set_select)
+
+            # Selected in menu but not in JSON file
+            if not_in_file:
+                flash(f"{len(not_in_file)} selected but not found in file: "
+                      f"{not_in_file}", "danger")
+                return redirect(url_for('main.import_ratings', dataset=dataset,
+                                        all_raters=all_raters))
+
+            # In JSON file, but not selected
+            if not_in_select:
+                flash(f"{len(not_in_select)} columns in file not loaded: "
+                      f"{not_in_select}", "warning")
+
+            # Selected and in JSON
+            selected = list(set_select & set_file)
+
+        # If CSV, then assign column names according to selection
+        # Order will be according to column choices declared above
+        else:
+            # Check that column number and selection matches before assignment
+            if len(column_names) != len(ratings.columns):
+                flash(f"Selected columns: {len(column_names)} "
+                      "don't match the number of columns in uploaded file: "
+                      f"{len(ratings.columns)}. Check file and try again.",
+                      'danger')
+                return redirect(url_for('main.import_ratings', dataset=dataset,
+                                        all_raters=all_raters))
+
+            selected = ratings.columns = column_names
+
+        # Parse data
+        rating = dict.fromkeys(column_choices, None)
+        not_found = 0
+        for row in ratings.index:
+            # Save value into rating dictionary
+            for column in selected:
+                rating[column] = ratings.at[row, column]
+
+        # Delete it?
+
+        # Save ratings in dataset
+
+
+
+
+        query = Rating.query.\
+            join(Image).\
+            filter(Image.dataset_id == ds_model.id).\
+            order_by(Image.id.asc()).\
+            add_columns(Image.name, Rating.rating)
+
+        rating_dict = OrderedDict()
+        for col_name in [[val[1] for val in form.columns.choices][order]
+                         for order in col_order]:
+            rating_dict[col_name] = None
+
+        if "Subject" in rating_dict.keys():
+            query = query.add_columns(Image.subject)
+
+        if "Session" in rating_dict.keys():
+            query = query.add_columns(Image.session)
+
+        if "Cohort" in rating_dict.keys():
+            query = query.add_columns(Image.cohort)
+
+        if "Rater" in rating_dict.keys():
+            query = query.join(Rater).add_columns(Rater.username)
+
+        if "Comments" in rating_dict.keys():
+            query = query.add_columns(Rating.comment)
+
+        if "Timestamp" in rating_dict.keys():
+            query = query.add_columns(Rating.timestamp)
+
+        if int(form.rater_filter.data):
+            query = query.filter(Rating.rater_id == current_user.id)
+            file_name = f'{file_name}_{current_user.username}'
+        else:
+            file_name = f'{file_name}_all-raters'
+
+        ratings = []
+        rating_codes = {0: 'Pending', 1: 'Pass', 2: 'Warning', 3: 'Fail'}
+        for rating in query.all():
+            if "Image" in rating_dict.keys():
+                rating_dict['Image'] = rating.name
+
+            if "Subject" in rating_dict.keys():
+                rating_dict['Subject'] = rating.subject
+
+            if "Session" in rating_dict.keys():
+                rating_dict['Session'] = rating.session
+
+            if "Cohort" in rating_dict.keys():
+                rating_dict['Cohort'] = rating.cohort
+
+            if "Rating" in rating_dict.keys():
+                rating_dict['Rating'] = rating_codes[rating.rating]
+
+            if "Rater" in rating_dict.keys():
+                rating_dict['Rater'] = rating.username
+
+            if "Comments" in rating_dict.keys():
+                rating_dict['Comments'] = rating.comment
+
+            if "Timestamp" in rating_dict.keys():
+                rating_dict['Timestamp'] = rating.timestamp.isoformat() + 'Z'
+
+            ratings.append({k: v for k, v in rating_dict.items()})
+
+        path = os.path.join(current_app.config['ABS_PATH'], 'static/reports')
+        if not os.path.isdir(path):
+            os.makedirs(path)
+
+        return send_file(file, as_attachment=True)
+    return render_template('export_ratings.html', form=form, dataset=dataset,
+                           nsub=not_subs, nsess=not_sess, ncohort=not_cohorts,
+                           ncomms=not_comms, all_raters=all_raters,
+                           title='Downlad Ratings')
+
+
+
 
     # All raters
     all_raters = request.args.get('all_raters', 0, type=int)

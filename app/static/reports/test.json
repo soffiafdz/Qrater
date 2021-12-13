@@ -1,0 +1,27 @@
+[
+    {
+        "Image": "qc_cls_sub-1000173_EN00",
+        "Rating": "Pass",
+        "Rater": "Sofia"
+    },
+    {
+        "Image": "qc_cls_sub-1000173_FU12",
+        "Rating": "Warning",
+        "Rater": "Sofia"
+    },
+    {
+        "Image": "qc_cls_sub-1000173_BL00",
+        "Rating": "Warning",
+        "Rater": "Sofia"
+    },
+    {
+        "Image": "qc_cls_sub-1000173_FU03",
+        "Rating": "Warning",
+        "Rater": "Sofia"
+    },
+    {
+        "Image": "qc_cls_sub-9566680_BL00",
+        "Rating": "Pending",
+        "Rater": "Sofia"
+    }
+]
