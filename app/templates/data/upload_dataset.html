@@ -5,6 +5,12 @@
   <li class="breadcrumb-item">
     <a
       class="text-decoration-none text-light"
+      href="{{ url_for('main.dashboard') }}"
+      >Dashboard</a>
+  </li>
+  <li class="breadcrumb-item">
+    <a
+      class="text-decoration-none text-light"
       href="#"
       >Upload Dataset</a>
   </li>
@@ -41,10 +47,11 @@
         </div>
       </div>
       <div class="row mb-3 mx-0">
-        <label class="col-sm-2 col-form-label" for="uploadImgs">
-          MRI files
-        </label>
-        <div class="col-sm-10" id=uploadImgs>
+        <label
+          class="col-sm-12 col-md-3 col-form-label"
+          for="uploadImgs"
+          >MRI files</label>
+        <div class="col-sm-12 col-md-9" id=uploadImgs>
           <input
             type="file"
             class="form-control"
@@ -55,10 +62,11 @@
         </div>
       </div>
       <div class="row mb-3 mx-0">
-        <label class="col-sm-2 col-form-label" for="privacyBool">
-          Privacy
-        </label>
-        <div class="col-sm-10" id="privacyBool">
+        <label
+          class="col-sm-12 col-md-3 col-form-label"
+          for="privacyBool"
+          >Privacy</label>
+        <div class="col-sm-12 col-md-9" id="privacyBool">
           <div class="form-check form-check-inline ps-0">
             <div class="btn-group" role="group">
               <input
