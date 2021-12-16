@@ -252,6 +252,7 @@ def rate(name_dataset):
 @login_required
 def export_ratings(dataset=None):
     """Page to configure and download a report of ratings."""
+    # TODO: Check if add imgtype
     columns = [["Image", 1, 0], ["Subject", 0, 0], ["Session", 0, 0],
                ["Cohort", 0, 0], ["Rater", 0, 0], ["Rating", 1, 0],
                ["Comments", 0, 0], ["Timestamp", 0, 0]]
@@ -376,6 +377,7 @@ def export_ratings(dataset=None):
             with open(f'app/{file}', 'w', newline='') as json_file:
                 json.dump(ratings, json_file, indent=4)
         return send_file(file, as_attachment=True)
+
     return render_template('export_ratings.html', form=form, dataset=dataset,
                            nsub=not_subs, nsess=not_sess, ncohort=not_cohorts,
                            ncomms=not_comms, all_raters=all_raters,
@@ -392,6 +394,9 @@ def import_ratings(dataset=None):
     public_ds = Dataset.query.filter_by(private=False)
     private_ds = Dataset.query.filter(Dataset.viewers.contains(current_user))
     form.dataset.choices = [ds.name for ds in public_ds.union(private_ds)]
+    # TODO: Check if add imgtype
+    rating_codes = {'Pending': 0, 'Pass': 1, 'Warning': 2, 'Fail': 3}
+
     column_choices = ["Image", "Subject", "Session", "Cohort", "Rater",
                       "Rating", "Comments", "Timestamp"]
     form.columns.choices = [(i, name) for i, name in enumerate(column_choices)]
@@ -433,8 +438,6 @@ def import_ratings(dataset=None):
         column_names = [[val[1] for val in form.columns.choices][order]
                         for order in column_order]
 
-        column_names_upper = [n.upper() for n in column_names]
-
         selected = None
 
         # TODO: maybe add option for header in CSV?
@@ -444,7 +447,7 @@ def import_ratings(dataset=None):
                 ratings.columns = ratings.columns.str.title()
 
             set_file = set(ratings.columns)
-            set_select = set(column_names_upper)
+            set_select = set(column_names)
             not_in_file = list(set_select - set_file)
             not_in_select = list(set_file - set_select)
 
@@ -478,119 +481,79 @@ def import_ratings(dataset=None):
             selected = ratings.columns = column_names
 
         # Parse data
+        query = Image.query.filter_by(dataset=ds_model)
         rating = dict.fromkeys(column_choices, None)
-        not_found = 0
+        not_found, ambiguous, loaded = [], 0, 0
+
         for row in ratings.index:
             # Save value into rating dictionary
             for column in selected:
                 rating[column] = ratings.at[row, column]
 
-        # Delete it?
+            # Find image:
+            if rating["Image"]:
+                query = query.filter_by(name=rating["Image"])
+                # If no image by that name, go to next row
+                if not query.first():
+                    not_found.append(rating["Image"])
+                    continue
 
-        # Save ratings in dataset
+            # More precise filtering
+            image_filters = []
+            for col in ["Subject", "Session", "Cohort"]:
+                if rating[col]:
+                    image_filters.append(f"{col}: {rating['col']}")
+                    test = query.\
+                        filter(getattr(Image, col.lower()) == rating[col])
+                    query = test if test.first() else query
 
+            # Ambiguity check: if more than one possible image, pass
+            if not query.first():
+                not_found.append("; ".join(image_filters))
+                continue
+            elif query.count() > 1:
+                ambiguous += 1
+                continue
+            else:
+                img = query.first()
 
+            # Set Data: Rating; Comments; Timestamp; Rater
+            rater = rating["Rater"] if rating["Rater"] else current_user
+            rate_num = rating_codes[rating["Rating"].title()] \
+                if isinstance(rating["Rating"], str) else rating["Rating"]
 
+            if isinstance(rate_num, int):
+                img.set_rating(user=rater, rating=rating,
+                               timestamp=rating["Timestamp"])
+            else:
+                continue
 
-        query = Rating.query.\
-            join(Image).\
-            filter(Image.dataset_id == ds_model.id).\
-            order_by(Image.id.asc()).\
-            add_columns(Image.name, Rating.rating)
+            if rating["Comments"]:
+                img.set_comment(user=rater, comment=rating["Comments"])
 
-        rating_dict = OrderedDict()
-        for col_name in [[val[1] for val in form.columns.choices][order]
-                         for order in col_order]:
-            rating_dict[col_name] = None
+            db.session.commit()
+            loaded += 1
 
-        if "Subject" in rating_dict.keys():
-            query = query.add_columns(Image.subject)
+        if not_found:
+            n = len(not_found)
+            if n < 5:
+                flash(f"{n} images were not found: " + str(not_found),
+                      "warning")
+            else:
+                flash(f"{n} images were not found.", "danger")
 
-        if "Session" in rating_dict.keys():
-            query = query.add_columns(Image.session)
+        if ambiguous:
+            flash(f"{ambiguous} images were not loaded because more than "
+                  "one image with that criteria was found.", "warning")
 
-        if "Cohort" in rating_dict.keys():
-            query = query.add_columns(Image.cohort)
+        if loaded:
+            flash(f"{loaded} images' ratings were successfully loaded!",
+                  "success")
 
-        if "Rater" in rating_dict.keys():
-            query = query.join(Rater).add_columns(Rater.username)
+        return redirect(url_for('main.dashboard', all_raters=all_raters))
 
-        if "Comments" in rating_dict.keys():
-            query = query.add_columns(Rating.comment)
-
-        if "Timestamp" in rating_dict.keys():
-            query = query.add_columns(Rating.timestamp)
-
-        if int(form.rater_filter.data):
-            query = query.filter(Rating.rater_id == current_user.id)
-            file_name = f'{file_name}_{current_user.username}'
-        else:
-            file_name = f'{file_name}_all-raters'
-
-        ratings = []
-        rating_codes = {0: 'Pending', 1: 'Pass', 2: 'Warning', 3: 'Fail'}
-        for rating in query.all():
-            if "Image" in rating_dict.keys():
-                rating_dict['Image'] = rating.name
-
-            if "Subject" in rating_dict.keys():
-                rating_dict['Subject'] = rating.subject
-
-            if "Session" in rating_dict.keys():
-                rating_dict['Session'] = rating.session
-
-            if "Cohort" in rating_dict.keys():
-                rating_dict['Cohort'] = rating.cohort
-
-            if "Rating" in rating_dict.keys():
-                rating_dict['Rating'] = rating_codes[rating.rating]
-
-            if "Rater" in rating_dict.keys():
-                rating_dict['Rater'] = rating.username
-
-            if "Comments" in rating_dict.keys():
-                rating_dict['Comments'] = rating.comment
-
-            if "Timestamp" in rating_dict.keys():
-                rating_dict['Timestamp'] = rating.timestamp.isoformat() + 'Z'
-
-            ratings.append({k: v for k, v in rating_dict.items()})
-
-        path = os.path.join(current_app.config['ABS_PATH'], 'static/reports')
-        if not os.path.isdir(path):
-            os.makedirs(path)
-
-        return send_file(file, as_attachment=True)
-    return render_template('export_ratings.html', form=form, dataset=dataset,
-                           nsub=not_subs, nsess=not_sess, ncohort=not_cohorts,
-                           ncomms=not_comms, all_raters=all_raters,
-                           title='Downlad Ratings')
-
-
-
-
-    # All raters
-    all_raters = request.args.get('all_raters', 0, type=int)
-
-    if form.validate_on_submit():
-        keys = []
-        if form.col_image.data:
-            keys.append('Image')
-        if form.col_sub.data:
-            keys.append('Subject')
-        if form.col_sess.data:
-            keys.append('Session')
-        if form.col_cohort.data:
-            keys.append('Cohort')
-        if form.col_rater.data:
-            keys.append('Rater')
-        keys.append('Rating')
-        if form.col_comment.data:
-            keys.append('Comment')
-        if form.col_timestamp.data:
-            keys.append('Date')
-
-    # TODO: COMLETE
+    return render_template('import_ratings.html', form=form, dataset=dataset,
+                           all_raters=all_raters, title='Downlad Ratings')
 
 
 @bp.route('/notifications', methods=['GET', 'DELETE'])
