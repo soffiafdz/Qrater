@@ -75,7 +75,7 @@ def upload_dataset():
                 # Commit changes in database
                 db.session.commit()
 
-        return redirect(url_for('main.dashboard'))
+        return redirect(url_for('main.dashboard', all_raters=all_raters))
     for _, error in form.errors.items():
         flash(error[0], 'danger')
     return render_template('data/upload_dataset.html', form=form,
@@ -169,7 +169,7 @@ def load_dataset(directory=None):
                 # Commit changes in database
                 db.session.commit()
 
-        return redirect(url_for('main.dashboard'))
+        return redirect(url_for('main.dashboard', all_raters=all_raters))
 
     # Form validation errors
     for _, error in form.errors.items():
