@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+
+{% block styles %}
+{{ super()  }}
+<link
+  rel="stylesheet"
+  type="text/css"
+  href="{{ url_for('static', filename=('css/bootstrap-multiselect.css')) }}">
+{% endblock %}
+
+{% block breadcrumb %}
+<ol class="breadcrumb m-0">
+  <li class="breadcrumb-item">
+    <a
+      class="text-decoration-none text-light"
+      href="{{ url_for('main.dashboard') }}"
+      >Dashboard</a>
+  </li>
+  <li class="breadcrumb-item">
+    <a
+      class="text-decoration-none text-light"
+      href="#"
+      >Export Ratings</a>
+  </li>
+</ol>
+{% endblock %}
+
+{% block app_content %}
+  <h1>Upload Ratings</h1>
+  <form
+    class="form disabled"
+    id="importForm"
+    action=""
+    method="POST"
+    role="form"
+    enctype="multipart/form-data"
+  >
+    {{ form.csrf_token() }}
+    <div class="col-lg-9">
+      <div class="row my-3 mx-0">
+        <div class="col">
+          <select
+            class="form-select form-select-lg"
+            id="datasetSelect"
+            name="dataset"
+            aria-label="Select a dataset"
+            >
+              <option value="">Select a Dataset</option>
+              {%- for name in form.dataset.choices -%}
+              <option
+                {% if name == dataset %}selected{% endif %}
+                >{{ name }}</option>
+              {%- endfor -%}
+          </select>
+        </div>
+      </div>
+      <div class="row mb-3 mx-0">
+        <label
+          class="col-sm-12 col-md-3 col-form-label"
+          for="fileType"
+          >Filetype</label>
+        <div class="col-sm-12 col-md-9" id="fileType">
+          <div class="form-check form-check-inline ps-0">
+            <div class="btn-group" role="group">
+              <input
+                type="radio"
+                class="btn-check"
+                name="file_type"
+                id="fileTypeCSV"
+                value="CSV"
+                autocomplete="off"
+                checked
+                >
+              <label
+                class="btn btn-outline-primary"
+                for="fileTypeCSV"
+                >CSV</label>
+              <input
+                type="radio"
+                class="btn-check"
+                name="file_type"
+                id="fileTypeJSON"
+                value="JSON"
+                autocomplete="off"
+                >
+              <label
+                class="btn btn-outline-dark"
+                for="fileTypeJSON"
+                >JSON</label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row mb-3 mx-0">
+        <label
+          class="col-sm-12 col-md-3 col-form-label"
+          for="ratingsColumns"
+          >Fields to include</label>
+        <div class="col-sm-12 col-md-9">
+          <input type="hidden" id="colOrder" name="order" value="0">
+          <select
+            class="form-select"
+            id="ratingsColumns"
+            name="columns"
+            multiple="multiple"
+            >
+            {% for opt in form.columns.choices -%}
+            <option
+              value={{ opt[0] }}
+              {% if opt[2] -%}selected{%- endif %}
+              {% if opt[3] -%}disabled{%- endif %}
+              >{{ opt[1] }}</option>
+            {%- endfor %}
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="row mb-3 mx-0">
+      <label
+        class="col-sm-12 col-md-3 col-form-label"
+        for="uploadFile"
+        >Ratings file</label>
+      <div class="col-sm-12 col-md-9" id=uploadFile>
+        <input
+          type="file"
+          class="form-control"
+          id="file"
+          name="file"
+          required>
+      </div>
+    </div>
+    <button
+      class="btn btn-primary btn-lg"
+      id="submitBtn"
+      type="submit"
+      form="exportForm"
+      value="Upload"
+      {% if dataset is none %}disabled{% endif %}
+      >Upload</button>
+  </form>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script
+  src="{{ url_for('static', filename=('js/bootstrap-multiselect.js')) }}">
+</script>
+<script>
+  $(document).ready(function () {
+    $("#datasetSelect").change(function() {
+      if($(this).val() == "") {
+        $("#submitBtn").attr("disabled", true);
+        $("#ratingsColumns").attr("disabled", true);
+        $("#file").attr("disabled", true);
+        $(this).attr("disabled", false);
+      } else {
+        window.location.href = "{{ url_for('main.import_ratings') }}/" +
+          $(this).val();
+      }
+    });
+    var orderCount = 0;
+    var selected = [];
+    $('#ratingsColumns option:selected').each(function() {
+      orderCount++;
+      $(this).data('order', orderCount);
+      selected.push([$(this).val(), $(this).data('order')]);
+    });
+    selected.sort(function(a, b) {
+      return a[1] - b[1];
+    });
+    var text = '';
+    for (var i = 0; i < selected.length; i++) {
+      text += selected[i][0];
+    }
+    $("#colOrder").val(text)
+    $("#ratingsColumns").multiselect({
+      maxHeight: 200,
+      buttonTextAlignment: "left",
+      buttonContainer: '<div class="btn-group w-100" />',
+      selectedClass: '',
+      onChange: function(option, checked) {
+        if (checked) {
+          orderCount++;
+          $(option).data('order', orderCount);
+        } else {
+          $(option).data('order', '');
+        };
+        selected = []
+        $('#ratingsColumns option:selected').each(function() {
+          selected.push([$(this).val(), $(this).data('order')]);
+        });
+        selected.sort(function(a, b) {
+          return a[1] - b[1];
+        });
+        var text = '';
+        for (var i = 0; i < selected.length; i++) {
+          text += selected[i][0];
+        }
+        $("#colOrder").val(text)
+        console.log(text)
+      },
+      buttonText: function(options) {
+        var shortNames = ["Img", "Sub", "Ses", "Coh", "Ratr", "Ratg",
+          "Comm", "Time"];
+        if (options.length === 0) {
+          return 'None selected';
+        } else if (options.length > 4) {
+          var shortSel = [];
+          options.each(function() {
+            shortSel.push([shortNames[$(this).val()], $(this).data('order')]);
+          });
+          shortSel.sort(function(a, b) {
+            return a[1] - b[1];
+          });
+          var text = '';
+          for (var i = 0; i < shortSel.length; i++) {
+            text += shortSel[i][0] + ', ';
+          }
+          return text.substr(0, text.length -2);
+        } else {
+          var selected = [];
+          options.each(function() {
+            selected.push([$(this).text(), $(this).data('order')]);
+          });
+          selected.sort(function(a, b) {
+            return a[1] - b[1];
+          });
+          var text = '';
+          for (var i = 0; i < selected.length; i++) {
+            text += selected[i][0] + ', ';
+          }
+          return text.substr(0, text.length -2);
+        }
+      },
+      templates: {
+        popupContainer: '<div class="multiselect-container dropdown-menu w-100"></div>'
+      }
+    });
+  });
+</script>
+{% endblock %}
