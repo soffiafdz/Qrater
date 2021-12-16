@@ -168,38 +168,40 @@ class Image(db.Model):
         """Object representation."""
         return f'<MRImage {self.name}>'
 
-    def set_rating(self, user, rating):
+    def set_rating(self, user, rating, timestamp=None):
         """Set a rating to the current MRI."""
         rating_mod = self.ratings.filter_by(rater=user).first()
-        if rating_mod is None:
-            rating_mod = Rating(rater=user, image=self, rating=rating)
-            db.session.add(rating_mod)
-        else:
+        if rating_mod:
             rating_mod.rating = rating
-            rating_mod.timestamp = datetime.utcnow()
+            rating_mod.timestamp = timestamp if timestamp \
+                else datetime.utcnow()
+        else:
+            rating_mod = Rating(rater=user, image=self,
+                                rating=rating, timestamp=timestamp)
+            db.session.add(rating_mod)
 
     def set_comment(self, user, comment):
         """Append a comment to the rating of current MRI."""
         rating_mod = self.ratings.filter_by(rater=user).first()
-        if rating_mod is None:
+        if rating_mod:
+            rating_mod.comment = comment
+        else:
             rating_mod = Rating(rater=user, image=self, comment=comment)
             db.session.add(rating_mod)
-        else:
-            rating_mod.comment = comment
 
     def rating_by_user(self, user):
         """Return rating of the image by specific user."""
         rating_mod = self.ratings.filter_by(rater=user).first()
-        if rating_mod is None:
-            return 0
-        return rating_mod.rating
+        if rating_mod:
+            return rating_mod.rating
+        return 0
 
     def comment_by_user(self, user):
         """Return rating of the image by specific user."""
         rating_mod = self.ratings.filter_by(rater=user).first()
-        if rating_mod is None:
-            return None
-        return rating_mod.comment
+        if rating_mod:
+            return rating_mod.comment
+        return None
 
 
 class Rating(db.Model):
