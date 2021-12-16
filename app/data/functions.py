@@ -34,8 +34,7 @@ def upload_data(files, savedir):
     return list_files
 
 
-def upload_file(file, savedir,
-                valid_extensions=current_app.config['DSET_ALLOWED_EXTS']):
+def upload_file(file, savedir, valid_extensions=None):
     """Upload single file to be sorted later.
 
     Arguments:
@@ -50,6 +49,8 @@ def upload_file(file, savedir,
     fpath = os.path.join(savedir, filename)
     file.save(fpath)
 
+    valid_extensions = valid_extensions if valid_extensions \
+        else current_app.config['DSET_ALLOWED_EXTS']
     try:
         basename, extension = filename.split('.', 1)
         if extension.lower() not in valid_extensions:
