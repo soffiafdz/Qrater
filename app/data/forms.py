@@ -40,6 +40,7 @@ class EditDatasetForm(FlaskForm):
     dataset = SelectField("Dataset", validators=[DataRequired()])
     new_name = StringField("Dataset's name")
     privacy = BooleanField("Private")
+    share_ratings = BooleanField("Sharing")
     # Choices for this will be generated in the route
     viewers = SelectMultipleField("Raters", coerce=int)
     sub_regex = StringField("Subjects' label (regex)")

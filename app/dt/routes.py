@@ -21,6 +21,9 @@ def datatable(dataset):
     all_raters = request.args.get('all_raters', 0, type=int)
     only_ratings = request.args.get('only_ratings', 0, type=int)
 
+    # Double check sharing ratings
+    all_raters = all_raters if ds_model.sharing else 0
+
     # Double check rater's access
     if not current_user.has_access(ds_model):
         flash(f"You don't have access to {dataset.name}", 'danger')

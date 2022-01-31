@@ -59,12 +59,16 @@ def dashboard(all_raters_string=None):
         imgs = dataset.images
         ntot = imgs.count()
         if all_raters or current_user.is_anonymous:
-            n_0 = imgs.join(Rating).filter_by(rating=0).\
-                union(imgs.filter_by(ratings=None)).distinct().count()
-            n_1 = imgs.join(Rating).filter_by(rating=1).distinct().count()
-            n_2 = imgs.join(Rating).filter_by(rating=2).distinct().count()
-            n_3 = imgs.join(Rating).filter_by(rating=3).distinct().count()
-            n_r = sum((n_1, n_2, n_3))
+            if not dataset.sharing:
+                n_0 = ntot
+                n_1 = n_2 = n_3 = 0
+            else:
+                n_0 = imgs.join(Rating).filter_by(rating=0).\
+                    union(imgs.filter_by(ratings=None)).distinct().count()
+                n_1 = imgs.join(Rating).filter_by(rating=1).distinct().count()
+                n_2 = imgs.join(Rating).filter_by(rating=2).distinct().count()
+                n_3 = imgs.join(Rating).filter_by(rating=3).distinct().count()
+                n_r = sum((n_1, n_2, n_3))
         else:
             n_1 = imgs.join(Rating).filter_by(rating=1, rater=current_user)\
                 .count()
@@ -101,12 +105,16 @@ def rate(name_dataset):
     # All raters
     all_raters = request.args.get('all_raters', 0, type=int)
 
+    # Double check sharing/all_raters
+    all_raters = all_raters if dataset.sharing else 0
+
     # Double check rater's access
     if not current_user.has_access(dataset):
         flash(f"You don't have access to {dataset.name}", 'danger')
         all_raters_string = "all_raters" if all_raters else None
         return redirect(url_for('main.dashboard',
                                 all_raters_string=all_raters_string))
+
 
     # Static directory
     statics_dir = os.path.join(current_app.config['ABS_PATH'], 'static')
@@ -290,7 +298,7 @@ def export_ratings(dataset=None):
                     join(Rating).
                     add_columns(Rating.comment).
                     all()
-                    if len(i.comment) != 0]
+                    if i.comment is not None]
         not_comms = (comments.count("") == len(comments))
         form.columns.choices[6][3] = 1 if not_comms else 0
 

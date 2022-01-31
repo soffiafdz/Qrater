@@ -34,8 +34,7 @@ def upload_data(files, savedir):
     return list_files
 
 
-def upload_file(file, savedir,
-                valid_extensions=current_app.config['DSET_ALLOWED_EXTS']):
+def upload_file(file, savedir, valid_extensions):
     """Upload single file to be sorted later.
 
     Arguments:
