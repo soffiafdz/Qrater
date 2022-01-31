@@ -58,17 +58,16 @@ def dashboard(all_raters_string=None):
     for dataset in datasets:
         imgs = dataset.images
         ntot = imgs.count()
-        if all_raters or current_user.is_anonymous:
-            if not dataset.sharing:
-                n_0 = ntot
-                n_1 = n_2 = n_3 = 0
-            else:
-                n_0 = imgs.join(Rating).filter_by(rating=0).\
-                    union(imgs.filter_by(ratings=None)).distinct().count()
-                n_1 = imgs.join(Rating).filter_by(rating=1).distinct().count()
-                n_2 = imgs.join(Rating).filter_by(rating=2).distinct().count()
-                n_3 = imgs.join(Rating).filter_by(rating=3).distinct().count()
-                n_r = sum((n_1, n_2, n_3))
+        if not dataset.sharing and current_user.is_anonymous:
+            n_0 = ntot
+            n_1 = n_2 = n_3 = n_r = 0
+        elif dataset.sharing and (all_raters or current_user.is_anonymous):
+            n_0 = imgs.join(Rating).filter_by(rating=0).\
+                union(imgs.filter_by(ratings=None)).distinct().count()
+            n_1 = imgs.join(Rating).filter_by(rating=1).distinct().count()
+            n_2 = imgs.join(Rating).filter_by(rating=2).distinct().count()
+            n_3 = imgs.join(Rating).filter_by(rating=3).distinct().count()
+            n_r = sum((n_1, n_2, n_3))
         else:
             n_1 = imgs.join(Rating).filter_by(rating=1, rater=current_user)\
                 .count()
