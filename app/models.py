@@ -115,6 +115,7 @@ class Dataset(db.Model):
     name = db.Column(db.String(64), index=True, unique=True)
     rater_id = db.Column(db.Integer, db.ForeignKey('rater.id'))
     private = db.Column(db.Boolean, default=False)
+    sharing = db.Column(db.Boolean, default=True)
     images = db.relationship('Image', backref='dataset', lazy='dynamic')
     viewers = db.relationship('Rater', secondary=data_access,
                               backref='access', lazy='dynamic')
@@ -123,6 +124,13 @@ class Dataset(db.Model):
         """Change the privacy status of the dataset."""
         if privacy != self.private:
             self.private = privacy
+            return True
+        return False
+
+    def change_sharing(self, sharing):
+        """Change the sharing status of the dataset."""
+        if sharing != self.sharing:
+            self.sharing = sharing
             return True
         return False
 
