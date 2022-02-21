@@ -179,6 +179,12 @@ class Image(db.Model):
     def set_rating(self, user, rating, timestamp=None):
         """Set a rating to the current MRI."""
         rating_mod = self.ratings.filter_by(rater=user).first()
+
+        if isinstance(timestamp, str):
+            timestamp = datetime.fromisoformat(timestamp[:-1]) \
+                if timestamp[-1].isalpha() \
+                else datetime.fromisoformat(timestamp)
+
         if rating_mod:
             rating_mod.rating = rating
             rating_mod.timestamp = timestamp if timestamp \

@@ -51,3 +51,4 @@ class ImportRatingsForm(FlaskForm):
                      validators=[FileRequired(), FileAllowed(['csv', 'json'])])
     # Choices for this are stored in the route
     columns = SelectMultipleField("Columns", coerce=int)
+    order = StringField("Order", validators=[DataRequired()])

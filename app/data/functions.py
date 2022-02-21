@@ -45,7 +45,7 @@ def upload_file(file, savedir, valid_extensions=None):
     Returns:
         String with path to saved file
     """
-    filename = secure_filename(file)
+    filename = secure_filename(file.filename)
     fpath = os.path.join(savedir, filename)
     file.save(fpath)
 

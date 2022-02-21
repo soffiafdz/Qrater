@@ -499,44 +499,53 @@ def import_ratings(dataset=None):
 
             # Find image:
             if rating["Image"]:
-                query = query.filter_by(name=rating["Image"])
+                subquery = query.filter_by(name=rating["Image"])
                 # If no image by that name, go to next row
-                if not query.first():
+                if not subquery.first():
                     not_found.append(rating["Image"])
                     continue
 
             # More precise filtering
             image_filters = []
-            for col in ["Subject", "Session", "Cohort"]:
-                if rating[col]:
-                    image_filters.append(f"{col}: {rating['col']}")
-                    test = query.\
-                        filter(getattr(Image, col.lower()) == rating[col])
-                    query = test if test.first() else query
+            for filter in ["Subject", "Session", "Cohort"]:
+                val = rating[filter] if rating[filter] else None
+                if isinstance(val, str):
+                    image_filters.append(f"{filter}: {val}")
+                    test = subquery.\
+                        filter(getattr(Image, filter.lower()) == val)
+                    subquery = test if test.first() else subquery
 
             # Ambiguity check: if more than one possible image, pass
-            if not query.first():
+            if not subquery.first():
                 not_found.append("; ".join(image_filters))
                 continue
-            elif query.count() > 1:
+            elif subquery.count() > 1:
                 ambiguous += 1
                 continue
             else:
-                img = query.first()
+                img = subquery.first()
 
             # Set Data: Rating; Comments; Timestamp; Rater
-            rater = rating["Rater"] if rating["Rater"] else current_user
+            # TODO: Add check if username doesn't exist
+            rater = Rater.query.filter_by(username=rating["Rater"]).first() \
+                if rating["Rater"] else current_user
+            if not rater:
+                image_filters.append(f"Rater: {rater}")
+                not_found.append("; ".join(image_filters))
+                continue
+
             rate_num = rating_codes[rating["Rating"].title()] \
                 if isinstance(rating["Rating"], str) else rating["Rating"]
 
             if isinstance(rate_num, int):
-                img.set_rating(user=rater, rating=rating,
+                img.set_rating(user=rater, rating=rate_num,
                                timestamp=rating["Timestamp"])
             else:
                 continue
 
-            if rating["Comments"]:
-                img.set_comment(user=rater, comment=rating["Comments"])
+            comment = rating["Comments"] if rating["Comments"] else None
+            if isinstance(comment, str):
+                img.set_comment(user=rater, comment=comment)
 
             db.session.commit()
             loaded += 1
@@ -560,7 +569,7 @@ def import_ratings(dataset=None):
         return redirect(url_for('main.dashboard', all_raters=all_raters))
 
     return render_template('import_ratings.html', form=form, dataset=dataset,
-                           all_raters=all_raters, title='Downlad Ratings')
+                           all_raters=all_raters, title='Upload Ratings')
 
 
 @bp.route('/notifications', methods=['GET', 'DELETE'])

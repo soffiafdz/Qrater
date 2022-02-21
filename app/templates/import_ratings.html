@@ -20,7 +20,7 @@
     <a
       class="text-decoration-none text-light"
       href="#"
-      >Export Ratings</a>
+      >Import Ratings</a>
   </li>
 </ol>
 {% endblock %}
@@ -114,26 +114,26 @@
           </select>
         </div>
       </div>
-    </div>
-    <div class="row mb-3 mx-0">
-      <label
-        class="col-sm-12 col-md-3 col-form-label"
-        for="uploadFile"
-        >Ratings file</label>
-      <div class="col-sm-12 col-md-9" id=uploadFile>
-        <input
-          type="file"
-          class="form-control"
-          id="file"
-          name="file"
-          required>
+      <div class="row mb-3 mx-0">
+        <label
+          class="col-sm-12 col-md-3 col-form-label"
+          for="uploadFile"
+          >Ratings file</label>
+        <div class="col-sm-12 col-md-9" id=uploadFile>
+          <input
+            type="file"
+            class="form-control"
+            id="file"
+            name="file"
+            required>
+        </div>
       </div>
     </div>
     <button
       class="btn btn-primary btn-lg"
       id="submitBtn"
       type="submit"
-      form="exportForm"
+      form="importForm"
       value="Upload"
       {% if dataset is none %}disabled{% endif %}
       >Upload</button>
