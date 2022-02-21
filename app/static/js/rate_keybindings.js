@@ -40,7 +40,7 @@ $("#collapseComment").on('hide.bs.collapse', function() {
 })
 
 // Go back to previous RATED image
-Mousetrap.bind(["ctrl+z", "u"] function() {
+Mousetrap.bind(["ctrl+z", "u"], function() {
   $("#backButton").click();
 })
 
