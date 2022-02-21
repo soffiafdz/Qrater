@@ -47,8 +47,8 @@
           {% if cohorts %}<th class="cohort">Cohort</th>{% endif %}
           <th class="rating">Rating</th>
           {% if ratings -%}
-          {% if comms %}<th class="comment">Comment</th>{% endif %}
           {% if all_raters %}<th class="rater">Rater</th>{% endif %}
+          {% if comms %}<th class="comment">Comment</th>{% endif %}
           <th class="datetime">Rated on</th>
           {%- endif %}
         </tr>
@@ -220,21 +220,25 @@
           }
         },
         {
-          targets: "rater",
-          render: function ( data, type, row ) {
-            if ( type === 'display' ) {
-              return data ? '<span class="fw-light">' + data + '</span>':
-                '<span class="text-muted fw-light"> Unrated</span>';
-            }
-            return data;
-          }
-        },
-        {
           targets: "comment",
           render: function ( data, type, row ) {
             if ( type === 'display' ) {
               return data ? '<span class="fw-light">' + data + '</span>':
                 '<span class="text-muted fw-light">...</span>';
+            }
+            return data;
+          }
+        },
+        {
+          targets: "rater",
+          render: function ( data, type, row ) {
+            if ( type === 'display' ) {
+              return data ? "<a href='/rate/{{ DS.name }}" +
+                "?rater_filter=" + data +
+                "&all_raters={{ all_raters }}" +
+                "' class='link-dark text-decoration-none fw-light'>" +
+                data + "</a>":
+                '<span class="text-muted fw-light"> Unrated</span>';
             }
             return data;
           }

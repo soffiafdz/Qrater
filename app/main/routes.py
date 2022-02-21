@@ -122,6 +122,7 @@ def rate(name_dataset):
     filters = {
         "image": request.args.get('image', None, type=str),
         "rating": request.args.get('rating_filter', None, type=int),
+        "rater": request.args.get('rater_filter', None, type=str),
         "type": request.args.get('type_filter', None, type=str),
         "subject": request.args.get('sub_filter', None, type=str),
         "session": request.args.get('sess_filter', None, type=str),
@@ -165,6 +166,11 @@ def rate(name_dataset):
 
         imgs = imgs.filter_by(cohort=filters["cohort"]) \
             if filters["cohort"] else imgs
+
+        imgs = imgs.join(Rating).\
+            filter(Rating.rater ==
+                   Rater.query.filter_by(username=filters["rater"]).first()) \
+            if filters["rater"] else imgs
 
         if filters["rating"] is None:
             # If no rating_filter, no need to do anything else
@@ -242,7 +248,8 @@ def rate(name_dataset):
                      or filters["rating"] == 0
                      or filters["type"]
                      or filters["subject"]
-                     or filters["session"])
+                     or filters["session"]
+                     or filters["rater"])
 
     # Rating form
     form = RatingForm()

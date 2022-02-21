@@ -104,26 +104,25 @@
   </h1>
   <div class="row row-cols-auto m-0 mb-2 justify-content-around">
     {% for rating in all_ratings %}
-    <div class="col">
-      <h2 class="mb-0">
-      {%- if rating.rating == 0 %}
-      <span class="badge bg-secondary">
-        <span class="fs-3 lead">{{ rating.rater.username }}</span>
-      </span>
+    <div class="col mb-0">
+      <a
+      {% if rating.rating == 0 -%}
+        class="btn btn-secondary"
       {%- elif rating.rating == 1 %}
-      <span class="badge bg-success">
-        <span class="fs-3 lead">{{ rating.rater.username }}</span>
-      </span>
+        class="btn btn-success"
       {%- elif rating.rating == 2 %}
-      <span class="badge bg-warning">
-        <span class="fs-3 lead">{{ rating.rater.username }}</span>
-      </span>
+        class="btn btn-warning"
       {%- elif rating.rating == 3 %}
-      <span class="badge bg-danger">
-        <span class="fs-3 lead">{{ rating.rater.username }}</span>
-      </span>
+        class="btn btn-warning"
       {% endif -%}
-      </h2>
+        href="{{ url_for('main.rate', name_dataset=DS.name,
+          rating_filter=filters["rating"], rater_filter=rating.rater.username,
+          type_filter=filters["type"], sub_filter=filters["subject"],
+          sess_filter=filters["session"], cohort_filter=filters["cohort"],
+          all_raters=all_raters) if current_user == rating.rater else '#' }}"
+        >
+        <span class="fs-3 lead">{{ rating.rater.username }}</span>
+      </a>
     </div>
     {% endfor %}
   </div>
@@ -166,9 +165,10 @@
       class="btn btn-dark"
       role="button"
       href="{{ url_for('main.rate', name_dataset=DS.name,
-        rating_filter=filters["rating"], type_filter=filters["type"],
-        sub_filter=filters["subject"], sess_filter=filters["session"],
-        cohort_filter=filters["cohort"], all_raters=all_raters) }}"
+        rating_filter=filters["rating"], rater_filter=filters["rater"],
+        type_filter=filters["type"], sub_filter=filters["subject"],
+        sess_filter=filters["session"], cohort_filter=filters["cohort"],
+        all_raters=all_raters) }}"
       >Done
     </a>
   </div>
@@ -181,9 +181,9 @@
       id="backButton"
       href="{{ url_for('main.rate', name_dataset=DS.name,
         image=prev_img, rating_filter=filters["rating"],
-        type_filter=filters["type"], sub_filter=filters["subject"],
-        sess_filter=filters["session"], cohort_filter=filters["cohort"],
-        all_raters=all_raters, prev=1) }}"
+        rater_filter=filters["rater"], type_filter=filters["type"],
+        sub_filter=filters["subject"], sess_filter=filters["session"],
+        cohort_filter=filters["cohort"], all_raters=all_raters, prev=1) }}"
       ><i class="bi bi-arrow-return-left"></i>
     </a>
   </div>
@@ -201,9 +201,9 @@
             id="prevPage"
             href="{{ url_for('main.rate', name_dataset=DS.name,
               image=filters["image"], rating_filter=filters["rating"],
-              type_filter=filters["type"], sub_filter=filters["subject"],
-              sess_filter=filters["session"], cohort_filter=filters["cohort"],
-              all_raters=all_raters,
+              rater_filter=filters["rater"], type_filter=filters["type"],
+              sub_filter=filters["subject"], sess_filter=filters["session"],
+              cohort_filter=filters["cohort"], all_raters=all_raters,
               page=imgs.prev_num) if imgs.has_prev else '#' }}"
             ><i class="bi-arrow-left"></i></a>
         </li>
@@ -215,8 +215,9 @@
             class="page-link"
             href="{{ url_for('main.rate', name_dataset=DS.name,
               image=filters["image"], rating_filter=filters["rating"],
-              type_filter=filters["type"], sub_filter=filters["subject"],
-              sess_filter=filters["session"], cohort_filter=filters["cohort"],
+              rater_filter=filters["rater"], type_filter=filters["type"],
+              sub_filter=filters["subject"], sess_filter=filters["session"],
+              cohort_filter=filters["cohort"],
               all_raters=all_raters, page=page) }}"
             >{{ page }}</a>
         </li>
@@ -244,9 +245,9 @@
               id="nextPage"
               href="{{ url_for('main.rate', name_dataset=DS.name,
                 image=filters["image"], rating_filter=filters["rating"],
-                type_filter=filters["type"], sub_filter=filters["subject"],
-                sess_filter=filters["session"], cohort_filter=filters["cohort"],
-                all_raters=all_raters,
+                rater_filter=filters["rater"], type_filter=filters["type"],
+                sub_filter=filters["subject"], sess_filter=filters["session"],
+                cohort_filter=filters["cohort"], all_raters=all_raters,
                 page=imgs.next_num) if imgs.has_next else '#' }}"
               ><i class="bi-arrow-right"></i></a>
           </li>
