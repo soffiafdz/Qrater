@@ -39,6 +39,11 @@ $("#collapseComment").on('hide.bs.collapse', function() {
   $("#collapseButton").removeClass("btn-info").addClass("btn-outline-info");
 })
 
+// Go back to previous RATED image
+Mousetrap.bind(["ctrl+z", "u"] function() {
+  $("#backButton").click();
+})
+
 // Previous image
 Mousetrap.bind("left", function() {
   var plink = $("#prevPage")[0].getAttribute("href");

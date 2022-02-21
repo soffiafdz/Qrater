@@ -133,6 +133,15 @@ def rate(name_dataset):
 
     # Paging
     pagination, page = True, request.args.get('page', 1, type=int)
+    prev = request.args.get('prev', 0, type=int)
+    _, prev_img, prev_time = Image.query.join(Rating).\
+        filter(Image.dataset == dataset, Rating.rater == current_user).\
+        order_by(Rating.timestamp.desc()).\
+        add_columns(Image.name, Rating.timestamp).first()
+
+    # If last rating is younger than 3 minutes give option de undo
+    timedelta = datetime.utcnow() - prev_time
+    back = 1 if timedelta.total_seconds() < 360 else 0
 
     # TODO apply subqueries to this mess...
     # TODO add an example to remember what I meant with 'subqueries'
@@ -141,73 +150,71 @@ def rate(name_dataset):
         # There is nothing else to do (filter, query, etc...)
         img = dataset.images.filter_by(name=filters["image"]).first_or_404()
 
-        # Rewrite imgs ## IS THIS NECESSARY??
-        imgs = None
-
         # No need of pagination (Only 1 image); REWRITE VAR
         pagination, page = False, None
 
-    imgs = imgs.filter_by(imgtype=filters["type"]) \
-        if filters["type"] else imgs
-
-    imgs = imgs.filter_by(subject=filters["subject"]) \
-        if filters["subject"] else imgs
-
-    imgs = imgs.filter_by(session=filters["session"]) \
-        if filters["session"] else imgs
-
-    imgs = imgs.filter_by(cohort=filters["cohort"]) \
-        if filters["cohort"] else imgs
-
-    if filters["rating"] is None:
-        # If no rating_filter, no need to do anything else
-        pass
-    elif all_raters:
-        if filters["rating"] == 0:  # PENDING
-            # Images without any rating saved
-            unrated = imgs.filter_by(ratings=None)
-
-            # Images marked 'PENDING' by any rater
-            pending = imgs.join(Rating).filter_by(rating=filters["rating"])
-
-            # QUERY: UNRATED + PENDING
-            # Unless they have another rating
-            imgs = pending.union(unrated).distinct()
-
-        # For ANY other rating; just filter by rating...
-        elif filters["rating"] < 4:
-            imgs = imgs.join(Rating).\
-                filter_by(rating=filters["rating"]).\
-                distinct()
-
-        else:   # If 'rating' is >=4, there's an ERROR, so abort w/404
-            flash('Invalid filtering; Showing all images...', 'danger')
-            return redirect(url_for('main.rate', all_raters=all_raters,
-                                    name_dataset=name_dataset))
     else:
-        # For single rater (current); filtering is more specific
-        if filters["rating"] == 0:
-            # Images with ratings from CURRENT_RATER (except pending)
-            rated = imgs.join(Rating).filter(Rating.rater == current_user,
-                                             Rating.rating > 0)
-            rated = db.session.query(Image.id).\
-                filter(Image.dataset == dataset).\
-                join(Rating).\
-                filter(Rating.rater == current_user, Rating.rating != 0).\
-                subquery()
+        imgs = imgs.filter_by(imgtype=filters["type"]) \
+            if filters["type"] else imgs
 
-            # All images, except Rated
-            imgs = imgs.filter(Image.id.not_in(rated))
+        imgs = imgs.filter_by(subject=filters["subject"]) \
+            if filters["subject"] else imgs
 
-        elif filters["rating"] < 4:
-            # Images where rating BY CURR_RATER matches rating filter
-            imgs = imgs.join(Rating).filter_by(rating=filters["rating"],
-                                               rater=current_user)
-        else:  # If 'rating' is >=4, there's an ERROR, so abort w/404
-            flash('Invalid filtering; Showing all images...',
-                  'danger')
-            return redirect(url_for('main.rate', all_raters=all_raters,
-                                    name_dataset=name_dataset))
+        imgs = imgs.filter_by(session=filters["session"]) \
+            if filters["session"] else imgs
+
+        imgs = imgs.filter_by(cohort=filters["cohort"]) \
+            if filters["cohort"] else imgs
+
+        if filters["rating"] is None:
+            # If no rating_filter, no need to do anything else
+            pass
+        elif all_raters:
+            if filters["rating"] == 0:  # PENDING
+                # Images without any rating saved
+                unrated = imgs.filter_by(ratings=None)
+
+                # Images marked 'PENDING' by any rater
+                pending = imgs.join(Rating).filter_by(rating=filters["rating"])
+
+                # QUERY: UNRATED + PENDING
+                # Unless they have another rating
+                imgs = pending.union(unrated).distinct()
+
+            # For ANY other rating; just filter by rating...
+            elif filters["rating"] < 4:
+                imgs = imgs.join(Rating).\
+                    filter_by(rating=filters["rating"]).\
+                    distinct()
+
+            else:   # If 'rating' is >=4, there's an ERROR, so abort w/404
+                flash('Invalid filtering; Showing all images...', 'danger')
+                return redirect(url_for('main.rate', all_raters=all_raters,
+                                        name_dataset=name_dataset))
+        else:
+            # For single rater (current); filtering is more specific
+            if filters["rating"] == 0:
+                # Images with ratings from CURRENT_RATER (except pending)
+                rated = imgs.join(Rating).filter(Rating.rater == current_user,
+                                                 Rating.rating > 0)
+                rated = db.session.query(Image.id).\
+                    filter(Image.dataset == dataset).\
+                    join(Rating).\
+                    filter(Rating.rater == current_user, Rating.rating != 0).\
+                    subquery()
+
+                # All images, except Rated
+                imgs = imgs.filter(Image.id.not_in(rated))
+
+            elif filters["rating"] < 4:
+                # Images where rating BY CURR_RATER matches rating filter
+                imgs = imgs.join(Rating).filter_by(rating=filters["rating"],
+                                                   rater=current_user)
+            else:  # If 'rating' is >=4, there's an ERROR, so abort w/404
+                flash('Invalid filtering; Showing all images...',
+                      'danger')
+                return redirect(url_for('main.rate', all_raters=all_raters,
+                                        name_dataset=name_dataset))
 
     imgs = imgs.order_by(Image.name.asc()).paginate(page, 1, False) \
         if pagination else None
@@ -248,8 +255,8 @@ def rate(name_dataset):
     return render_template('rate.html', DS=dataset, form=form, imgs=imgs,
                            pagination=pagination, all_ratings=all_ratings,
                            img_name=img.name, img_path=path, title=img.name,
-                           filters=filters, filtering=filtering,
-                           all_raters=all_raters,
+                           filters=filters, filtering=filtering, prev=prev,
+                           all_raters=all_raters, prev_img=prev_img, back=back,
                            comment=img.comment_by_user(current_user),
                            rating=img.rating_by_user(current_user))
 

@@ -44,7 +44,10 @@
   <li class="breadcrumb-item">
     <a
       href="#"
-      {%- if filters["rating"] == 0 -%}
+      {%- if prev -%}
+      class="text-decoration-none text-white"
+      >{{ filters["image"] }}
+      {%- elif filters["rating"] == 0 -%}
       class="text-decoration-none text-secondary"
       >Pending
       {%- elif filters["rating"] == 1 -%}
@@ -157,7 +160,38 @@
   </div>
 </div>
 <div class="row my-3 justify-content-center">
+  {% if prev %}
+  <div class="col-sm-12 col-xl-5">
+    <a
+      class="btn btn-dark"
+      role="button"
+      href="{{ url_for('main.rate', name_dataset=DS.name,
+        rating_filter=filters["rating"], type_filter=filters["type"],
+        sub_filter=filters["subject"], sess_filter=filters["session"],
+        cohort_filter=filters["cohort"], all_raters=all_raters) }}"
+      >Done
+    </a>
+  </div>
+  <div class="col-sm-12 col-xl-2">
+  {% elif filters["rating"] is not none and back -%}
+  <div class="col-sm-2 col-xl-2">
+    <a
+      class="btn btn-dark btn-sm"
+      role="button"
+      id="backButton"
+      href="{{ url_for('main.rate', name_dataset=DS.name,
+        image=prev_img, rating_filter=filters["rating"],
+        type_filter=filters["type"], sub_filter=filters["subject"],
+        sess_filter=filters["session"], cohort_filter=filters["cohort"],
+        all_raters=all_raters, prev=1) }}"
+      ><i class="bi bi-arrow-return-left"></i>
+    </a>
+  </div>
+  <div class="col-sm-10 col-xl-5">
+  {%- else -%}
   <div class="col-sm-12 col-xl-7">
+  {% endif -%}
+  {% set prev_img = img_name %}
     {% if pagination %}
     <nav aria-label="Page navigation">
       <ul class="pagination justify-content-center">
