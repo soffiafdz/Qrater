@@ -47,6 +47,7 @@
           {% if cohorts %}<th class="cohort">Cohort</th>{% endif %}
           <th class="rating">Rating</th>
           {% if ratings -%}
+          {% if comms %}<th class="comment">Comment</th>{% endif %}
           {% if all_raters %}<th class="rater">Rater</th>{% endif %}
           <th class="datetime">Rated on</th>
           {%- endif %}
@@ -102,7 +103,7 @@
       "ajax": "{{ url_for('dt.data', dset_id=DS.id,
                   all_raters=all_raters, only_ratings=only_ratings,
                   type=types, subject=subs, session=sess, cohort=cohorts,
-                  ratings=ratings) }}",
+                  comments=comms, ratings=ratings) }}",
       "lengthChange": false,
       "lengthMenu": [
           [ 10, 25, 50, 100 ],
@@ -224,6 +225,16 @@
             if ( type === 'display' ) {
               return data ? '<span class="fw-light">' + data + '</span>':
                 '<span class="text-muted fw-light"> Unrated</span>';
+            }
+            return data;
+          }
+        },
+        {
+          targets: "comment",
+          render: function ( data, type, row ) {
+            if ( type === 'display' ) {
+              return data ? '<span class="fw-light">' + data + '</span>':
+                '<span class="text-muted fw-light">...</span>';
             }
             return data;
           }

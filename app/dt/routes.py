@@ -31,34 +31,41 @@ def datatable(dataset):
         return redirect(url_for('main.dashboard',
                                 all_raters_string=all_raters_string))
 
-    col_names = ['Type', 'Sub', 'Sess', 'Cohort', 'Rating']
+    col_names = ['Type', 'Sub', 'Sess', 'Cohort', 'Rating', 'Comment']
     columns = {**dict.fromkeys(col_names, None)}
 
-    types = [i.imgtype for i in ds_model.images.all()]
+    types = [i.imgtype for i in ds_model.images]
     columns['Type'] = (types.count(None) != len(types))
 
-    subs = [i.subject for i in ds_model.images.all()]
+    subs = [i.subject for i in ds_model.images]
     columns['Sub'] = (subs.count(None) != len(subs))
 
-    sess = [i.session for i in ds_model.images.all()]
+    sess = [i.session for i in ds_model.images]
     columns['Sess'] = (sess.count(None) != len(sess))
 
-    cohorts = [i.cohort for i in ds_model.images.all()]
+    cohorts = [i.cohort for i in ds_model.images]
     columns['Cohort'] = (cohorts.count(None) != len(cohorts))
 
-    ratings_lists = [i.ratings.all() for i in ds_model.images.all()]
+    ratings_lists = [i.ratings.all() for i in ds_model.images]
     columns['Rating'] = (ratings_lists.count([]) != len(ratings_lists))
+
+    comments = [r.comment for r in
+                Rating.query.join(Image).filter(Image.dataset == ds_model)]
+    columns['Comment'] = (comments.count('') + comments.count(None)
+                          != len(comments))
 
     return render_template("dt/datatable.html", DS=ds_model,
                            types=columns['Type'], subs=columns['Sub'],
                            sess=columns['Sess'], cohorts=columns['Cohort'],
-                           ratings=columns['Rating'], all_raters=all_raters,
-                           only_ratings=only_ratings)
+                           ratings=columns['Rating'], comms=columns['Comment'],
+                           all_raters=all_raters, only_ratings=only_ratings)
 
 
 @bp.route('/data/<int:dset_id>/<int:type>/<int:subject>/' +
-          '<int:session>/<int:cohort>/<int:ratings>/<int:only_ratings>')
-def data(dset_id, type, subject, session, cohort, ratings, only_ratings=0):
+          '<int:session>/<int:cohort>/<int:ratings>/' +
+          '<int:comments>/<int:only_ratings>')
+def data(dset_id, type, subject, session, cohort, ratings, comments,
+         only_ratings=0):
     """Return server side data for datatable."""
     all_raters = request.args.get('all_raters', 0, type=int)
 
@@ -70,6 +77,8 @@ def data(dset_id, type, subject, session, cohort, ratings, only_ratings=0):
     # If there are ratings insert rating info
     if ratings:
         columns.insert(2, ColumnDT(Rating.timestamp))
+        if comments:
+            columns.insert(2, ColumnDT(Rating.comment))
         if all_raters:
             columns.insert(2, ColumnDT(Rater.username))
 
