@@ -58,7 +58,7 @@
             class="list-group-item list-group-item-action list-group-item-dark
               d-flex justify-content-between"
             href="{{ url_for('main.rate', name_dataset=DS.name,
-              rating_filter=0, first_image=1, all_raters=all_raters) }}"
+              rating_filter=0, all_raters=all_raters) }}"
             ><div class="me-auto">Pending</div>
             <span
               class="badge rounded-pill bg-light text-dark"
@@ -70,7 +70,7 @@
             class="list-group-item list-group-item-action list-group-item-success
               d-flex justify-content-between"
             href="{{ url_for('main.rate', name_dataset=DS.name,
-              rating_filter=1, first_image=1, all_raters=all_raters) }}"
+              rating_filter=1, all_raters=all_raters) }}"
             ><div class="me-auto">Pass</div>
             <span
               class="badge rounded-pill bg-light text-dark"
@@ -82,7 +82,7 @@
             class="list-group-item list-group-item-action list-group-item-warning
               d-flex justify-content-between"
             href="{{ url_for('main.rate', name_dataset=DS.name,
-              rating_filter=2, first_image=1, all_raters=all_raters) }}"
+              rating_filter=2, all_raters=all_raters) }}"
             ><div class="me-auto">Warning</div>
             <span
               class="badge rounded-pill bg-light text-dark"
@@ -94,7 +94,7 @@
             class="list-group-item list-group-item-action list-group-item-danger
               d-flex justify-content-between"
             href="{{ url_for('main.rate', name_dataset=DS.name,
-              rating_filter=3, first_image=1, all_raters=all_raters) }}"
+              rating_filter=3, all_raters=all_raters) }}"
             ><div class="me-auto">Fail</div>
             <span
               class="badge rounded-pill bg-light text-dark"
