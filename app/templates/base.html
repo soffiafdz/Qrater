@@ -125,6 +125,7 @@
       </div>
 
       <div class="navbar-nav ms-auto">
+        {%- block img_filters_btn %}{% endblock -%}
         {%- block help_btn %}{% endblock -%}
       </div>
       <ul class="navbar-nav">
@@ -201,6 +202,8 @@
 </svg>
 {% endblock %}
 
+{% block offcanvas %}
+{% endblock %}
 
 {% block content %}
 <br>

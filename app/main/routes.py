@@ -167,21 +167,22 @@ def rate(name_dataset):
         imgs = imgs.filter_by(cohort=filters["cohort"]) \
             if filters["cohort"] else imgs
 
-        imgs = imgs.join(Rating).\
-            filter(Rating.rater ==
-                   Rater.query.filter_by(username=filters["rater"]).first()) \
-            if filters["rater"] else imgs
+        imgs = imgs.join(Rating)
+        if all_raters:
+            imgs = imgs.filter(Rating.rater ==
+                               Rater.query.
+                               filter_by(username=filters["rater"]).first()) \
+                if filters["rater"] else imgs
 
-        if filters["rating"] is None:
-            # If no rating_filter, no need to do anything else
-            pass
-        elif all_raters:
-            if filters["rating"] == 0:  # PENDING
+            if filters["rating"] is None:
+                pass
+
+            elif filters["rating"] == 0:  # PENDING
                 # Images without any rating saved
                 unrated = imgs.filter_by(ratings=None)
 
                 # Images marked 'PENDING' by any rater
-                pending = imgs.join(Rating).filter_by(rating=filters["rating"])
+                pending = imgs.filter(Rating.rating == 0)
 
                 # QUERY: UNRATED + PENDING
                 # Unless they have another rating
@@ -189,8 +190,7 @@ def rate(name_dataset):
 
             # For ANY other rating; just filter by rating...
             elif filters["rating"] < 4:
-                imgs = imgs.join(Rating).\
-                    filter_by(rating=filters["rating"]).\
+                imgs = imgs.filter(Rating.rating == filters["rating"]).\
                     distinct()
 
             else:   # If 'rating' is >=4, there's an ERROR, so abort w/404
@@ -198,11 +198,14 @@ def rate(name_dataset):
                 return redirect(url_for('main.rate', all_raters=all_raters,
                                         name_dataset=name_dataset))
         else:
+            if filters["rating"] is None:
+                pass
+
             # For single rater (current); filtering is more specific
             if filters["rating"] == 0:
                 # Images with ratings from CURRENT_RATER (except pending)
-                rated = imgs.join(Rating).filter(Rating.rater == current_user,
-                                                 Rating.rating > 0)
+                rated = imgs.filter(Rating.rater == current_user,
+                                    Rating.rating > 0)
                 rated = db.session.query(Image.id).\
                     filter(Image.dataset == dataset).\
                     join(Rating).\
@@ -214,8 +217,8 @@ def rate(name_dataset):
 
             elif filters["rating"] < 4:
                 # Images where rating BY CURR_RATER matches rating filter
-                imgs = imgs.join(Rating).filter_by(rating=filters["rating"],
-                                                   rater=current_user)
+                imgs = imgs.filter(Rating.rating == filters["rating"],
+                                   Rating.rater == current_user)
             else:  # If 'rating' is >=4, there's an ERROR, so abort w/404
                 flash('Invalid filtering; Showing all images...',
                       'danger')
