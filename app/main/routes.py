@@ -114,7 +114,6 @@ def rate(name_dataset):
         return redirect(url_for('main.dashboard',
                                 all_raters_string=all_raters_string))
 
-
     # Static directory
     statics_dir = os.path.join(current_app.config['ABS_PATH'], 'static')
 
@@ -131,6 +130,9 @@ def rate(name_dataset):
 
     # INIT with all dataset's images
     imgs = dataset.images
+
+    # Unrated images (used for filtering later)
+    unrated = imgs.filter_by(ratings=None)
 
     # Paging
     pagination, page = True, request.args.get('page', 1, type=int)
@@ -167,45 +169,28 @@ def rate(name_dataset):
         imgs = imgs.filter_by(cohort=filters["cohort"]) \
             if filters["cohort"] else imgs
 
-        imgs = imgs.join(Rating)
-        if all_raters:
-            imgs = imgs.filter(Rating.rater ==
-                               Rater.query.
-                               filter_by(username=filters["rater"]).first()) \
+        if filters["rating"] is not None or filters["rater"]:
+            imgs = imgs.join(Rating)
+            imgs = imgs.\
+                filter(Rating.rater == Rater.query.filter_by(
+                    username=filters["rater"]).first()) \
                 if filters["rater"] else imgs
 
-            if filters["rating"] is None:
-                pass
+        if filters["rating"] is None:
+            pass
 
-            elif filters["rating"] == 0:  # PENDING
-                # Images without any rating saved
-                unrated = imgs.filter_by(ratings=None)
-
+        elif filters["rating"] == 0:
+            if all_raters:
                 # Images marked 'PENDING' by any rater
                 pending = imgs.filter(Rating.rating == 0)
 
                 # QUERY: UNRATED + PENDING
                 # Unless they have another rating
                 imgs = pending.union(unrated).distinct()
-
-            # For ANY other rating; just filter by rating...
-            elif filters["rating"] < 4:
-                imgs = imgs.filter(Rating.rating == filters["rating"]).\
-                    distinct()
-
-            else:   # If 'rating' is >=4, there's an ERROR, so abort w/404
-                flash('Invalid filtering; Showing all images...', 'danger')
-                return redirect(url_for('main.rate', all_raters=all_raters,
-                                        name_dataset=name_dataset))
-        else:
-            if filters["rating"] is None:
-                pass
-
-            # For single rater (current); filtering is more specific
-            if filters["rating"] == 0:
+            else:
                 # Images with ratings from CURRENT_RATER (except pending)
-                rated = imgs.filter(Rating.rater == current_user,
-                                    Rating.rating > 0)
+                # rated = imgs.filter(Rating.rater == current_user,
+                #                   Rating.rating > 0)
                 rated = db.session.query(Image.id).\
                     filter(Image.dataset == dataset).\
                     join(Rating).\
@@ -213,17 +198,21 @@ def rate(name_dataset):
                     subquery()
 
                 # All images, except Rated
-                imgs = imgs.filter(Image.id.not_in(rated))
+                imgs = imgs.filter(Image.id.not_in(rated)).\
+                    union(unrated).distinct()
 
-            elif filters["rating"] < 4:
-                # Images where rating BY CURR_RATER matches rating filter
+        elif filters["rating"] < 4:
+            if all_raters:
+                imgs = imgs.filter(Rating.rating == filters["rating"]).\
+                    distinct()
+            else:
                 imgs = imgs.filter(Rating.rating == filters["rating"],
                                    Rating.rater == current_user)
-            else:  # If 'rating' is >=4, there's an ERROR, so abort w/404
-                flash('Invalid filtering; Showing all images...',
-                      'danger')
-                return redirect(url_for('main.rate', all_raters=all_raters,
-                                        name_dataset=name_dataset))
+
+        else:
+            flash('Invalid filtering; Showing all images...', 'danger')
+            return redirect(url_for('main.rate', all_raters=all_raters,
+                                    name_dataset=name_dataset))
 
     imgs = imgs.order_by(Image.name.asc()).paginate(page, 1, False) \
         if pagination else None
@@ -257,8 +246,8 @@ def rate(name_dataset):
     # Rating form
     form = RatingForm()
     if form.validate_on_submit():
-        img.set_rating(user=current_user, rating=form.rating.data)
-        img.set_comment(user=current_user, comment=form.comment.data)
+        img.set_rating(user=current_user, rating=form.rating.data,
+                       comment=form.comment.data)
         db.session.commit()
         return redirect(request.url)
 
@@ -562,7 +551,7 @@ def import_ratings(dataset=None):
 
             comment = rating["Comments"] if rating["Comments"] else None
             if isinstance(comment, str):
-                img.set_comment(user=rater, comment=comment)
+                img.set_rating(user=rater, comment=comment)
 
             db.session.commit()
             loaded += 1
