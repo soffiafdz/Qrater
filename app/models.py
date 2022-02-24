@@ -176,32 +176,29 @@ class Image(db.Model):
         """Object representation."""
         return f'<MRImage {self.name}>'
 
-    def set_rating(self, user, rating, timestamp=None):
-        """Set a rating to the current MRI."""
-        rating_mod = self.ratings.filter_by(rater=user).first()
-
+    def set_rating(self, user, rating=None, comment=None, timestamp=None):
+        """Set a rating to the current Image and save to history."""
         if isinstance(timestamp, str):
-            timestamp = datetime.fromisoformat(timestamp[:-1]) \
+            new_time = datetime.fromisoformat(timestamp[:-1]) \
                 if timestamp[-1].isalpha() \
                 else datetime.fromisoformat(timestamp)
+        else:
+            new_time = timestamp
+
+        rating_mod = self.ratings.filter_by(rater=user).first()
 
         if rating_mod:
-            rating_mod.rating = rating
-            rating_mod.timestamp = timestamp if timestamp \
-                else datetime.utcnow()
+            rating_mod.save()
+            # Update values if not None else existing/default
+            rating_mod.rating = rating if rating else rating_mod.rating
+            rating_mod.comment = comment if comment else rating_mod.comment
+            rating_mod.timestamp = new_time if new_time else datetime.utcnow()
         else:
             rating_mod = Rating(rater=user, image=self,
-                                rating=rating, timestamp=timestamp)
+                                rating=rating, comment=comment,
+                                timestamp=new_time)
             db.session.add(rating_mod)
-
-    def set_comment(self, user, comment):
-        """Append a comment to the rating of current MRI."""
-        rating_mod = self.ratings.filter_by(rater=user).first()
-        if rating_mod:
-            rating_mod.comment = comment
-        else:
-            rating_mod = Rating(rater=user, image=self, comment=comment)
-            db.session.add(rating_mod)
+            rating_mod.save()
 
     def rating_by_user(self, user):
         """Return rating of the image by specific user."""
@@ -227,10 +224,33 @@ class Rating(db.Model):
     rater_id = db.Column(db.Integer, db.ForeignKey('rater.id'))
     rating = db.Column(db.Integer)
     comment = db.Column(db.String(256))
+    history = db.relationship("History", backref='reference', lazy='dynamic')
 
     def __repr__(self):
         """Object representation."""
         return f'<Rating {self.image_id}; {self.rating}>'
+
+    def save(self):
+        """Save rating in history table."""
+        n = self.history.count() + 1
+        entry = History(reference=self, rating=self.rating, n=n,
+                        comment=self.comment, timestamp=self.timestamp)
+        db.session.add(entry)
+
+
+class History(db.Model):
+    """SQLAlchemy Model for history of QC ratings."""
+
+    id = db.Column(db.Integer, primary_key=True)
+    rating_id = db.Column(db.Integer, db.ForeignKey('rating.id'))
+    rating = db.Column(db.Integer)
+    comment = db.Column(db.String(256))
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    n = db.Column(db.Integer)
+
+    def __repr__(self):
+        """Object representation."""
+        return f'<Rating {self.reference}; {self.n}>'
 
 
 class Notification(db.Model):
