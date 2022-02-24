@@ -70,11 +70,11 @@ def dashboard(all_raters_string=None):
             n_r = (imgs.join(Rating).count()
                    - imgs.join(Rating).filter_by(rating=0).count())
         else:
-            n_1 = imgs.join(Rating).filter_by(rating=1, rater=current_user)\
+            n_1 = imgs.join(Rating).filter_by(rating=1, rater=current_user).\
                 distinct().count()
-            n_2 = imgs.join(Rating).filter_by(rating=2, rater=current_user)\
+            n_2 = imgs.join(Rating).filter_by(rating=2, rater=current_user).\
                 distinct().count()
-            n_3 = imgs.join(Rating).filter_by(rating=3, rater=current_user)\
+            n_3 = imgs.join(Rating).filter_by(rating=3, rater=current_user).\
                 distinct().count()
             n_r = sum((n_1, n_2, n_3))
             n_0 = ntot - n_r
