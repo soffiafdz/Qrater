@@ -11,7 +11,7 @@ from flask import (render_template, flash, redirect, url_for, request,
 from flask_login import login_required, current_user
 from app import db
 from app.data import bp
-from app.models import Dataset, Rater
+from app.models import Dataset, Rater, Precomment
 from app.data.functions import load_data, upload_data
 from app.data.forms import LoadDatasetForm, UploadDatasetForm, EditDatasetForm
 from app.data.exceptions import (OrphanDatasetError, EmptyLoadError)
@@ -219,6 +219,38 @@ def edit_dataset(dataset=None):
     changes = False
     if form.validate_on_submit():
 
+        # Subratings;
+        if form.sr_change.data:
+            sr_ids, sr_texts, sr_ratings, sr_keybindings = (
+                [id.split("_")[1] for id in form.sr_ids.data.split("___")],
+                form.sr_texts.data.split("___"),
+                form.sr_ratings.data.split("___"),
+                form.sr_keybindings.data.split("___")
+            )
+
+            # Sanity check
+            if not (len(sr_ids)
+                    == len(sr_texts)
+                    == len(sr_ratings)
+                    == len(sr_keybindings)):
+                flash(('Something went wrong trying to set up the '
+                      'pre-defined ratings.'), 'danger')
+                return redirect(request.url)
+
+            for n, id in enumerate(sr_ids):
+                if "d" in id:
+                    sr = Precomment.query.filter_by(id=id[1:-1]).first()
+                    db.session.delete(sr)
+                else:
+                    sr = Precomment(dataset=ds_model) if "n" in id \
+                        else Precomment.query.filter_by(id=id[1:]).first()
+                    sr.rating = sr_ratings[n]
+                    sr.comment = sr_texts[n]
+                    sr.keybinding = sr_keybindings[n] \
+                        if sr_keybindings[n] else None
+                    db.session.add(sr)
+            changes = True
+
         # Check if there is a name change;
         if form.new_name.data and form.new_name.data != ds_model.name:
 
@@ -251,7 +283,6 @@ def edit_dataset(dataset=None):
             changes = True
 
         # Regex for image type, cohort, subject and/or session
-        # TODO: move to TASKS
         if form.sub_regex.data \
                 or form.sess_regex.data \
                 or form.type_regex.data \
@@ -337,6 +368,7 @@ def edit_dataset(dataset=None):
     return render_template('data/edit_dataset.html', form=form,
                            dataset=dataset, privacy=privacy, ro=ro,
                            names=test_names, all_raters=all_raters,
+                           subratings=ds_model.subratings,
                            title='Edit Dataset')
 
 

@@ -5,7 +5,7 @@
   aria-labelledby="helpModalLabel"
   aria-hidden="true"
   >
-  <div class="modal-dialog modal-dialog-centered">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header">
         <h3 class="modal-title lead" id="helpModalLabel">
@@ -49,6 +49,34 @@
             Mark as <span class="text-muted">Pending</span>
           </dd>
           <hr class="mt-2">
+          {% set colors = ["secondary", "success", "warning", "danger"] %}
+          {% for subrating in subratings %}
+          {% if subrating.keybinding -%}
+          <dt class="col-4 text-center">
+            {% set kb = subrating.keybinding.split("_") %}
+            {% set modKeys = {"a": "Alt", "c": "Ctrl", "s": "Shift"} %}
+            {% if kb|count == 1 -%}
+            <kbd>{{ kb[0] }}</kbd>
+            {%- else -%}
+            <kbd>{{ modKeys[kb[0]] }}</kbd> + <kbd>{{ kb[1] }}</kbd>
+            {%- endif -%}
+          </dt>
+          <dd class="col-8">
+            Mark as <span
+              {%- if subrating.rating == 0 -%}
+              class="text-muted"
+              {%- elif subrating.rating == 1 -%}
+              class="text-success"
+              {%- elif subrating.rating == 2 -%}
+              class="text-warning"
+              {%- elif subrating.rating == 3 -%}
+              class="text-danger"
+              {%- endif -%}
+              >"{{ subrating.comment }}""</span>
+          </dd>
+          {% endif %}
+          {% endfor %}
+          <hr class="mt-2">
           <dt class="col-4 text-center"><kbd>c</kbd></dt>
           <dd class="col-8">Show/hide comment box</dd>
           <hr class="mt-2">
@@ -62,6 +90,11 @@
             <kbd>shift</kbd> + <kbd><i class="bi bi-arrow-down-short"></i></kbd>
           </dt>
           <dd class="col-8">Zoom Out</dd>
+          <hr class="mt-2">
+          <dt class="col-4 text-center">
+            <kbd>shift</kbd> + <kbd>enter</kbd>
+          </dt>
+          <dd class="col-8">Zoom In</dd>
         </dl>
       </div>
     </div>

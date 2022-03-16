@@ -27,7 +27,7 @@ Mousetrap.bind("c", function() {
 
 // Focus on textarea and fill button when collapsible opens
 $("#collapseComment").on('show.bs.collapse', function() {
-  $("#collapseButton").removeClass("btn-outline-info").addClass("btn-info");
+  $("#collapseButton").addClass("active");
 })
 
 $("#collapseComment").on('shown.bs.collapse', function() {
@@ -36,7 +36,7 @@ $("#collapseComment").on('shown.bs.collapse', function() {
 
 // Return button to normal when collapse closes
 $("#collapseComment").on('hide.bs.collapse', function() {
-  $("#collapseButton").removeClass("btn-info").addClass("btn-outline-info");
+  $("#collapseButton").removeClass("active")
 })
 
 // Go back to previous RATED image

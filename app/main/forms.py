@@ -22,8 +22,9 @@ class RatingForm(FlaskForm):
 
     rating = RadioField('Rating', choices=[(0, 'Pending'), (1, 'Pass'),
                                            (2, 'Warning'), (3, 'Fail')])
+    subratings = StringField("Subratings")
     comment = TextAreaField('Comment')
-    submit = SubmitField('Comment')
+    submit = SubmitField('Submit')
 
 
 class ExportRatingsForm(FlaskForm):

@@ -18,7 +18,7 @@ from app import db
 from app.main.forms import RatingForm, ExportRatingsForm, ImportRatingsForm
 from app.data.exceptions import NoExtensionError, UnsupportedExtensionError
 from app.data.functions import upload_file
-from app.models import Dataset, Image, Rating, Rater, Notification
+from app.models import Dataset, Image, Rating, Rater, Precomment, Notification
 from app.main import bp
 
 
@@ -243,11 +243,26 @@ def rate(name_dataset):
                      or filters["session"]
                      or filters["rater"])
 
+    img_subratings = img.subratings_by_user(current_user)
+    subratings_json = jsonify([{
+        "id": s.id,
+        "selected": s in img_subratings,
+        "rating": s.rating,
+        "keybinding": s.keybinding
+    } for s in dataset.subratings])
+
     # Rating form
     form = RatingForm()
     if form.validate_on_submit():
+        subratings_list = []
+        sr_data = [s.split("_") for s in form.subratings.data.split("___")]
+        for sr in sr_data:
+            sr_model = Precomment.query.get(sr[0])
+            if sr_model and sr_model[1] == "true":  # CHECK THIS
+                subratings_list.append(sr_model)
+
         img.set_rating(user=current_user, rating=form.rating.data,
-                       comment=form.comment.data)
+                       comment=form.comment.data, subratings=subratings_list)
         db.session.commit()
         return redirect(request.url)
 
@@ -256,8 +271,11 @@ def rate(name_dataset):
                            img_name=img.name, img_path=path, title=img.name,
                            filters=filters, filtering=filtering, prev=prev,
                            all_raters=all_raters, prev_img=prev_img, back=back,
-                           comment=img.comment_by_user(current_user),
-                           rating=img.rating_by_user(current_user))
+                           subratings=dataset.subratings,
+                           subratings_data=subratings_json,
+                           rating=img.rating_by_user(current_user),
+                           comment=img.comment_by_user(
+                               current_user, add_subratings=False))
 
 
 @bp.route('/export-ratings', methods=['GET', 'POST'])
@@ -286,27 +304,20 @@ def export_ratings(dataset=None):
         ds_model = Dataset.query.filter_by(name=dataset).first_or_404()
         file_name = f'{ds_model.name}'
 
-        subs = [i.subject for i in ds_model.images.all()]
-        not_subs = (subs.count(None) == len(subs))
-        form.columns.choices[1][3] = 1 if not_subs else 0
+        form.columns.choices[1][3] = 0 \
+            if sum([bool([i.subject for i in ds_model.images])]) else 1
 
-        sess = [i.session for i in ds_model.images.all()]
-        not_sess = (sess.count(None) == len(sess))
-        form.columns.choices[2][3] = 1 if not_sess else 0
+        form.columns.choices[2][3] = 0 \
+            if sum([bool([i.session for i in ds_model.images])]) else 1
 
-        cohorts = [i.cohort for i in ds_model.images.all()]
-        not_cohorts = (cohorts.count(None) == len(cohorts))
-        form.columns.choices[3][3] = 1 if not_cohorts else 0
+        form.columns.choices[3][3] = 0 \
+            if sum([bool([i.cohort for i in ds_model.images])]) else 1
 
-        comments = [i.comment for i in
-                    ds_model.
-                    images.
-                    join(Rating).
-                    add_columns(Rating.comment).
-                    all()
-                    if i.comment is not None]
-        not_comms = (comments.count("") == len(comments))
-        form.columns.choices[6][3] = 1 if not_comms else 0
+        comm = [bool(r.comment) for r in
+                ds_model.images.join(Rating).add_columns(Rating.comment)]
+        subr = [bool(r.subratings.all()) for r in
+                Rating.query.join(Image).filter(Image.dataset == ds_model)]
+        form.columns.choices[6][3] = 0 if (sum(comm) or sum(subr)) else 1
 
     if form.validate_on_submit():
         query = Rating.query.\
