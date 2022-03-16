@@ -34,25 +34,17 @@ def datatable(dataset):
     col_names = ['Type', 'Sub', 'Sess', 'Cohort', 'Rating', 'Comment']
     columns = {**dict.fromkeys(col_names, None)}
 
-    types = [i.imgtype for i in ds_model.images]
-    columns['Type'] = (types.count(None) != len(types))
-
-    subs = [i.subject for i in ds_model.images]
-    columns['Sub'] = (subs.count(None) != len(subs))
-
-    sess = [i.session for i in ds_model.images]
-    columns['Sess'] = (sess.count(None) != len(sess))
-
-    cohorts = [i.cohort for i in ds_model.images]
-    columns['Cohort'] = (cohorts.count(None) != len(cohorts))
-
-    ratings_lists = [i.ratings.all() for i in ds_model.images]
-    columns['Rating'] = (ratings_lists.count([]) != len(ratings_lists))
-
-    comments = [r.comment for r in
+    columns['Type'] = bool(sum([bool(i.imgtype) for i in ds_model.images]))
+    columns['Sub'] = bool(sum([bool(i.subject) for i in ds_model.images]))
+    columns['Sess'] = bool(sum([bool(i.session) for i in ds_model.images]))
+    columns['Cohort'] = bool(sum([bool(i.cohort) for i in ds_model.images]))
+    columns['Rating'] = bool(sum([bool(i.ratings.all())
+                                  for i in ds_model.images]))
+    comments = [bool(r.comment) for r in
                 Rating.query.join(Image).filter(Image.dataset == ds_model)]
-    columns['Comment'] = (comments.count('') + comments.count(None)
-                          != len(comments))
+    subratings = [bool(r.subratings.all()) for r in
+                  Rating.query.join(Image).filter(Image.dataset == ds_model)]
+    columns['Comment'] = (sum(comments) or sum(subratings))
 
     return render_template("dt/datatable.html", DS=ds_model,
                            types=columns['Type'], subs=columns['Sub'],
@@ -77,6 +69,7 @@ def data(dset_id, type, subject, session, cohort, ratings, comments,
     # If there are ratings insert rating info
     if ratings:
         columns.insert(2, ColumnDT(Rating.timestamp))
+        # TODO Figure out how to insert subratings here
         if comments:
             columns.insert(2, ColumnDT(Rating.comment))
         if all_raters:
