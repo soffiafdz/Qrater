@@ -101,6 +101,7 @@ function deleteSubrating(obj) {
   );
   obj.remove(); // 2 Remove button
   clearForm();  // 3 Clear form
+  submitSubratings();
 }
 
 function activateSubrating(obj) {
@@ -189,9 +190,9 @@ function clearForm() {
 }
 
 //subratings :
-//{ id: id, text: text, rating: rating, keyBinding: keyBinding; delete: None}
+//{ id: id, text: text, rating: rating, keyBinding: keyBinding, toDelete: }
 function submitSubratings() {
-  let [ids, toDelete, texts, ratings, keybindings] = [[], [], [], [], []];
+  let [ids, texts, ratings, keybindings, toDelete] = [[], [], [], [], []];
 
   subratings.forEach(subrating => {
     ids.push((subrating.toDelete) ? subrating.id + "d" : subrating.id);
@@ -244,9 +245,10 @@ kbMods.forEach(btn => btn.click(() => toggleKbMod(btn.val())));
 
 // Send values to subratingsBar
 addBtn.click(() => {
-  let kb = (kbMod) ? `${kbMod}_${subrKb.val()}` : subrKb.val()
-  addSubrating(subrText.val(), subrating, kb, origId, existing)
-  subratingChange = true
+  let kb = (kbMod) ? `${kbMod}_${subrKb.val()}` : subrKb.val();
+  addSubrating(subrText.val(), subrating, kb, origId, existing);
+  subratingChange = true;
+  submitSubratings();
 });
 
 // Activate delete button

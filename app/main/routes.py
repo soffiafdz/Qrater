@@ -137,14 +137,18 @@ def rate(name_dataset):
     # Paging
     pagination, page = True, request.args.get('page', 1, type=int)
     prev = request.args.get('prev', 0, type=int)
-    _, prev_img, prev_time = Image.query.join(Rating).\
-        filter(Image.dataset == dataset, Rating.rater == current_user).\
-        order_by(Rating.timestamp.desc()).\
-        add_columns(Image.name, Rating.timestamp).first()
+
+    subquery = Image.query.join(Rating).filter(Image.dataset == dataset,
+                                               Rating.rater == current_user)
+
+    _, prev_img, prev_time = subquery.order_by(Rating.timestamp.desc()).\
+        add_columns(Image.name, Rating.timestamp).first() \
+        if subquery.first() else None, None, None
 
     # If last rating is younger than 3 minutes give option de undo
-    timedelta = datetime.utcnow() - prev_time
-    back = 1 if timedelta.total_seconds() < 360 else 0
+    back = 0 if not prev_time \
+        else 1 if (datetime.utcnow() - prev_time).total_seconds() < 360 \
+        else 0
 
     # TODO apply subqueries to this mess...
     # TODO add an example to remember what I meant with 'subqueries'
@@ -244,12 +248,12 @@ def rate(name_dataset):
                      or filters["rater"])
 
     img_subratings = img.subratings_by_user(current_user)
-    subratings_json = jsonify([{
+    subratings_json = [{
         "id": s.id,
         "selected": s in img_subratings,
         "rating": s.rating,
         "keybinding": s.keybinding
-    } for s in dataset.subratings])
+    } for s in dataset.subratings]
 
     # Rating form
     form = RatingForm()
@@ -258,7 +262,7 @@ def rate(name_dataset):
         sr_data = [s.split("_") for s in form.subratings.data.split("___")]
         for sr in sr_data:
             sr_model = Precomment.query.get(sr[0])
-            if sr_model and sr_model[1] == "true":  # CHECK THIS
+            if sr_model and sr[1] == "true":  # CHECK THIS
                 subratings_list.append(sr_model)
 
         img.set_rating(user=current_user, rating=form.rating.data,

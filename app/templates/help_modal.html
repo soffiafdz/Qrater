@@ -63,16 +63,12 @@
           </dt>
           <dd class="col-8">
             Mark as <span
-              {%- if subrating.rating == 0 -%}
-              class="text-muted"
-              {%- elif subrating.rating == 1 -%}
-              class="text-success"
-              {%- elif subrating.rating == 2 -%}
-              class="text-warning"
-              {%- elif subrating.rating == 3 -%}
-              class="text-danger"
+              {%- if subrating.rating == 0 %} class="text-muted"
+              {%- elif subrating.rating == 1 %} class="text-success"
+              {%- elif subrating.rating == 2 %} class="text-warning"
+              {%- elif subrating.rating == 3 %} class="text-danger"
               {%- endif -%}
-              >"{{ subrating.comment }}""</span>
+              >{{ subrating.comment }}</span>
           </dd>
           {% endif %}
           {% endfor %}
@@ -94,7 +90,7 @@
           <dt class="col-4 text-center">
             <kbd>shift</kbd> + <kbd>enter</kbd>
           </dt>
-          <dd class="col-8">Zoom In</dd>
+          <dd class="col-8">Force-submit rating</dd>
         </dl>
       </div>
     </div>

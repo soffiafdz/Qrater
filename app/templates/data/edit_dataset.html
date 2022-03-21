@@ -255,6 +255,7 @@
               id="subratingDropdown"
               class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split"
               data-bs-toggle="dropdown"
+              data-bs-auto-close="false"
               aria-expanded="false"
               ><span class="visually-hidden">Toggle Dropdown</span></button>
             <div class="dropdown-menu dropdown-menu-end">
@@ -353,7 +354,7 @@
         id="subratingsBar"
         class="list-group list-group-horizontal-lg mb-3 mx-0"
         >
-        {% set colors = ["secondary", "success", "warning", "danger"] %}
+        {% set colors = ["dark", "success", "warning", "danger"] %}
         {% for sr in subratings %}
         <a
           href="#"

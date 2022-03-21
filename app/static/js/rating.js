@@ -7,7 +7,6 @@ const rateBtns = [
 let zoom;
 
 // Subratings JSON submitted by Flask from MySQL database
-let subratings = JSON.parse('{{ subratings_data | tojson | safe }}');
 // {id: model_ID, selected: Boolean, rating: [0-3], keybinding: [asc]_\S}
 
 /// Functions
@@ -19,6 +18,21 @@ function clickRating(rating) {
 // Click subrating
 function clickSubrating(id) { $(`#subrating_${id}`).trigger("click") }
 
+// subrating signalling
+function subratingSignal(state, rateBtn, sr_rating = null) {
+  switch (state) {
+    case "on":
+      rateBtn.text().includes("*") || rateBtn.text(rateBtn.text() + "*");
+      break;
+    case "off":
+      subratings.filter(
+        ({selected, rating}) => selected === true & rating === sr_rating)
+        .length === 0 &&
+        rateBtn.text().includes("*") &&
+        rateBtn.text(rateBtn.text().slice(0,-1));
+  };
+}
+
 // Actions for subrating buttons
 function toggleSubrating(obj) {
 // When clicking on subrating button:
@@ -28,25 +42,24 @@ function toggleSubrating(obj) {
   let sr = subratings.filter(sr => sr.id == obj.attr("id").split("_")[1])[0];
   let rateBtn = $(`label[for=${rateBtns[sr.rating].attr("id")}`)
 
-  if (subrating.selected) {
+  if (sr.selected) {
     sr.selected = false;
     obj.removeClass("active");
-    rateBtn.text().includes("*") || rateBtn.text(rateBtn.text() + "*")
+    subratingSignal("off", rateBtn, sr.rating)
   } else {
     sr.selected = true;
     obj.addClass("active");
-    subratings.filter(
-      ({selected, rating}) => selected === false & rating === sr.rating
-    ).length === 0 && rateBtn.text().includes("*") &&
-      rateBtn.text(rateBtn.text().slice(0,-1));
+    subratingSignal("on", rateBtn)
   }
-}
+};
 
 function submitSubratings() {
   let subratingData = []
   subratings.forEach(sr => subratingData.push(`${sr.id}_${sr.selected}`));
   $("#subratingsForm").val(subratingData.join("___"))
-}
+};
+
+function submitAll() {submitSubratings(); $("form").submit();};
 
 /// Mousetrap Keybindings
 // Help Modal
@@ -117,16 +130,20 @@ $("#collapseComment").on('hide.bs.collapse',
 // Mark already selected from Backend & Set-Up Mousetrap
 subratings.forEach(
   subrating => {
-    subrating.selected && $("#subrating_" + subrating.id).addClass('active');
-    kb = subrating.keybinding.split("_");
-    let [mod, kb] = (kb === 2) ? kb : [null, kb[0]];
-    let key;
+    let obj = $("#subrating_" + subrating.id)
+    let rateBtn = $(`label[for=${rateBtns[subrating.rating].attr("id")}`)
+    subrating.selected &&
+      obj.addClass('active') &&
+      subratingSignal("on", rateBtn);
+    let key, mod, kb = subrating.keybinding.split("_");
+    [mod, kb] = (kb.length === 2) ? kb : [null, kb[0]];
     switch (mod) {
       case "a": key = `alt+${kb}`; break;
       case "c": key = `ctrl+${kb}`; break;
       case "s": key = `shift+${kb}`; break;
       default: key = kb;
     };
+    console.log(`Mousetrap.bind(${key}, () => clickSubrating(${subrating.id}))`)
     Mousetrap.bind(key, () => clickSubrating(subrating.id));
   }
 );
@@ -137,16 +154,14 @@ $("button[id^=subrating]").each(function(index){
 });
 
 /// Submit Form
+// Submit button
+$("#submitButton").click(() => submitAll());
+
 //Force submit with shif-enter:
-Mousetrap.bind(
-  "shift+enter", () => {
-    submitSubratings();
-    $("form").submit();
-  }
-);
+Mousetrap.bind("shift+enter", () => submitAll());
 
 // Submit form when changes:
-$(".form-check").change(() => {submitSubratings(); $("form").submit();})
+$(".form-check").change(() => submitAll())
 
 //Submit rate (Comment)
-$("textarea").change(() => {submitSubratings(); $("form").submit();})
+$("textarea").change(() => submitAll())

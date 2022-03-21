@@ -222,13 +222,15 @@ def edit_dataset(dataset=None):
         # Subratings;
         if form.sr_change.data:
             sr_ids, sr_texts, sr_ratings, sr_keybindings = (
-                [id.split("_")[1] for id in form.sr_ids.data.split("___")],
+                [id.split("_")[1] if id else ""
+                 for id in form.sr_ids.data.split("___")],
                 form.sr_texts.data.split("___"),
                 form.sr_ratings.data.split("___"),
                 form.sr_keybindings.data.split("___")
             )
 
             # Sanity check
+            print(f"{sr_ids=} {sr_texts=} {sr_ratings=} {sr_keybindings=}")
             if not (len(sr_ids)
                     == len(sr_texts)
                     == len(sr_ratings)
@@ -239,16 +241,20 @@ def edit_dataset(dataset=None):
 
             for n, id in enumerate(sr_ids):
                 if "d" in id:
+                    print(f"{id=}")
                     sr = Precomment.query.filter_by(id=id[1:-1]).first()
-                    db.session.delete(sr)
+                    print(f"{sr=}")
+                    if sr:
+                        db.session.delete(sr)
                 else:
                     sr = Precomment(dataset=ds_model) if "n" in id \
                         else Precomment.query.filter_by(id=id[1:]).first()
-                    sr.rating = sr_ratings[n]
-                    sr.comment = sr_texts[n]
-                    sr.keybinding = sr_keybindings[n] \
-                        if sr_keybindings[n] else None
-                    db.session.add(sr)
+                    if sr:
+                        sr.rating = sr_ratings[n]
+                        sr.comment = sr_texts[n]
+                        sr.keybinding = sr_keybindings[n] \
+                            if sr_keybindings[n] else None
+                        db.session.add(sr)
             changes = True
 
         # Check if there is a name change;

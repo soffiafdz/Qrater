@@ -11,6 +11,7 @@ import jwt
 from flask import current_app
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy.ext.hybrid import hybrid_property
 from app import db, login
 import redis
 import rq
@@ -210,6 +211,8 @@ class Image(db.Model):
             rating_mod.rating = rating if rating else rating_mod.rating
             rating_mod.comment = comment if comment else rating_mod.comment
             rating_mod.timestamp = new_time if new_time else datetime.utcnow()
+            rating_mod.subratings = subratings \
+                if subratings else rating_mod.subratings
         else:
             rating_mod = Rating(rater=user, image=self,
                                 rating=rating, comment=comment,
@@ -228,22 +231,22 @@ class Image(db.Model):
         """Return comment(s) of the image by specific user."""
         rating_mod = self.ratings.filter_by(rater=user).first()
         if rating_mod:
-            comment = rating_mod.comment
+            output = comment = rating_mod.comment
             if add_subratings:
                 subratings = ", ".join(
                     [subr.comment for subr in rating_mod.subratings])
 
                 output = "; ".join([subratings, comment]) \
-                    if subratings else comment
+                    if subratings else output
             return output
-        return None
+        return ""
 
     def subratings_by_user(self, user):
         """Return list of subratings of the image by specific user."""
         rating_mod = self.ratings.filter_by(rater=user).first()
         if rating_mod:
             return rating_mod.subratings
-        return None
+        return []
 
 
 class Rating(db.Model):
@@ -300,7 +303,7 @@ class History(db.Model):
 
     def __repr__(self):
         """Object representation."""
-        return f'<Rating {self.reference}; {self.n}>'
+        return f'<Rating {self.latest}; {self.n}>'
 
 
 class Notification(db.Model):
