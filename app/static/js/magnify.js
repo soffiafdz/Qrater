@@ -1,3 +1,12 @@
+// $("#zoomButton")
+$("#zoomButton").click(() => {
+  if ($(".img-magnifier-glass").length) {
+    $(".img-magnifier-glass").remove();
+  } else {
+    zoom = 2; magnify("img", zoom);
+  };
+});
+
 function magnify(imgID, zoom) {
   var img, glass, w, h, bw;
   img = document.getElementById(imgID);

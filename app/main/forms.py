@@ -22,8 +22,9 @@ class RatingForm(FlaskForm):
 
     rating = RadioField('Rating', choices=[(0, 'Pending'), (1, 'Pass'),
                                            (2, 'Warning'), (3, 'Fail')])
+    subratings = StringField("Subratings")
     comment = TextAreaField('Comment')
-    submit = SubmitField('Comment')
+    submit = SubmitField('Submit')
 
 
 class ExportRatingsForm(FlaskForm):
@@ -51,3 +52,4 @@ class ImportRatingsForm(FlaskForm):
                      validators=[FileRequired(), FileAllowed(['csv', 'json'])])
     # Choices for this are stored in the route
     columns = SelectMultipleField("Columns", coerce=int)
+    order = StringField("Order", validators=[DataRequired()])

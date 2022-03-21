@@ -11,6 +11,7 @@ import jwt
 from flask import current_app
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy.ext.hybrid import hybrid_property
 from app import db, login
 import redis
 import rq
@@ -26,6 +27,20 @@ data_access = db.Table(
     'data_access',
     db.Column('rater_id', db.Integer, db.ForeignKey('rater.id')),
     db.Column('dataset_id', db.Integer, db.ForeignKey('dataset.id')),
+)
+
+
+subrating = db.Table(
+    'subrating',
+    db.Column('rating_id', db.Integer, db.ForeignKey('rating.id')),
+    db.Column('precomment_id', db.Integer, db.ForeignKey('precomment.id'))
+)
+
+
+subrating_history = db.Table(
+    'subrating_history',
+    db.Column('history_id', db.Integer, db.ForeignKey('history.id')),
+    db.Column('precomment_id', db.Integer, db.ForeignKey('precomment.id'))
 )
 
 
@@ -117,6 +132,8 @@ class Dataset(db.Model):
     private = db.Column(db.Boolean, default=False)
     sharing = db.Column(db.Boolean, default=True)
     images = db.relationship('Image', backref='dataset', lazy='dynamic')
+    subratings = db.relationship('Precomment', backref='dataset',
+                                 lazy='dynamic')
     viewers = db.relationship('Rater', secondary=data_access,
                               backref='access', lazy='dynamic')
 
@@ -176,38 +193,60 @@ class Image(db.Model):
         """Object representation."""
         return f'<MRImage {self.name}>'
 
-    def set_rating(self, user, rating):
-        """Set a rating to the current MRI."""
-        rating_mod = self.ratings.filter_by(rater=user).first()
-        if rating_mod is None:
-            rating_mod = Rating(rater=user, image=self, rating=rating)
-            db.session.add(rating_mod)
+    def set_rating(self, user,
+                   rating=None, subratings=None, comment=None, timestamp=None):
+        """Set a rating to the current Image and save to history."""
+        if isinstance(timestamp, str):
+            new_time = datetime.fromisoformat(timestamp[:-1]) \
+                if timestamp[-1].isalpha() \
+                else datetime.fromisoformat(timestamp)
         else:
-            rating_mod.rating = rating
-            rating_mod.timestamp = datetime.utcnow()
+            new_time = timestamp
 
-    def set_comment(self, user, comment):
-        """Append a comment to the rating of current MRI."""
         rating_mod = self.ratings.filter_by(rater=user).first()
-        if rating_mod is None:
-            rating_mod = Rating(rater=user, image=self, comment=comment)
-            db.session.add(rating_mod)
+
+        if rating_mod:
+            rating_mod.save()
+            # Update values if not None else existing/default
+            rating_mod.rating = rating if rating else rating_mod.rating
+            rating_mod.comment = comment if comment else rating_mod.comment
+            rating_mod.timestamp = new_time if new_time else datetime.utcnow()
+            rating_mod.subratings = subratings \
+                if subratings else rating_mod.subratings
         else:
-            rating_mod.comment = comment
+            rating_mod = Rating(rater=user, image=self,
+                                rating=rating, comment=comment,
+                                timestamp=new_time, subratings=subratings)
+            db.session.add(rating_mod)
+            rating_mod.save()
 
     def rating_by_user(self, user):
         """Return rating of the image by specific user."""
         rating_mod = self.ratings.filter_by(rater=user).first()
-        if rating_mod is None:
-            return 0
-        return rating_mod.rating
+        if rating_mod:
+            return rating_mod.rating
+        return 0
 
-    def comment_by_user(self, user):
-        """Return rating of the image by specific user."""
+    def comment_by_user(self, user, add_subratings=True):
+        """Return comment(s) of the image by specific user."""
         rating_mod = self.ratings.filter_by(rater=user).first()
-        if rating_mod is None:
-            return None
-        return rating_mod.comment
+        if rating_mod:
+            output = comment = rating_mod.comment
+            if add_subratings:
+                subratings = ", ".join(
+                    [subr.comment for subr in rating_mod.subratings])
+
+                output = "; ".join([subratings, comment]) \
+                    if subratings else output
+            return output
+        return ""
+
+    def subratings_by_user(self, user):
+        """Return list of subratings of the image by specific user."""
+        rating_mod = self.ratings.filter_by(rater=user).first()
+        if rating_mod:
+            return rating_mod.subratings
+        return []
 
 
 class Rating(db.Model):
@@ -219,10 +258,52 @@ class Rating(db.Model):
     rater_id = db.Column(db.Integer, db.ForeignKey('rater.id'))
     rating = db.Column(db.Integer)
     comment = db.Column(db.String(256))
+    history = db.relationship("History", backref='latest', lazy='dynamic')
+    subratings = db.relationship('Precomment', secondary=subrating,
+                                 backref='reference', lazy='dynamic')
 
     def __repr__(self):
         """Object representation."""
         return f'<Rating {self.image_id}; {self.rating}>'
+
+    def save(self):
+        """Save rating in history table."""
+        n = self.history.count() + 1
+        entry = History(latest=self, rating=self.rating, n=n,
+                        comment=self.comment, timestamp=self.timestamp,
+                        subratings=self.subratings)
+        db.session.add(entry)
+
+
+class Precomment(db.Model):
+    """SQLAlchemy Model for QC subrating."""
+
+    id = db.Column(db.Integer, primary_key=True)
+    dataset_id = db.Column(db.Integer, db.ForeignKey('dataset.id'))
+    rating = db.Column(db.Integer, default=0)
+    comment = db.Column(db.String(256))
+    keybinding = db.Column(db.String(3))
+
+    def __repr__(self):
+        """Object representation."""
+        return f'<Subrating {self.dataset}; {self.comment}>'
+
+
+class History(db.Model):
+    """SQLAlchemy Model for history of QC ratings."""
+
+    id = db.Column(db.Integer, primary_key=True)
+    rating_id = db.Column(db.Integer, db.ForeignKey('rating.id'))
+    rating = db.Column(db.Integer)
+    comment = db.Column(db.String(256))
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    n = db.Column(db.Integer)
+    subratings = db.relationship('Precomment', secondary=subrating_history,
+                                 backref='history', lazy='dynamic')
+
+    def __repr__(self):
+        """Object representation."""
+        return f'<Rating {self.latest}; {self.n}>'
 
 
 class Notification(db.Model):

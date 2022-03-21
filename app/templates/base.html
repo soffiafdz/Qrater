@@ -111,8 +111,8 @@
             </li>
             <li>
               <a
-                class="dropdown-item disabled"
-                href="#"
+                class="dropdown-item"
+                href="{{ url_for('main.import_ratings', all_raters=all_raters) }}"
                 >Import</a>
             </li>
           </ul>
@@ -125,6 +125,8 @@
       </div>
 
       <div class="navbar-nav ms-auto">
+        {%- block zoom_btn %}{% endblock -%}
+        {%- block img_filters_btn %}{% endblock -%}
         {%- block help_btn %}{% endblock -%}
       </div>
       <ul class="navbar-nav">
@@ -201,6 +203,8 @@
 </svg>
 {% endblock %}
 
+{% block offcanvas %}
+{% endblock %}
 
 {% block content %}
 <br>
