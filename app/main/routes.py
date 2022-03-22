@@ -264,7 +264,8 @@ def rate(name_dataset):
 
         sr_data = [(Precomment.query.get(sr[0]), sr[1]) for sr in
                    [string.split("_") for string in
-                    form.subratings.data.split("___")]]
+                    form.subratings.data.split("___")]
+                   if len(sr) == 2]
 
         rating_mod = img.ratings.filter_by(rater=current_user).first()
         for sr in sr_data:

@@ -261,6 +261,7 @@ def edit_dataset(dataset=None):
         if form.new_name.data and form.new_name.data != ds_model.name:
 
             # If there is another dataset with that name, throw error
+            # Case-insensitive
             if Dataset.query.filter_by(name=form.new_name.data).first():
                 flash((f'A Dataset named "{form.new_name.data}" '
                       'already exists. Please choose another name'),
@@ -268,28 +269,35 @@ def edit_dataset(dataset=None):
                 return redirect(request.url)
 
             # Rename dataset directory
+            name_changed = False
             for d in ['preloaded', 'uploaded']:
                 old_dir = os.path.join(data_dir, d, ds_model.name)
                 new_dir = os.path.join(data_dir, d, form.new_name.data)
                 if os.path.isdir(old_dir):
                     # TODO Include try/exception for writing permissions
-                    os.rename(old_dir, new_dir)
-
-            # Change dataset name in images database
-            # TODO: move to tasks
-            for img in ds_model.images.all():
-                # TODO Think about what to do if preloaded directory can't
-                # change
-                img.path = img.path.replace(ds_model.name, form.new_name.data)
-                db.session.add(img)
+                    try:
+                        os.rename(old_dir, new_dir)
+                    except PermissionError:
+                        with open(os.path.join(old_dir, ".name_changed"),
+                                  "w") as f:
+                            f.write(form.new_name.data)
+                            f.write("\n")
+                    else:
+                        name_changed = True
 
             # Change dataset name in dataset database
             ds_model.name = form.new_name.data
             db.session.add(ds_model)
             changes = True
 
+            # Change dataset name in images database
+            # Will be used in tasks
+            new_ds_name = form.new_name.data if name_changed else ""
+
+
         # Regex for image type, cohort, subject and/or session
-        if form.sub_regex.data \
+        if new_ds_name \
+                or form.sub_regex.data \
                 or form.sess_regex.data \
                 or form.type_regex.data \
                 or form.cohort_regex.data:
@@ -300,6 +308,7 @@ def edit_dataset(dataset=None):
                                      f"from {ds_model.name} dataset",
                                      icon='edit', alert_color='primary',
                                      dataset_name=ds_model.name,
+                                     new_ds_name=new_ds_name,
                                      sub_regex=form.sub_regex.data,
                                      sess_regex=form.sess_regex.data,
                                      cohort_regex=form.cohort_regex.data,

@@ -112,12 +112,14 @@ def load_data(files, dataset_name, rater_id,
         _set_task_progress(100, name=f'load_progress_{dataset_name}')
 
 
-def edit_info(dataset_name, rater_id, sub_regex=None, sess_regex=None,
-              cohort_regex=None, type_regex=None):
+def edit_info(dataset_name, rater_id, new_ds_name=None,
+              sub_regex=None, sess_regex=None, cohort_regex=None,
+              type_regex=None):
     """Start RQ task to edit a dataset.
 
     Arguments:
         dataset_name    -- dataset to edit
+        new_ds_name     -- new dataset name
         sub_regex       -- regular expression from edit-form
         sess_regex      -- regular expression from edit-form
         cohort_regex    -- regular expression from edit-form
@@ -132,6 +134,10 @@ def edit_info(dataset_name, rater_id, sub_regex=None, sess_regex=None,
 
         for image in dataset.images.all():
             change = False
+            if new_ds_name:
+                img.path = img.path.replace(dataset_name, new_ds_name)
+                change = True
+
             if sub_regex:
                 pattern = sub_regex
                 result = re.search(pattern, image.path)
@@ -156,6 +162,7 @@ def edit_info(dataset_name, rater_id, sub_regex=None, sess_regex=None,
                 if result:
                     image.imgtype = result.group()
                     change = True
+
             if change:
                 changed_imgs += 1
                 db.session.add(image)
