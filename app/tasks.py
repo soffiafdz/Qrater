@@ -135,7 +135,15 @@ def edit_info(dataset_name, rater_id, new_ds_name=None,
         for image in dataset.images.all():
             change = False
             if new_ds_name:
-                img.path = img.path.replace(dataset_name, new_ds_name)
+                directory = ""
+                for d in ["preloaded", "uploaded"]:
+                    if f"/{d}/" in image.path:
+                        directory = d
+
+                image.path = re.sub(f"(?<={directory}/).*(?=/)",
+                                  new_ds_name,
+                                  image.path)
+
                 change = True
 
             if sub_regex:

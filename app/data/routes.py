@@ -218,6 +218,7 @@ def edit_dataset(dataset=None):
 
     changes = False
     if form.validate_on_submit():
+        new_ds_name = None
 
         # Subratings;
         if form.sr_change.data:
@@ -274,14 +275,18 @@ def edit_dataset(dataset=None):
                 old_dir = os.path.join(data_dir, d, ds_model.name)
                 new_dir = os.path.join(data_dir, d, form.new_name.data)
                 if os.path.isdir(old_dir):
-                    # TODO Include try/exception for writing permissions
+                    if os.path.isdir(new_dir):
+                        flash((f'A directory named "{form.new_name.data}" '
+                              'already exists. Please choose another name'),
+                              'danger')
+                        return redirect(request.url)
+
                     try:
                         os.rename(old_dir, new_dir)
                     except PermissionError:
-                        with open(os.path.join(old_dir, ".name_changed"),
-                                  "w") as f:
-                            f.write(form.new_name.data)
-                            f.write("\n")
+                        with open(os.path.join(data_dir, ".name_changes"),
+                                  "a+") as f:
+                            f.write(f"{ds_model.name}: {form.new_name.data}\n")
                     else:
                         name_changed = True
 
