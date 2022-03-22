@@ -274,6 +274,28 @@ class Rating(db.Model):
                         subratings=self.subratings)
         db.session.add(entry)
 
+    def subrating(self, subrating, action="toggle"):
+        """Toggle/Add/Remove subrating to current rating."""
+        if not isinstance(subrating, Precomment):
+            return False
+
+        if action == "toggle":
+            if subrating in self.subratings:
+                action = "remove"
+            else:
+                action = "add"
+
+        if action == "add":
+            subrating in self.subratings or self.subratings.append(subrating)
+
+        elif action == "remove":
+            subrating in self.subratings and self.subratings.remove(subrating)
+
+        else:
+            return False
+
+        return True
+
 
 class Precomment(db.Model):
     """SQLAlchemy Model for QC subrating."""

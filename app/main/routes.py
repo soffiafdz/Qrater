@@ -259,19 +259,20 @@ def rate(name_dataset):
     # Rating form
     form = RatingForm()
     if form.validate_on_submit():
-        subratings_to_add, subratings_to_delete = [], []
+        img.set_rating(user=current_user, rating=form.rating.data,
+                       comment=form.comment.data)
+
         sr_data = [(Precomment.query.get(sr[0]), sr[1]) for sr in
                    [string.split("_") for string in
                     form.subratings.data.split("___")]]
 
+        rating_mod = img.ratings.filter_by(rater=current_user).first()
         for sr in sr_data:
             if sr[0] and sr[1] == "true":
-                subratings_to_add.append(sr[0])
+                rating_mod.subrating(sr[0], "add")
             elif sr[0] and sr[1] == "false":
-                subratings_to_delete.append(sr[0])
+                rating_mod.subrating(sr[0], "remove")
 
-        img.set_rating(user=current_user, rating=form.rating.data,
-                       comment=form.comment.data, subratings=subratings_list)
         db.session.commit()
         return redirect(request.url)
 
