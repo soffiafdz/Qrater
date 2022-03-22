@@ -50,8 +50,10 @@
           </dd>
           <hr class="mt-2">
           {% set colors = ["secondary", "success", "warning", "danger"] %}
+          {% set ns = namespace(sr_help=false) -%}
           {% for subrating in subratings %}
           {% if subrating.keybinding -%}
+          {% set ns.sr_help = true -%}
           <dt class="col-4 text-center">
             {% set kb = subrating.keybinding.split("_") %}
             {% set modKeys = {"a": "Alt", "c": "Ctrl", "s": "Shift"} %}
@@ -72,7 +74,7 @@
           </dd>
           {% endif %}
           {% endfor %}
-          <hr class="mt-2">
+          {% if ns.sr_help %} <hr class="mt-2"> {% endif %}
           <dt class="col-4 text-center"><kbd>c</kbd></dt>
           <dd class="col-8">Show/hide comment box</dd>
           <hr class="mt-2">
