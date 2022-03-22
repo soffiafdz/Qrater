@@ -283,7 +283,7 @@ def edit_dataset(dataset=None):
 
                     try:
                         os.rename(old_dir, new_dir)
-                    except PermissionError:
+                    except (OSError, PermissionError):
                         with open(os.path.join(data_dir, ".name_changes"),
                                   "a+") as f:
                             f.write(f"{ds_model.name}: {form.new_name.data}\n")
