@@ -217,6 +217,7 @@ def edit_dataset(dataset=None):
         test_names[set.name] = [img.path for img in set.images.limit(5).all()]
 
     changes = False
+    subratings = ds_model.subratings if ds_model else None
     if form.validate_on_submit():
 
         # Subratings;
@@ -374,7 +375,7 @@ def edit_dataset(dataset=None):
     return render_template('data/edit_dataset.html', form=form,
                            dataset=dataset, privacy=privacy, ro=ro,
                            names=test_names, all_raters=all_raters,
-                           subratings=ds_model.subratings,
+                           subratings=subratings,
                            title='Edit Dataset')
 
 
