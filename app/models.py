@@ -193,8 +193,7 @@ class Image(db.Model):
         """Object representation."""
         return f'<MRImage {self.name}>'
 
-    def set_rating(self, user,
-                   rating=None, subratings=None, comment=None, timestamp=None):
+    def set_rating(self, user, rating=None, comment=None, timestamp=None):
         """Set a rating to the current Image and save to history."""
         if isinstance(timestamp, str):
             new_time = datetime.fromisoformat(timestamp[:-1]) \
@@ -211,12 +210,10 @@ class Image(db.Model):
             rating_mod.rating = rating if rating else rating_mod.rating
             rating_mod.comment = comment if comment else rating_mod.comment
             rating_mod.timestamp = new_time if new_time else datetime.utcnow()
-            rating_mod.subratings = subratings \
-                if subratings else rating_mod.subratings
         else:
             rating_mod = Rating(rater=user, image=self,
                                 rating=rating, comment=comment,
-                                timestamp=new_time, subratings=subratings)
+                                timestamp=new_time)
             db.session.add(rating_mod)
             rating_mod.save()
 
@@ -273,6 +270,28 @@ class Rating(db.Model):
                         comment=self.comment, timestamp=self.timestamp,
                         subratings=self.subratings)
         db.session.add(entry)
+
+    def subrating(self, subrating, action="toggle"):
+        """Toggle/Add/Remove subrating to current rating."""
+        if not isinstance(subrating, Precomment):
+            return False
+
+        if action == "toggle":
+            if subrating in self.subratings:
+                action = "remove"
+            else:
+                action = "add"
+
+        if action == "add":
+            subrating in self.subratings or self.subratings.append(subrating)
+
+        elif action == "remove":
+            subrating in self.subratings and self.subratings.remove(subrating)
+
+        else:
+            return False
+
+        return True
 
 
 class Precomment(db.Model):

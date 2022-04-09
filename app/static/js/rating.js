@@ -135,7 +135,8 @@ subratings.forEach(
     subrating.selected &&
       obj.addClass('active') &&
       subratingSignal("on", rateBtn);
-    let key, mod, kb = subrating.keybinding.split("_");
+    let key, mod
+    let kb = (subrating.keybinding) ? subrating.keybinding.split("_") : [""];
     [mod, kb] = (kb.length === 2) ? kb : [null, kb[0]];
     switch (mod) {
       case "a": key = `alt+${kb}`; break;
@@ -144,7 +145,7 @@ subratings.forEach(
       default: key = kb;
     };
     console.log(`Mousetrap.bind(${key}, () => clickSubrating(${subrating.id}))`)
-    Mousetrap.bind(key, () => clickSubrating(subrating.id));
+    if (key) Mousetrap.bind(key, () => clickSubrating(subrating.id));
   }
 );
 

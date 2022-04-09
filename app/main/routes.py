@@ -67,14 +67,15 @@ def dashboard(all_raters_string=None):
             n_1 = imgs.join(Rating).filter_by(rating=1).distinct().count()
             n_2 = imgs.join(Rating).filter_by(rating=2).distinct().count()
             n_3 = imgs.join(Rating).filter_by(rating=3).distinct().count()
-            n_r = sum((n_1, n_2, n_3))
+            n_r = (imgs.join(Rating).count()
+                   - imgs.join(Rating).filter_by(rating=0).count())
         else:
-            n_1 = imgs.join(Rating).filter_by(rating=1, rater=current_user)\
-                .count()
-            n_2 = imgs.join(Rating).filter_by(rating=2, rater=current_user)\
-                .count()
-            n_3 = imgs.join(Rating).filter_by(rating=3, rater=current_user)\
-                .count()
+            n_1 = imgs.join(Rating).filter_by(rating=1, rater=current_user).\
+                distinct().count()
+            n_2 = imgs.join(Rating).filter_by(rating=2, rater=current_user).\
+                distinct().count()
+            n_3 = imgs.join(Rating).filter_by(rating=3, rater=current_user).\
+                distinct().count()
             n_r = sum((n_1, n_2, n_3))
             n_0 = ntot - n_r
         n1_100 = (n_1 / ntot * 100) if ntot > 0 else 0
@@ -258,19 +259,21 @@ def rate(name_dataset):
     # Rating form
     form = RatingForm()
     if form.validate_on_submit():
-        subratings_to_add, subratings_to_delete = [], []
+        img.set_rating(user=current_user, rating=form.rating.data,
+                       comment=form.comment.data)
+
         sr_data = [(Precomment.query.get(sr[0]), sr[1]) for sr in
                    [string.split("_") for string in
-                    form.subratings.data.split("___")]]
+                    form.subratings.data.split("___")]
+                   if len(sr) == 2]
 
+        rating_mod = img.ratings.filter_by(rater=current_user).first()
         for sr in sr_data:
             if sr[0] and sr[1] == "true":
-                subratings_to_add.append(sr[0])
+                rating_mod.subrating(sr[0], "add")
             elif sr[0] and sr[1] == "false":
-                subratings_to_delete.append(sr[0])
+                rating_mod.subrating(sr[0], "remove")
 
-        img.set_rating(user=current_user, rating=form.rating.data,
-                       comment=form.comment.data, subratings=subratings_list)
         db.session.commit()
         return redirect(request.url)
 
