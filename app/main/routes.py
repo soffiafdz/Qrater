@@ -7,6 +7,7 @@ Module with different HTML routes for the webapp.
 import os
 import csv
 import json
+import re
 import pandas as pd
 from pandas.errors import ParserError
 from collections import defaultdict, OrderedDict
@@ -142,9 +143,9 @@ def rate(name_dataset):
     subquery = Image.query.join(Rating).filter(Image.dataset == dataset,
                                                Rating.rater == current_user)
 
-    _, prev_img, prev_time = subquery.order_by(Rating.timestamp.desc()).\
+    (_, prev_img, prev_time) = subquery.order_by(Rating.timestamp.desc()).\
         add_columns(Image.name, Rating.timestamp).first() \
-        if subquery.first() else None, None, None
+        if subquery.first() else (None, None, None)
 
     # If last rating is younger than 3 minutes give option de undo
     back = 0 if not prev_time \
@@ -275,7 +276,14 @@ def rate(name_dataset):
                 rating_mod.subrating(sr[0], "remove")
 
         db.session.commit()
-        return redirect(request.url)
+
+        url = request.url
+        if form.gotopage.data:
+            url = \
+                re.sub(r"page=\d+", f"page={form.gotopage.data}", url) \
+                if "page" in url \
+                else re.sub(r"\?", f"?page={form.gotopage.data}&", request.url)
+        return redirect(url)
 
     return render_template('rate.html', DS=dataset, form=form, imgs=imgs,
                            pagination=pagination, all_ratings=all_ratings,
