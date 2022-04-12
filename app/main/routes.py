@@ -139,8 +139,7 @@ def rate(name_dataset):
     pagination, page = True, request.args.get('page', 1, type=int)
     prev = request.args.get('prev', 0, type=int)
 
-    subquery = Image.query.join(Rating).filter(Image.dataset == dataset,
-                                               Rating.rater == current_user)
+    subquery = imgs.join(Rating).filter(Rating.rater == current_user)
 
     _, prev_img, prev_time = subquery.order_by(Rating.timestamp.desc()).\
         add_columns(Image.name, Rating.timestamp).first() \
