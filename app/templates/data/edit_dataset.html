@@ -355,6 +355,7 @@
         class="list-group list-group-horizontal-lg mb-3 mx-0"
         >
         {% set colors = ["dark", "success", "warning", "danger"] %}
+        {% if subratings %}
         {% for sr in subratings %}
         <a
           href="#"
@@ -366,6 +367,7 @@
             {%- endif -%}"
           >{{ sr.comment }}</a>
         {% endfor %}
+        {% endif %}
       </div>
       <div>
         <input type="hidden" id="srChange" name="sr_change" value=0>

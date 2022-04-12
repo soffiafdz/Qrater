@@ -10,6 +10,20 @@ let zoom;
 // {id: model_ID, selected: Boolean, rating: [0-3], keybinding: [asc]_\S}
 
 /// Functions
+// Go To specific page
+function goToPage(page) {
+  let url = window.location.href;
+  let newUrl
+  const rex = new RegExp("page=\d+");
+  if (rex.test(url)) {
+    newUrl = url.replace(rex, `page=${page}`);
+  } else {
+    newUrl = url.replace("\?", `?page=${page}&`);
+  }
+  console.log(newUrl);
+  window.location.assign(newUrl);
+}
+
 // Click rating
 function clickRating(rating) {
   rateBtns[rating].trigger("click")
@@ -118,6 +132,12 @@ Mousetrap.bind("shift+up", () => {
 })
 
 /// Actions
+// Go to specific page
+$("#goToPageBtn").click(() => {
+  submitAll();
+  goToPage($("#goToPageInput").val());
+});
+
 // Focus on textarea and fill button when collapsible opens
 $("#collapseComment").on('show.bs.collapse', () => {
   $("#collapseButton").addClass("active"); $("#comment").focus();
