@@ -500,6 +500,7 @@
 {% block scripts %}
 {{ super() }}
 <script>
+  const currentPage = "{{ imgs.page }}"
   const subratings = JSON.parse('{{ subratings_data | tojson | safe }}')
 </script>
 <script src="{{ url_for('static', filename=('js/rating.js')) }}"></script>

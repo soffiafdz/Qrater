@@ -73,7 +73,11 @@ function submitSubratings() {
   $("#subratingsForm").val(subratingData.join("___"))
 };
 
-function submitAll() {submitSubratings(); $("form").submit();};
+function submitAll() {
+  submitSubratings();
+  if ($("#goToPageInput").val() === "") $("#goToPageInput").val(currentPage);
+  $("form").submit();
+};
 
 /// Mousetrap Keybindings
 // Help Modal
