@@ -97,14 +97,14 @@ Mousetrap.bind(["ctrl+z", "u"], () => $("#backButton").click())
 
 // Previous image
 Mousetrap.bind("left", () => {
-  ($("#prevPage")[0].getAttribute("href") != '#')
-    && window.location.assign(plink)
+  let plink = $("#prevPage")[0].getAttribute("href");
+  (plink != '#') && window.location.assign(plink);
 })
 
 // Next image
 Mousetrap.bind("right", () => {
-  ($("#nextPage")[0].getAttribute("href") != '#')
-    && window.location.assign(nlink)
+  let nlink = $("#nextPage")[0].getAttribute("href");
+  (nlink != '#') && window.location.assign(nlink);
 })
 
 // Zoom
