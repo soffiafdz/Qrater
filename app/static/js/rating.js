@@ -75,7 +75,13 @@ function submitSubratings() {
 
 function submitAll() {
   submitSubratings();
-  if ($("#goToPageInput").val() === "") $("#goToPageInput").val(currentPage);
+  if ($("#goToPageInput").val() === "") {
+    if (currentPage) {
+      $("#goToPageInput").val(currentPage);
+    } else {
+      $("#goToPageInput").val(0);
+    }
+  }
   $("form").submit();
 };
 

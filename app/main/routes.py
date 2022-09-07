@@ -258,7 +258,9 @@ def rate(name_dataset):
 
     # Rating form
     form = RatingForm()
+
     if form.validate_on_submit():
+        print("Setting rating.")
         img.set_rating(user=current_user, rating=form.rating.data,
                        comment=form.comment.data)
 
@@ -277,12 +279,14 @@ def rate(name_dataset):
         db.session.commit()
 
         url = request.url
-        if form.gotopage.data:
+        if pagination:
             url = \
                 re.sub(r"page=\d+", f"page={form.gotopage.data}", url) \
                 if "page" in url \
                 else re.sub(r"\?", f"?page={form.gotopage.data}&", request.url)
         return redirect(url)
+    else:
+        print(f"{form.errors}")
 
     return render_template('rate.html', DS=dataset, form=form, imgs=imgs,
                            pagination=pagination, all_ratings=all_ratings,
@@ -338,6 +342,7 @@ def export_ratings(dataset=None):
         form.columns.choices[6][3] = 0 if (sum(comm) or sum(subr)) else 1
 
     if form.validate_on_submit():
+
         query = Rating.query.\
             join(Image).\
             filter(Image.dataset_id == ds_model.id).\
@@ -396,7 +401,10 @@ def export_ratings(dataset=None):
                 rating_dict['Rater'] = rating.username
 
             if "Comments" in rating_dict.keys():
-                rating_dict['Comments'] = rating.comment
+                comment_string = [rating.comment] + [subrating.comment
+                              for subrating in rating[0].subratings.all()]
+                comment_string[:] = [x for x in comment_string if x]
+                rating_dict['Comments'] = ". ".join(comment_string)
 
             if "Timestamp" in rating_dict.keys():
                 rating_dict['Timestamp'] = rating.timestamp.isoformat() + 'Z'
