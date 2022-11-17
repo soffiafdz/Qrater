@@ -344,6 +344,11 @@ def edit_dataset(dataset=None):
                 if ds_model.deny_access(rater):
                     changes = True
 
+            # Make sure current_user AND creator do not get kicked out
+            ds_model.grant_access(ds_model.creator)
+            ds_model.grant_access(current_user)
+            db.session.commit()
+
         files = request.files.getlist(form.imgs_to_upload.name)
         # Check that files is not an empty list??
         # Maybe to trigger upload
