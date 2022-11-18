@@ -45,10 +45,12 @@ def dashboard(all_raters_string=None):
 
     # Show all public datasets / accesible datasets for the current user
     public_ds = Dataset.query.filter_by(private=False)
-    datasets = public_ds if current_user.is_anonymous \
+    datasets = public_ds.order_by(Dataset.name.asc()) \
+        if current_user.is_anonymous \
         else Dataset.query.\
         filter(Dataset.viewers.contains(current_user)).\
-        union(public_ds)
+        union(public_ds).\
+        order_by(Dataset.name.asc())
 
     # Reroute to 'Welcome' landing page if there are no ACCESSIBLE Datasets
     if datasets.first() is None:
