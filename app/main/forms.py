@@ -37,6 +37,9 @@ class ExportRatingsForm(FlaskForm):
     rater_filter = RadioField("Rater(s)", choices=[(0, 'All Raters'),
                                                    (1, 'User')],
                               validators=[DataRequired()])
+    history_filter = RadioField("History", choices=[(0, 'Current Rating'),
+                                                   (1, 'Complete History')],
+                              validators=[DataRequired()])
     # choices=[(0, current_user.username), (1, "All")])
     # Choices for this are stored in the route
     columns = SelectMultipleField("Columns", coerce=int)

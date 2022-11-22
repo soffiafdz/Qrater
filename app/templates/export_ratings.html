@@ -116,14 +116,52 @@
                 type="radio"
                 class="btn-check"
                 name="rater_filter"
-                id="rater_filter0"
+                id="raterFilter0"
                 value="0"
                 autocomplete="off"
                 >
               <label
                   class="btn btn-outline-dark"
-                  for="rater_filter0"
+                  for="raterFilter0"
                 >All Raters</label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row mb-3 mx-0">
+        <label
+          class="col-sm-12 col-md-3 col-form-label"
+          for="historyFilter"
+          >History</label>
+        <div class="col-sm-12 col-md-9" id="historyFilter">
+          <div class="form-check form-check-inline ps-0">
+            <div class="btn-group" role="group">
+              <input
+                type="radio"
+                class="btn-check"
+                name="history_filter"
+                id="historyFilter0"
+                value="0"
+                autocomplete="off"
+                checked
+                >
+              <label
+                class="btn btn-outline-primary"
+                for="historyFilter0"
+                >Current Rating</label>
+              <input
+                type="radio"
+                class="btn-check"
+                name="history_filter"
+                id="historyFilter1"
+                value="1"
+                autocomplete="off"
+                {% if disable_history %}disabled{% endif %}
+                >
+              <label
+                  class="btn btn-outline-dark"
+                  for="historyFilter1"
+                >All History</label>
             </div>
           </div>
         </div>

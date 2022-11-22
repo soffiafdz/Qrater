@@ -19,7 +19,8 @@ from app import db
 from app.main.forms import RatingForm, ExportRatingsForm, ImportRatingsForm
 from app.data.exceptions import NoExtensionError, UnsupportedExtensionError
 from app.data.functions import upload_file
-from app.models import Dataset, Image, Rating, Rater, Precomment, Notification
+from app.models import (Dataset, Image, Rating, Rater, History,
+                        Precomment, Notification)
 from app.main import bp
 
 
@@ -324,6 +325,9 @@ def export_ratings(dataset=None):
     all_raters = request.args.get('all_raters', 0, type=int)
 
     not_subs, not_sess, not_cohorts, not_comms = False, False, False, False
+
+    disable_history = False
+
     if dataset is not None:
         ds_model = Dataset.query.filter_by(name=dataset).first_or_404()
         file_name = f'{ds_model.name}'
@@ -343,13 +347,18 @@ def export_ratings(dataset=None):
                 Rating.query.join(Image).filter(Image.dataset == ds_model)]
         form.columns.choices[6][3] = 0 if (sum(comm) or sum(subr)) else 1
 
-    if form.validate_on_submit():
+        query = Rating.query\
+            .join(Image)\
+            .filter(Image.dataset_id == ds_model.id)\
+            .order_by(Image.id.asc())
 
-        query = Rating.query.\
-            join(Image).\
-            filter(Image.dataset_id == ds_model.id).\
-            order_by(Image.id.asc()).\
-            add_columns(Image.name, Rating.rating)
+        disable_history = query.join(History).count() == 0
+
+    if form.validate_on_submit():
+        if int(form.history_filter.data):
+            query = query.join(History).add_columns(Image.name, History.rating)
+        else:
+            query = query.add_columns(Image.name, Rating.rating)
 
         rating_dict = OrderedDict()
         col_order = [int(order) for order in form.order.data]
@@ -370,16 +379,23 @@ def export_ratings(dataset=None):
             query = query.join(Rater).add_columns(Rater.username)
 
         if "Comments" in rating_dict.keys():
-            query = query.add_columns(Rating.comment)
+            query = query.add_columns(History.comment) \
+                if int(form.history_filter.data) \
+                else query.add_columns(Rating.comment)
 
         if "Timestamp" in rating_dict.keys():
-            query = query.add_columns(Rating.timestamp)
+            query = query.add_columns(History.timestamp) \
+                if int(form.history_filter.data) \
+                else query.add_columns(Rating.timestamp)
 
         if int(form.rater_filter.data):
             query = query.filter(Rating.rater_id == current_user.id)
             file_name = f'{file_name}_{current_user.username}'
         else:
             file_name = f'{file_name}_all-raters'
+
+        if int(form.history_filter.data):
+            file_name = f'{file_name}_history'
 
         ratings = []
         rating_codes = {0: 'Pending', 1: 'Pass', 2: 'Warning', 3: 'Fail'}
@@ -433,6 +449,7 @@ def export_ratings(dataset=None):
     return render_template('export_ratings.html', form=form, dataset=dataset,
                            nsub=not_subs, nsess=not_sess, ncohort=not_cohorts,
                            ncomms=not_comms, all_raters=all_raters,
+                           disable_history=disable_history,
                            title='Downlad Ratings')
 
 
