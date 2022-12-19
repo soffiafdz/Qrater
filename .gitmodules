@@ -1,0 +1,3 @@
+[submodule "qrater_analysis"]
+	path = qrater_analysis
+	url = git@github.com:soffiafdz/qrater_analysis.git
